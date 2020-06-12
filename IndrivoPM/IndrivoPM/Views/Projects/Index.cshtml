@@ -1,0 +1,543 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = Localizer["_projects"];
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = ViewData["Title"];
+}
+
+@section Styles {
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+}
+
+@{ await Html.RenderPartialAsync("_ProjectsIndexTabs"); }
+
+<div class="row row-m-20 bg-white border rounded top-bar pl-20 pr-20">
+    <div class="nav col-12 d-md-flex flex-wrap p-0">
+        <div id="filter" class="d-flex col-xs-2"></div>
+        <div class="btn-group ml-auto mr-3 col-xs-2">
+            <button class="btn btn-outline-primary layout-list active" title="@Localizer["_listView"]"></button>
+            <button class="btn btn-outline-primary layout-grid cursor-no-drop" title="@Localizer["_gridView"] (Under construction)"></button>
+        </div>
+        @if (ViewBag.CurrentView == ProjectsViewByStatus.Current && User.UserHasThisPermission(Permissions.ProjectGroupCreate))
+        {
+            <button class="btn btn-success float-md-none float-right col-xs-2" id="add-parent" data-toggle="modal" data-target="#modal" data-controller="ProjectGroups" data-action="Create">@Localizer["shortCuts_addProjectGroup"]</button>
+            <div class="top-bar-divider d-md-block d-none"></div>
+        }
+        else if (User.UserHasThisPermission(Permissions.ProjectCreate))
+        {
+            <button class="btn btn-success float-md-none float-right col-xs-2" id="add-entity" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="Create">@Localizer["shortCuts_addProject"]</button>
+            <div class="top-bar-divider d-md-block d-none"></div>
+        }
+        <input type="text" class="form-control search-input w-md-100-i mt-md-0 mt-2 col-xs-2" placeholder="@Localizer["_searchProjects"]" />
+    </div>
+</div>
+
+<hr class="no-gutters" />
+
+<div id="projects"></div>
+<div id="search-result"></div>
+
+<footer class="bulk-actions-container">
+    <div class="d-lg-inline-flex d-block">
+        <button type="button" class="btn d-block w-lg-auto w-100 btn-outline-secondary" id="deselect-all">@Localizer["shortCuts_deselectAll"] <span class="check-counter d-lg-none"></span></button>
+        @if (!User.UserHasThisPermission(Permissions.ProjectUpdate) && !User.UserHasThisPermission(Permissions.ProjectDelete))
+        {
+            <p class="d-lg-inline text-lg-left text-center">@Localizer["messages_noPermessionsEditDeleteProject"]</p>
+        }
+        else
+        {
+            <p class="d-lg-inline d-none"><span class="check-counter"></span> @Localizer["messages_projectSelected"]</p>
+        }
+    </div>
+    <ul class="list-unstyled list-inline d-lg-inline-block d-block float-lg-right mb-0">
+        @if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+        {
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                <button type="button" class="bulk-update-status btn w-lg-auto w-100 btn-outline-primary mr-2" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="BulkUpdateStatus">@Localizer["shortCuts_updateStatus"]</button>
+                <button type="button" class="bulk-set-priority btn w-lg-auto w-100 btn-outline-primary mr-lg-2" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="BulkSetPriority">@Localizer["shortCuts_setPriority"]</button>
+            </li>
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                <button type="button" class="bulk-move-to-group btn w-lg-auto w-100 btn-outline-primary mr-lg-2" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="BulkMoveToGroup">@Localizer["shortCuts_moveToGroup"]</button>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.ProjectDelete))
+        {
+            <li class="d-lg-inline-block d-none">
+                <div class="divider"></div>
+            </li>
+            <li class="d-lg-inline-block d-block mt-lg-0 mt-2">
+                <button type="button" class="bulk-delete-link btn d-block w-lg-auto w-100 btn-danger ml-lg-2" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="BulkDelete">@Localizer["shortCuts_deleteSelected"]</button>
+            </li>
+        }
+    </ul>
+</footer>
+<div class="bulk-hidden-space d-none"></div>
+
+<input type="hidden" id="current-view" value="@(ViewBag.CurrentView)" />
+
+<input type="hidden" id="current-page" value="Projects" />
+
+@section Scripts {
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        function GetCurrentView() {
+            return $("#current-view").val();
+        }
+    </script>
+    <script>
+        function GetProjectGroups() {
+            var collapses = localStorage.collapses === undefined ? new Array() : JSON.parse(localStorage.collapses);
+
+            $.ajax({
+                url: "@Url.Action("GetProjectGroups", "ProjectGroups")",
+                type: "GET",
+                data: { filter: GetFilterValues() },
+                traditional: true,
+                success: function (result) {
+                    $("#projects").html(result);
+                    feather.replace();
+
+                    for (var i in collapses) {
+                        if ($("#" + collapses[i]).hasClass("collapse")) $("#" + collapses[i]).collapse("show");
+                        var object = $("[href='#" + collapses[i] + "'].collapse-container");
+                        LoadProjectsOnClick(object);
+                    }
+                },
+                error: function() {
+                    $.errorAlert({
+                        title: "@Localizer["_error"]",
+                        message: "@Localizer["errors_LoadProjects"]"
+                    });
+                }
+            });
+        }
+    </script>
+    <script>
+        $(document).on("shown.bs.collapse", ".collapse", function () {
+            var active = $(this).attr("id");
+            var collapses = localStorage.collapses === undefined
+                ? new Array()
+                : JSON.parse(localStorage.collapses);
+
+            if ($.inArray(active, collapses) == -1) collapses.push(active);
+
+            localStorage.collapses = JSON.stringify(collapses);
+        });
+
+        $(document).on("hidden.bs.collapse", ".collapse", function () {
+            var active = $(this).attr("id");
+            var collapses = localStorage.collapses === undefined
+                ? new Array()
+                : JSON.parse(localStorage.collapses);
+            var elementIndex = $.inArray(active, collapses);
+
+            if (elementIndex !== -1) collapses.splice(elementIndex, 1);
+
+            localStorage.collapses = JSON.stringify(collapses);
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // #region Load project groups on load
+            $("#projects").html(LOADER);
+
+            $.bindFilter({
+                container: "#filter",
+                types: [
+                    {
+                        name: "@Localizer["_new"]",
+                        value: "@Convert.ToInt32(ProjectStatus.New)",
+                        description: "@Localizer["enums_ProjectStatus_New_description"]",
+                        default: true
+                    },
+                    {
+                        name: "@Localizer["_inProgress"]",
+                        value: "@Convert.ToInt32(ProjectStatus.InProgress)",
+                        description: "@Localizer["enums_ProjectStatus_InProgress_description"]",
+                        default: true
+                    },
+                    {
+                        name: "@Localizer["_onHold"]",
+                        value: "@Convert.ToInt32(ProjectStatus.OnHold)",
+                        description: "@Localizer["enums_ProjectStatus_OnHold_description"]"
+                    },
+                    {
+                        name: "@Localizer["_canceled"]",
+                        value: "@Convert.ToInt32(ProjectStatus.Canceled)",
+                        description: "@Localizer["enums_ProjectStatus_Canceled_description"]"
+                    },
+                    {
+                        name: "@Localizer["_completed"]",
+                        value: "@Convert.ToInt32(ProjectStatus.Completed)",
+                        description: "@Localizer["enums_ProjectStatus_Completed_description"]"
+                    }
+                ],
+                cookieKey: "ProjectFilters",
+                refreshFunction: GetProjectGroups
+            });
+
+            GetProjectGroups();
+            // #endregion
+
+            // #region Bind create project group action
+            @if (User.UserHasThisPermission(Permissions.ProjectGroupCreate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: "#add-parent",
+                        modalTitle: "@Localizer["shortCuts_addProjectGroup"]",
+                        modalSize: "regular"
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind update project group action
+            @if (User.UserHasThisPermission(Permissions.ProjectGroupUpdate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".edit-parent-link",
+                        modalTitle: "@Localizer["shortCuts_renameProjectGroup"]",
+                        modalSize: "regular"
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind delete project group action
+            @if (User.UserHasThisPermission(Permissions.ProjectGroupDelete))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".delete-parent-link",
+                        modalTitle: "@Localizer["shortCuts_deleteProjectGroup"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_projectGroup"]",
+                        successMessage: "@Localizer["messages_deleteProjectGroupSuccess"]",
+                        errorMessage: "@Localizer["messages_deleteProjectGroupError"]",
+                        eventFunction: function(result) {
+                            $("[id='" + result.id + "'].parent-content").remove();
+                            $("[data-is-deletable='False'].collapse").html(result.view);
+                            $("[data-is-deletable='False'].collapse-count").html(result.count);
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Load projects on project group click
+            $(document).on("click", ".collapse-container", function() {
+                var $this = $(this);
+
+                LoadProjectsOnClick($this);
+            });
+            // #endregion
+
+            // #region Load more functionality
+            $(document).on("click", ".load-more", function () {
+                var $this = $(this);
+
+                DisableButton($this);
+
+                $.ajax({
+                    url: "@Url.Action("GetProjectsFromGroup", "Projects")",
+                    type: "GET",
+                    data: {
+                        groupId: $this.attr("data-parent-id"),
+                        skip: $this.attr("data-skip"),
+                        filter: GetFilterValues()
+                    },
+                    traditional: true,
+                    success: function (result) {
+                        var tbody = $("#tbody-" + $this.attr("data-parent-id"));
+                        var dt = tbody.parents(".bizon-datatable").DataTable();
+                        $(result).filter("tr").each(function(i, v) {
+                            dt.row.add($(v));
+                        });
+                        tbody.append(result);
+
+                        var loadMoreButton = $("[data-parent-id='" + $this.attr("data-parent-id") + "'].load-more");
+
+                        if (tbody.children().length - loadMoreButton.attr("data-skip") < 10) {
+                            loadMoreButton.hide();
+                        } else {
+                            EnableButton($this, "Load more");
+                            loadMoreButton.attr("data-skip", tbody.children().length);
+                        }
+
+                        $("[data-parent-id='" + $this.attr("data-parent-id") + "'].entity-counter")
+                            .html(tbody.children().length);
+                    },
+                    error: function() {
+                        $.errorAlert({
+                            title: "@Localizer["_error"]",
+                            message: "@Localizer["errors_LoadProjects"]"
+                        });
+                    }
+                });
+            });
+            // #endregion
+
+            // #region Bind project create action (top bar)
+            @if (User.UserHasThisPermission(Permissions.ProjectCreate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: "#add-entity",
+                        modalTitle: "@Localizer["shortCuts_addProject"]"
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind project create action (group collapse)
+            @if (User.UserHasThisPermission(Permissions.ProjectCreate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".add-entity-link",
+                        modalTitle: "@Localizer["shortCuts_addProject"]",
+                        data: {
+                            projectGroupId: "data-parent-id"
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind project edit action
+            @if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".edit-entity-link",
+                        modalTitle: "@Localizer["shortCuts_editProject"]"
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind delete project action
+            @if (User.UserHasThisPermission(Permissions.ProjectDelete))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".delete-entity-link",
+                        modalTitle: "@Localizer["shortCuts_deleteProject"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_project"]",
+                        successMessage: "@Localizer["messages_deleteProjectSuccess"]",
+                        errorMessage: "@Localizer["messages_deleteProjectError"]",
+                        eventFunction: function (result) {
+                            if ("@ViewBag.CurrentView" == "@ProjectsViewByStatus.Current") {
+                                DeleteTableRowCollapseUpdate(result.id, "@Localizer["messages_noProjectsInGroup"]");
+                            } else {
+                                DeleteTableRow(result.id, "#projects", "@Localizer["_messages_noProjects"]");
+                            }
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind delete confirmation modal
+            $.confirmDelete();
+            // #endregion
+
+            // #region Shortcut actions
+            @if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+            {
+                <text>
+                    // Rename
+                    $.bindFormModal({
+                        bindTo: ".rename-entity-link",
+                        modalTitle: "@Localizer["shortCuts_renameProject"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            name: "data-name"
+                        }
+                    });
+
+                    // Update status
+                    $.bindFormModal({
+                        bindTo: ".edit-entity-status-link",
+                        modalTitle: "@Localizer["shortCuts_updateProjectStatus"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            status: "data-status"
+                        }
+                    });
+
+                    // Set priority
+                    $.bindFormModal({
+                        bindTo: ".set-entity-priority-link",
+                        modalTitle: "@Localizer["shortCuts_setProjectPriority"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            priority: "data-priority"
+                        }
+                    });
+
+                    // Move to project group
+                    $.bindFormModal({
+                        bindTo: ".move-to-parent-link",
+                        modalTitle: "@Localizer["shortCuts_moveToGroup"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            projectGroupId: "data-project-group-id"
+                        }
+                    });
+
+                    // Edit project members
+                    $.bindFormModal({
+                        bindTo: ".edit-entity-members-link",
+                        modalTitle: "@Localizer["shortCuts_editProjectMembers"]",
+                        modalSize: "regular"
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bulk Actions
+
+            @if (User.UserHasThisPermission(Permissions.ProjectDelete))
+            {
+                <text>
+                    // Bulk delete projects
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-delete-link",
+                        modalTitle: "@Localizer["bulk_deleteProjects"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_projects"]",
+                        successMessage: "@Localizer["messages_bulkDeleteProjectsSuccess"]",
+                        errorMessage: "@Localizer["messages_bulkDeleteProjectsError"]",
+                        eventFunction: function (result) {
+                            if ("@ViewBag.CurrentView" == "@ProjectsViewByStatus.Current") {
+                                $.each(result.deletedRows,
+                                    function (key, value) {
+                                        DeleteTableRowCollapseUpdate(value, "@Localizer["messages_noProjectsInGroup"]");
+                                    });
+                            } else {
+                                $.each(result.deletedRows, function (key, value) {
+                                    DeleteTableRow(value, "#projects", "@Localizer["_messages_noProjects"]");
+                                });
+                            }
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+            {
+                <text>
+                    // Bulk update status
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-update-status",
+                        modalTitle: "@Localizer["shortCuts_updateProjectStatus"]",
+                        modalSize: "regular"
+                    });
+
+                    // Bulk set priority
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-set-priority",
+                        modalTitle: "@Localizer["shortCuts_setProjectPriority"]",
+                        modalSize: "regular"
+                    });
+
+                    // Bulk move to group
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-move-to-group",
+                        modalTitle: "@Localizer["shortCuts_moveToGroup"]",
+                        modalSize: "regular"
+                    });
+                </text>
+            }
+
+            // #endregion
+
+            // #region Bind search
+            $(".search-input").on("input", Delay(function() {
+                var searchValue = $(this).val();
+                var searchResultContainer = $("#search-result");
+                var projectsContainer = $("#projects");
+
+                if (searchValue.length > 0) {
+                    $.ajax({
+                        url: "@Url.Action("SearchProjects", "Projects")",
+                        type: "GET",
+                        data: { searchValue: searchValue },
+                        success: function(result) {
+                            DeselectAll();
+                            projectsContainer.addClass("d-none");
+                            searchResultContainer.removeClass("d-none").html(result);
+                            feather.replace();
+                        },
+                        error: function() {
+                            $.errorAlert({
+                                title: "Error!",
+                                message: "Search not working!"
+                            });
+                        }
+                    });
+                } else {
+                    projectsContainer.removeClass("d-none");
+                    if (!searchResultContainer.hasClass("d-none")) {
+                        $("#search-result").addClass("d-none");
+                    }
+                    DeselectAll();
+                }
+            }, 500));
+            // #endregion
+        });
+    </script>
+    <script>
+        function LoadProjectsOnClick(object) {
+            var $this = object;
+
+            if (!JSON.parse($this.attr("data-loaded"))) {
+                $this.find(".loader-container").html(LOADER_SM);
+
+                $.ajax({
+                    url: "@Url.Action("GetProjectsFromGroup", "Projects")",
+                    type: "GET",
+                    data: {
+                        groupId: $this.attr("data-id"),
+                        filter: GetFilterValues()
+                    },
+                    traditional: true,
+                    success: function(result) {
+                        $this.attr("data-loaded", true);
+                        $this.find(".loader-container").remove();
+
+                        $("[id='" + $this.attr("href").split("#")[1] + "'].collapse-datatable").html(result);
+                    },
+                    error: function() {
+                        $.errorAlert({
+                            title: "@Localizer["_error"]",
+                            message: "@Localizer["errors_LoadProjects"]"
+                        });
+                    }
+                });
+            }
+        }
+    </script>
+}

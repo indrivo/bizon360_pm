@@ -1,0 +1,35 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.ActivityLists.Commands.RenameActivityList.RenameActivityListCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="ActivityLists" asp-action="Rename" id="form-rename-activity-list">
+    <div class="modal-body">
+        <input asp-for="Id" hidden />
+
+        <label asp-for="Name" class="float-label"></label>
+        <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_activityListName"]" autocomplete="off" required />
+        <span asp-validation-for="Name" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-rename-activity-list">@Localizer["shortCuts_rename"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    $.saveChanges({
+        bindTo: "#btn-rename-activity-list",
+        formId: "#form-rename-activity-list",
+        ajaxUrl: "@Url.Action("Rename", "ActivityLists")",
+        successMessage: "@Localizer["messages_editActivityListSuccess"]",
+        errorMessage: "@Localizer["messages_editActivityListError"]",
+        buttonText: "@Localizer["shortCuts_rename"]",
+        eventFunction: function(result) {
+            $("span[data-id='" + result.id + "'].collapse-title").html(result.name);
+        }
+    });
+</script>

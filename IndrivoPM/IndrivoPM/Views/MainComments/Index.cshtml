@@ -1,0 +1,45 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.Activities.Queries.GetActivityDto.ActivityDto
+@using Bizon360.Utils
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer Localizer
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = Model.Name;
+    ViewData["ActivePage"] = "Comments";
+    ViewData["EntityId"] = $"A{Model.Number:00000}";
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["SecondNode"] = Model.ProjectName;
+    ViewData["PriorityBadge"] = Model.Priority;
+    ViewData["PriorityBadgeClass"] = ProjectsViewHelper.GetPriorityBadgeColor(Model.Priority);
+}
+
+@{ await Html.RenderPartialAsync("~/Views/Shared/Components/ActivityTabs/_ActivityTabs.cshtml", Model.Id); }
+
+<div id="comments"></div>
+
+@section Scripts {
+
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        $(document).ready(function() {
+            GetComments();
+        });
+
+        function GetComments() {
+            $.get("/MainComments/GetCommentList/?recordId=" + "@Model.Id")
+                .done(function(result) {
+                    $("#comments").html(result);
+                    feather.replace();
+                });
+        }
+    </script>
+
+    <script>
+        // Append project id to the parent breadcrumb node
+        $("a[href='" + "@ViewBag.LinkToReplace" + "']").attr("href", "@ViewBag.BreadcrumbLink");
+    </script>
+
+}

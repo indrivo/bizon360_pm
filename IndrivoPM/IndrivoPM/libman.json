@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "feather-icons@4.21.0",
+      "destination": "wwwroot/lib/feather-icons/"
+    },
+    {
+      "library": "bootstrap-select@1.13.10",
+      "destination": "wwwroot/lib/bootstrap-select/"
+    },
+    {
+      "library": "jqueryui@1.12.1",
+      "destination": "wwwroot/lib/jqueryui/"
+    },
+    {
+      "library": "datatables@1.10.19",
+      "destination": "wwwroot/lib/datatables/"
+    },
+    {
+      "library": "summernote@0.8.12",
+      "destination": "wwwroot/lib/summernote/"
+    },
+    {
+      "library": "aspnet-signalr@1.1.4",
+      "destination": "wwwroot/lib/aspnet-signalr/"
+    },
+    {
+      "library": "Chart.js@2.8.0",
+      "destination": "wwwroot/lib/Chart.js/"
+    },
+    {
+      "library": "bootstrap-datepicker@1.9.0",
+      "destination": "wwwroot/lib/bootstrap-datepicker/"
+    },
+    {
+      "library": "hamburgers@1.1.3",
+      "destination": "wwwroot/lib/hamburgers/"
+    },
+    {
+      "library": "mouse0270-bootstrap-notify@3.1.7",
+      "destination": "wwwroot/lib/mouse0270-bootstrap-notify/"
+    },
+    {
+      "library": "animate.css@3.7.2",
+      "destination": "wwwroot/lib/animate.css/"
+    },
+    {
+      "library": "popper.js@1.14.3",
+      "destination": "wwwroot/lib/popper.js/"
+    },
+    {
+      "library": "highcharts@8.1.0",
+      "destination": "wwwroot/highcharts/"
+    }
+  ]
+}

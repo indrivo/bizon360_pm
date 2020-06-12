@@ -1,0 +1,64 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@model Gear.ProjectManagement.Manager.Domain.ActivityTypes.Commands.UpdateActivityType.UpdateActivityTypeCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+<form id="form">
+    @Html.AntiForgeryToken()
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-md-12">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input hidden asp-for="Id"/>
+                <div class="mb-2">
+                    <label asp-for="Name" class="float-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_activityType"]" autofocus="autofocus" autocomplete="off" required/>
+                    <span asp-validation-for="Name" class="invalid-feedback"></span>
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="Abbreviation" class="float-label"></label>
+                    <input asp-for="Abbreviation" class="form-control" placeholder="@Localizer["placeholders_abbreviation"]" autocomplete="off"/>
+                    <span asp-validation-for="Abbreviation" class="invalid-feedback"></span>
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="ColorBadge" class="float-label-select"></label>
+                    <select asp-for="ColorBadge" class="form-control selectpicker">
+                        <option value="@ColorBadge.Blue" data-content="<span class='badge badge-color color-primary text-dark'></span>">@Localizer["_blue"]</option>
+                        <option value="@ColorBadge.Cyan" data-content="<span class='badge badge-color color-info'></span>">@Localizer["_cyan"]</option>
+                        <option value="@ColorBadge.Green" data-content="<span class='badge badge-color color-success'></span>">@Localizer["_green"]</option>
+                        <option value="@ColorBadge.Gray" data-content="<span class='badge badge-color color-secondary'></span>">@Localizer["_gray"]</option>
+                        <option value="@ColorBadge.Purple" data-content="<span class='badge badge-color color-purple'></span>">@Localizer["_purple"]</option>
+                        <option value="@ColorBadge.Red" data-content="<span class='badge badge-color color-danger text-dark'></span>">@Localizer["_red"]</option>
+                        <option value="@ColorBadge.Yellow" data-content="<span class='badge badge-color color-yellow'></span>">@Localizer["_orange"]</option>
+                    </select>
+                    <span asp-validation-for="ColorBadge" class="invalid-feedback"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn">@Localizer["_update"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+<script>
+    $(".selectpicker").selectpicker();
+    var services = new ServicesContainer();
+
+    $.saveChanges({
+        bindTo: "#btn",
+        formId: "#form",
+        ajaxUrl: "@Url.Action("EditActivityType", "Services")",
+        successMessage: "@Localizer["msgSuccess_editActivityType"]",
+        errorMessage: "@Localizer["msgError_editActivityType"]",
+        eventFunction: services.getServices
+    });
+</script>

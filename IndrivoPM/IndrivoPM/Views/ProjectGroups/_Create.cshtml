@@ -1,0 +1,52 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.ProjectGroups.Commands.CreateProjectGroup.CreateProjectGroupCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+<form asp-action="Create" asp-controller="ProjectGroups" id="form-create-project-group">
+    <div class="modal-body">
+        <input asp-for="Id" class="form-control" hidden />
+
+        <label asp-for="Name" class="float-label"></label>
+        <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_projectGroupName"]" autocomplete="off" required />
+        <span asp-validation-for="Name" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-create-project-group">@Localizer["_add"]</button>
+        <button type="submit" class="btn btn-success" id="btn-create-project-group-new">@Localizer["_addAndNew"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    $.saveChanges({
+        bindTo: "#btn-create-project-group",
+        formId: "#form-create-project-group",
+        ajaxUrl: "@Url.Action("Create", "ProjectGroups")",
+        successMessage: "@Localizer["_projectGroupCreateSuccessMessage"]",
+        errorMessage: "@Localizer["_projectGroupCreateErrorMessage"]",
+        buttonText: "@Localizer["_add"]",
+        eventFunction: function(result) {
+            $("#projects").append(result);
+            feather.replace();
+        }
+    });
+</script>
+<script>
+    $.saveChanges({
+        bindTo: "#btn-create-project-group-new",
+        formId: "#form-create-project-group",
+        ajaxUrl: "@Url.Action("Create", "ProjectGroups")",
+        successMessage: "@Localizer["_projectGroupCreateSuccessMessage"]",
+        errorMessage: "@Localizer["_projectGroupCreateErrorMessage"]",
+        new: true,
+        buttonText: "@Localizer["_addAndNew"]",
+        eventFunction: function(result) {
+            $("#projects").append(result);
+            feather.replace();
+        }
+    });
+</script>

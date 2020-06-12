@@ -1,0 +1,567 @@
+.bizon-auth-title
+  font-size: 24px
+  font-weight: 200
+  color: $color-black
+
+  span
+    font-weight: bold
+
+.password-toggle
+  display: inline-block
+  position: absolute
+  right: 10px
+  bottom: 32px
+  content: ""
+  height: 16px
+  width: 20px
+  background-image: url("../svg/eye-inactive.svg")
+  cursor: pointer
+  background-repeat: no-repeat
+  background-position-x: 4px
+  background-position-y: 4px
+
+  &.active
+    background-image: url("../svg/eye-active.svg")
+
+#global-search
+  width: 200px
+  height: 32px
+  position: relative
+  top: 13px
+  margin-right: 20px
+
+.bizon-auth-container
+  margin: auto
+  width: 370px
+
+  & form
+    margin-top: 25px
+
+    & .custom-control
+      margin-left: 10px
+
+    & .invalid-feedback
+      margin-left: 14px
+
+    & p
+      font-size: 12px
+      line-height: 16px
+      color: $color-black
+      margin-bottom: 0
+      text-align: center
+
+.top-bar
+  min-height: 50px
+  padding-top: 8px
+  padding-bottom: 8px
+
+  button.btn, a
+    height: 32px
+
+  .search-input
+    width: 200px
+    height: 32px
+
+  .top-bar-divider
+    width: 1px
+    height: 24px
+    margin: 4px 20px 0 20px
+    background-color: $color-border
+
+    .dark-theme &
+      background-color: $dark-color-border
+
+  &.main
+    margin-top: 32px
+
+.main-nav-tabs
+  margin: 32px -40px 8px -40px
+  border-bottom: 3px solid $color-border
+  flex-wrap: nowrap
+
+  .dark-theme &
+    border-color: $dark-color-border
+
+  & .nav-item
+    margin-bottom: -3px
+
+    & .nav-link
+      font-weight: 600
+      background: none
+      border: none
+      padding: 0px 10px 7px 10px
+      color: $color-gray
+      line-height: 16px
+      border-bottom: 3px solid $color-border
+
+      .dark-theme &
+        border-color: $dark-color-border
+
+      &:not(.active):hover
+        color: $color-black
+
+      &.active
+        border-color: $color-blue
+        color: $color-black
+
+        .dark-theme &
+          color: $color-border
+
+  & .nav-item:first-of-type a
+    padding-left: 0
+
+  & .nav-item:last-of-type a
+    padding-right: 0
+
+  &.bizon-auth-tabs
+    margin: 25px 0 0 0
+
+.nav-tab-border
+  height: 3px
+  background-color: $color-border
+  margin-top: -3px
+  width: 100%
+  position: absolute
+  left: 0
+  z-index: -1
+
+.more-vertical
+  background-image: url("/svg/more-horizontal-01.svg")
+  background-repeat: no-repeat
+  background-position: center
+  height: 20px
+  width: 16px
+  content: " "
+  cursor: pointer
+  transition: $transition
+
+  &:hover
+    background-image: url("/svg/more-horizontal-02.svg")
+
+    .dark-theme &
+      background-image: url("/svg/more-horizontal-03.svg")
+
+// Collapse
+.collapse-container
+  min-height: 50px
+
+  &.collapse-lg
+    min-height: 60px
+
+    .collapse-switcher
+      margin-top: 6px
+
+    .collapse-details
+      padding-top: 15px
+
+    .collapse-dropdown
+      top: 16px
+
+  &[aria-expanded="true"]
+    .collapse-switcher-icon
+      transform: rotate(90deg)
+
+  .pt-collapse
+    padding-top: 14px
+
+  .collapse-switcher
+    min-width: 20px
+    height: 20px
+    background-color: $color-bg
+    border-radius: 4px
+
+    .dark-theme &
+      background-color: $dark-color-bg
+
+    .collapse-switcher-icon
+      width: 14px
+      position: relative
+      top: -4px
+      left: 2px
+      color: $color-gray
+      transition: $transition
+
+  .collapse-title, .collapse-count
+    line-height: 19px
+    margin-left: 10px
+    font-weight: 600
+
+  .collapse-count
+    color: $color-blue
+
+  .collapse-divider
+    height: 1px
+    background-color: $color-border
+    margin: 15px -20px 15px 0
+
+    .dark-theme &
+      background-color: $dark-color-border
+
+    &.collapse-group
+      margin-bottom: 10px
+
+  .collapse-button
+    height: 28px
+    padding: 5px 10px
+
+  .collapse-dropdown
+    position: absolute
+    top: 11px
+    right: 10px
+
+  .collapse-progress
+    width: 100px
+    margin-top: 22px
+
+  .collapse-log-details
+    font-size: 14px
+    line-height: 16px
+    color: $color-gray
+    margin-right: 40px
+
+  .collapse-badge
+    margin-left: 10px
+    height: 20px
+
+  .collapse-deal-details
+    font-size: 14px
+    line-height: 16px
+    margin-top: 16px
+
+  .user-rectangle
+    margin-left: 10px
+    padding-top: 6px
+
+  .collapse-title-group
+    margin-top: -4px
+
+  .collapse-title-description
+    font-size: 12px
+    line-height: 15px
+    display: block
+    margin-left: 10px
+    margin-top: -4px
+
+  .collapse-more
+    color: $color-gray
+
+  .more-vertical
+    margin-top: 3px
+    margin-right: 4px
+
+    &:hover
+      color: $color-black
+
+.bulk-actions-container
+  position: fixed
+  bottom: -100px
+  background-color: #FFFFFF
+  width: 100%
+  margin-left: -40px
+  z-index: 500
+  padding: 24px 40px
+  border-top: 1px solid $color-border
+  box-shadow: 0 0 64px 0 rgba(0, 0, 0, 0.05)
+  transition: $transition
+
+  .dark-theme &
+    background-color: $dark-color-black
+    border-color: $dark-color-border
+
+  button
+    .check-counter
+      background-color: $color-red-light
+      color: #FFFFFF
+      display: inline-block
+      border-radius: 8px
+      margin-left: 4px
+      padding: 0 6px 1px 6px
+      font-size: 12px
+
+  &.show
+    bottom: 0 !important
+
+  & .btn
+    padding: 8px 15px
+
+  & p
+    margin: 6px 0 0 20px
+
+  & ul
+    position: relative
+    top: -2px
+
+  & ul li .divider
+    height: 24px
+    width: 1px
+    background-color: $color-border
+    position: relative
+    top: 8px
+
+    .dark-theme &
+      background-color: $dark-color-border
+
+.bulk-hidden-space
+  height: 75px
+
+.bizon-loader
+  height: 40px
+  width: 40px
+  display: block
+  margin: 8px auto
+
+  &.loader-sm
+    height: 18px
+    width: 18px
+
+.loader-container
+  position: absolute
+  top: 15px
+  left: 21px
+  border-radius: 4px
+  background-color: $color-bg
+
+  .dark-theme &
+    background-color: $dark-color-bg
+
+  & .loader-sm
+    margin: 0
+
+.collapse-lg .loader-container
+  top: 21px
+
+.title-badge
+  position: relative
+  top: -3px
+
+.reports-divider
+  display: inline-block
+  width: 1px
+  background-color: $color-border
+  height: 24px
+  margin-top: 4px
+
+#deselect-all
+  margin-bottom: 10px
+
+.checklist-input
+  width: 100%
+  border: none
+  outline: none
+  font-size: 14px
+
+  .dark-theme &
+    background-color: $dark-color-wh
+    color: $color-border
+
+  &::placeholder
+    color: $color-gray
+
+.checkitem-delete
+  height: 14px
+  position: relative
+  top: 1px
+
+.comment-card
+  & .subcomments hr:last-of-type
+    display: none
+
+  & .comments-dropdown
+    position: absolute
+    right: 10px
+
+.checklist-row
+  min-height: 1.75rem
+  padding-left: 2.5rem
+
+.summernote-label
+  font-size: 14px
+  margin-bottom: 0
+  position: absolute
+  top: -11px
+  left: 11px
+  background-color: #FFFFFF
+  z-index: 1
+  padding: 0 5px
+
+  .dark-theme &
+    background-color: $dark-color-wh
+
+.note-editor
+  border-radius: 4px
+  border-color: $color-border !important
+
+  .dark-theme &
+    border-color: $dark-color-border !important
+
+    & button
+      background-color: $dark-color-border
+      color: $color-border
+
+    & p, & li, & table, & td
+      color: $color-border
+
+    & .note-statusbar, & .note-toolbar
+      border-color: $dark-color-border !important
+
+    & .note-editable
+      background-color: $dark-color-wh !important
+
+    & .note-resizebar
+      background-color: $dark-color-border !important
+
+.col-tracker
+  margin-right: 15px
+
+.grid ul.ui-sortable
+  min-height: 100vh
+
+.ui-state-highlight
+  background-color: rgba(220, 224, 228, .25) !important
+  height: 150px
+  margin-bottom: 8px
+  border-radius: 8px
+  border: 1px solid $color-border !important
+
+  .dark-theme &
+    background-color: rgba(8, 16, 24, .25) !important
+    border-color: $dark-color-border !important
+
+.wiki-headlines
+  border-right: 3px solid $color-border
+
+  .dark-theme &
+    border-color: $dark-color-border
+
+.title-entity-id
+  color: $color-gray-light
+  font-size: 24px
+  line-height: 24px
+  margin-right: 6px
+  cursor: pointer
+  transition: $transition
+
+  &:hover
+    color: $color-black
+
+  .dark-theme &
+    color: $color-gray-light
+
+    &:hover
+      color: $color-border
+
+.pb-percentage
+  position: relative
+  top: -6px
+  margin-left: 8px
+.filter-dropdown
+  padding: 15px 20px
+
+.filter-icon
+  display: block
+  width: 20px
+  height: 20px
+  margin: 0 6px
+  transition: $transition
+
+  .btn-outline-primary &
+    background-image: url("../svg/filter-blue.svg")
+
+  .btn-outline-primary:hover &
+    background-image: url("../svg/filter-white.svg")
+
+  .btn-primary &
+    background-image: url("../svg/filter-white.svg")
+
+  .btn-primary:hover &
+    background-image: url("../svg/filter-white.svg")
+
+.active-filter
+  height: 28px
+  margin: 2px 2px 0 0
+  padding: 5px 10px !important
+  font-size: 14px !important
+  line-height: 16px !important
+
+  & .cancel-filter
+    display: inline-block
+    cursor: pointer
+    background-image: url("../svg/xs-blue.svg")
+    width: 9px
+    height: 9px
+    margin-left: 4px
+
+.layout-list
+  background-image: url("../svg/list-blue.svg")
+  background-repeat: no-repeat
+  background-position: 5px
+  transition: $transition
+
+  &.btn-primary
+    background-image: url("../svg/list-white.svg") !important
+
+  &.active, &:hover
+    background-image: url("../svg/list-white.svg")
+
+.layout-grid
+  background-image: url("../svg/grid-blue.svg")
+  background-repeat: no-repeat
+  background-position: 5px
+  transition: $transition
+
+  &.btn-primary
+    background-image: url("../svg/grid-white.svg") !important
+
+  &.active, &:hover
+    background-image: url("../svg/grid-white.svg")
+
+.layout-sprint
+  background-image: url("../svg/sprint-blue.svg")
+  background-repeat: no-repeat
+  background-position: 5px
+  transition: $transition
+
+  &.btn-primary
+    background-image: url("../svg/sprint-white.svg") !important
+
+  &.active, &:hover
+    background-image: url("../svg/sprint-white.svg")
+
+.layout-team
+  background-image: url("../svg/team-blue.svg")
+  background-repeat: no-repeat
+  background-position: 5px
+  transition: $transition
+
+  &.btn-primary
+    background-image: url("../svg/team-white.svg") !important
+
+  &.active, &:hover
+    background-image: url("../svg/team-white.svg")
+
+@media (max-width: 768px)
+  .wiki-headlines
+    border-right: none
+
+  .wiki-tabs a.nav-link.active
+    border-right: none
+
+@media (max-width: 576px)
+  .bizon-auth-container
+    width: 100%
+    padding: 0 20px
+
+  .bizon-auth-footer
+    & h6
+      margin-right: 0 !important
+
+
+.collapse-details
+  padding-top: 11px
+
+.details
+    a
+        text-decoration: underline
+
+.clear .form-control.is-invalid 
+    background-image: none;

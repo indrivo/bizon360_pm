@@ -1,0 +1,280 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.ProjectTabModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@{
+    Layout = "_BizonLayout";
+    ViewData["ActivePage"] = "Wiki";
+    ViewData["Title"] = Model.Name;
+    ViewData["TitleBadge"] = $"{Model.EndDate:yyyy-MM-dd}";
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+@section Styles {
+    <link href="~/lib/summernote/summernote-bs4.css" rel="stylesheet" />
+    <link href="~/css/summer-note.css" rel="stylesheet" />
+
+    <style rel="stylesheet">
+        #myProgress {
+            width: 20%;
+            background-color: grey;
+            opacity: 0;
+            display: none;
+        }
+
+        #myBar {
+            width: 1%;
+            height: 30px;
+            background-color: green;
+            opacity: 0;
+            display: none;
+        }
+    </style>
+}
+
+@{ await Html.RenderPartialAsync("_ProjectTabs", Model); }
+
+<div id="headlines"></div>
+
+<!-- MODAL: Upload file -->
+<div class="modal fade" id="modal-add-file" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Upload File</h6>
+                <i data-feather="x" class="modal-close-icon" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="OneDriveUploadFile">
+                    <label class="custom-file-label" for="customFile">Choose file</label>
+                </div>
+                <span class="color-danger" id="error"></span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal" id="OneDriveUploadFileAction">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/lib/summernote/summernote-bs4.js"></script>
+    <script src="~/js/dev/project-wiki.js"></script>
+
+    <script>
+        // Todo: Need refactoring.
+
+        // Add the following code if you want the name of the file appear on select
+        $(".custom-file-input").on("change", function() {
+            var fileName = $(this).val().split("\\").pop();
+            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+
+            var file = $("#OneDriveUploadFile")[0];
+            const size = (file.files[0].size / 1024 / 1024).toFixed(2);
+
+            if (size > 25) {
+                $("#OneDriveUploadFileAction").attr('disabled', true);
+                $("#error").html('File to big, please select a file less than  25 MB!');
+
+
+            } else {
+                $("#OneDriveUploadFileAction").attr('disabled', false);
+                $("#error").html('');
+            }
+
+        });
+
+        //Move to a generic function
+        $("#OneDriveUploadFileAction").click(function() {
+            if (!$("#OneDriveUploadFile").val()) {
+                $.errorAlert({
+                    title: "Error",
+                    message: "Upload File missing"
+                });
+            } else {
+                var file = $("#OneDriveUploadFile")[0];
+                const size = (file.files[0].size / 1024 / 1024).toFixed(2);
+
+                if (size > 25) {
+                    $.errorAlert({
+                        title: "Error",
+                        message: "File to big, please select a file less than  25 MB!"
+                    });
+                } else {
+                    DisableButton("#upload-files");
+                    var formData = new FormData();
+                    formData.append("projectNumber", "@Model.ProjectNumber");
+                    formData.append("projectName", "@Model.Name");
+                    formData.append("projectId", "@Model.Id");
+                    formData.append("file", file.files[0]);
+                    $.ajax({
+                        url: '@Url.Action("UploadFile", "Wiki")',
+                        type: 'POST',
+                        processData: false,
+                        contentType: false,
+                        data: formData,
+                        xhr: function () {
+                            var bgBar = $("#myProgress");
+                            bgBar.css("opacity", 1);
+                            var elem = $("#myBar");
+                            elem.css("opacity", 1);
+                            var xhr = $.ajaxSettings.xhr();
+                            xhr.upload.onprogress = function (e) {
+                                var progress = Math.floor(e.loaded / e.total * 100);
+                                elem.css("width", progress + '%');
+                                
+                                console.log(progress + '%');
+
+                                if (progress == 100) {
+                                    bgBar.css("opacity", 0);
+                                    elem.css("opacity", 0);
+
+                                    DisableButton("#upload-files");
+                                    $.successAlert({
+                                        title: "Informative",
+                                        message: "Trying to connect with service!"
+                                    });
+                                }
+                            };
+                            return xhr;
+                        },
+                        success: function(result) {
+
+                            var bgBar = $("#myProgress");
+                            bgBar.css("opacity", 0);
+                            var elem = $("#myBar");
+                            elem.css("opacity", 0);
+
+                            $.successAlert({
+                                title: "Success",
+                                message: "File send to service!"
+                            });
+
+                            getFiles();
+                        },
+                        error: function (e) {
+
+                            var bgBar = $("#myProgress");
+                            bgBar.css("opacity", 0);
+                            var elem = $("#myBar");
+                            elem.css("opacity", 0);
+
+                            $.errorAlert({
+                                title: "Error",
+                                message: "Could not Upload. Please try again later!"
+                            });
+
+                            $(".project-list")
+                                .html(
+                                    "<div class=\"text-center\"><i data-feather=\"frown\"></i></div><h5 class=\"text-center mt-2\">Something went wrong</h5>");
+                            feather.replace();
+                        },
+                        complete: EnableButton("#upload-files", "Upload file")
+
+                    });
+                }
+
+            }
+        });
+
+        function getFiles() {
+            DisableButton("#upload-files");
+            $.ajax({
+                url: '@Url.Action("GetFiles", "Wiki")',
+                type: "GET",
+                data: {
+                    projectName: "@Model.Name",
+                    projectId: "@Model.Id",
+                    projectNumber: "@Model.ProjectNumber"
+                },
+                success: function(result) {
+                    $("#files").html(result);
+                },
+                error: function() {
+                    $("#files").html(ERROR_MESSAGE);
+                },
+                complete: function() {
+                    EnableButton("#upload-files", "Upload file");
+                    feather.replace();
+                }
+            });
+        }
+    </script>
+
+    <script>
+        $("#headlines").html(LOADER);
+        function GetWiki() {
+            const  wiki = new Wiki();
+            wiki.GetWikiByProject("@Model.Id");
+            if (@ViewBag.IsAuthenticatedOnCloud.ToString().ToLower()) {
+                getFiles();
+            }
+        }
+
+        GetWiki();
+        $.confirmDelete();
+
+        $.bindFormModal({
+            bindTo: "#create-tab",
+            modalTitle: "@Localizer["shortCuts_createTab"]",
+            modalSize: "modal-lg",
+            data: {
+                projectId: "data-project-id"
+            }
+        });
+
+        $.bindFormModal({
+            bindTo: ".create-section",
+            modalTitle: "@Localizer["shortCuts_createSection"]",
+            modalSize: "modal-lg",
+            data: {
+                headlineId: "data-headline-id"
+            }
+        });
+
+        $.bindFormModal({
+            bindTo: ".rename-headline",
+            modalTitle: "@Localizer["shortCuts_renameHeadline"]",
+            modalSize: "regular"
+        });
+
+        $.bindFormModal({
+            bindTo: ".edit-section",
+            modalTitle: "@Localizer["shortCuts_editSection"]",
+            modalSize: "modal-lg"
+        });
+
+        $.bindDeleteModal({
+            bindTo: ".delete-headline",
+            modalTitle: "@Localizer["shortCuts_deleteHeadline"]",
+            modalSize: "regular",
+            type: "@Localizer["types_tab"]",
+            successMessage: "@Localizer["msgSuccess_deleteHeadline"]",
+            errorMessage: "@Localizer["msgError_deleteHeadline"]",
+            eventFunction: function () {
+                localStorage.setItem("@Model.Id", $("ul#headlines li:first-child a").attr("href"));
+                GetWiki();
+            }
+
+        });
+
+        $.bindDeleteModal({
+            bindTo: ".delete-section",
+            modalTitle: "@Localizer["shortCuts_deleteSection"]",
+            modalSize: "regular",
+            type: "@Localizer["types_section"]",
+            successMessage: "@Localizer["msgSuccess_deleteSection"]",
+            errorMessage: "@Localizer["msgError_deleteSection"]",
+            eventFunction: GetWiki
+        });
+
+    </script>
+}

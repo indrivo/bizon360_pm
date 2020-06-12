@@ -1,0 +1,3 @@
+[submodule "IndrivoPM/Modules/Notifications"]
+	path = IndrivoPM/Modules/Notifications
+	url = https://github.com/indrivo/Gear.Notifications.git

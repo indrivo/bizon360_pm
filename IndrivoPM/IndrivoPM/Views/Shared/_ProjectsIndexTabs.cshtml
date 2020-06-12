@@ -1,0 +1,16 @@
+﻿@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Bizon360.Views.Projects
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+<ul class="nav nav-tabs main-nav-tabs px-40">
+    <li class="nav-item">
+        <a class="nav-link @ProjectsIndexTabs.ProjectsNavClass(ViewContext)" asp-controller="Projects" asp-action="Index">@Localizer["_projects"]</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @ProjectsIndexTabs.SettingsNavClass(ViewContext) cursor-no-drop" title="Under construction" href="javascript:">@Localizer["_settings"]</a>
+    </li>
+</ul>

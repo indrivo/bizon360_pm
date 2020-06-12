@@ -1,0 +1,344 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer Localizer
+@model Gear.ProjectManagement.Manager.Domain.Activities.Queries.GetActivityListFromParentEntity.ActivityListViewModel
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = ViewBag.FullName;
+    ViewData["Platform"] = Platform.Pm;
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = "Employees";
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+@section Styles {
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.css" rel="stylesheet" />
+}
+<ul class="nav nav-tabs main-nav-tabs px-40">
+    <li class="nav-item">
+        <a class="nav-link active" id="employee-activities-tab" data-toggle="tab" href="#employee-activities" role="tab" aria-selected="true">Activities</a>
+    </li>
+</ul>
+<div class="tab-pane fade employee-activities-tab show active" id="employee-activities" role="tabpanel" aria-labelledby="employee-activities-tab">
+    <div class="row row-m-20 bg-white border rounded top-bar pl-20 pr-20">
+        <div class="nav col-12 d-md-flex  flex-wrap p-0">
+            <div id="filter" class="d-flex col-xs-2"></div>
+            <input type="text" class="form-control search-input w-md-100-i ml-auto mt-md-0 mt-2 col-xs-2" placeholder="@Localizer["_search"]" />
+        </div>
+    </div>
+
+    <div id="activities"></div>
+</div>
+
+<footer class="bulk-actions-container">
+    <div class="d-lg-inline-flex d-block">
+        <button type="button" class="btn d-block w-lg-auto w-100 btn-outline-secondary" id="deselect-all">@Localizer["shortCuts_deselectAll"] <span class="check-counter d-lg-none"></span></button>
+        @if (!User.UserHasThisPermission(Permissions.ActivityUpdate) && !User.UserHasThisPermission(Permissions.ActivityDelete))
+        {
+            <p class="d-lg-inline text-lg-left text-center">@Localizer["messages_noPermessionsEditDeleteActivity"]</p>
+        }
+        else
+        {
+            <p class="d-lg-inline d-none"><span class="check-counter"></span> @Localizer["messages_selectedActivities"]</p>
+        }
+    </div>
+    <ul class="list-unstyled list-inline d-lg-inline-block d-block float-lg-right mb-0">
+        @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+        {
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                <button type="button" class="bulk-update-status btn w-lg-auto w-100 btn-outline-primary mr-2" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="SetActivitiesStatus">@Localizer["shortCuts_updateStatus"]</button>
+                <button type="button" class="bulk-set-priority btn w-lg-auto w-100 btn-outline-primary mr-lg-2" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="SetActivitiesPriority">@Localizer["shortCuts_setPriority"]</button>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.ActivityDelete))
+        {
+            <li class="d-lg-inline-block d-none">
+                <div class="divider"></div>
+            </li>
+            <li class="d-lg-inline-block d-block mt-lg-0 mt-2">
+                <button type="button" class="bulk-delete-link btn d-block w-lg-auto w-100 btn-danger ml-lg-2" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="DeleteActivities">@Localizer["shortCuts_deleteSelected"]</button>
+            </li>
+        }
+    </ul>
+</footer>
+
+@section Scripts {
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.js"></script>
+    <script>
+        function GetUserActivities() {
+                $.ajax({
+                    url: "@Url.Action("GetActivitiesFromParentEntity", "Activities")",
+                    type: "GET",
+                    data: {
+                        parentType: "@ActivityParentType.UserActivities",
+                        parentId: "@ViewBag.UserId",
+                        filter:  GetFilterValues()
+                    },
+                    traditional: true,
+                    success: function (result) {
+                        
+                        $("#activities").html(result);
+                        var activitiesCount = $('.dt-activities tr').length;
+                        if (activitiesCount < 10) {
+                            $('#activities').find('.load-more').hide();
+                        }
+                       
+                    },
+                    error: function() {
+                        $.errorAlert({
+                            title: "@Localizer["_error"]",
+                            message: "@Localizer["error_loadActivities"]"
+                        });
+                    }
+                });
+        }
+    </script>
+    <script>
+
+        $(document).ready(function () {
+
+            $.bindFilter({
+                container: "#filter",
+                types: [
+                    {
+                        name: "@Localizer["_new"]",
+                        value: "@Convert.ToInt32(ActivityStatus.New)",
+                        description: "@Localizer["enums_ActivitytStatus_New_description"]",
+                        default: true
+                    },
+                    {
+                        name: "@Localizer["_inProgress"]",
+                        value: "@Convert.ToInt32(ActivityStatus.InProgress)",
+                        description: "@Localizer["enums_ActivityStatus_InProgress_description"]",
+                        default: true
+                    },
+                    {
+                        name: "@Localizer["_refused"]",
+                        value: "@Convert.ToInt32(ActivityStatus.Refused)",
+                        description: "@Localizer["enums_ActivityStatus_Refused_description"]"
+                    },
+                    {
+                        name: "@Localizer["_developed"]",
+                        value: "@Convert.ToInt32(ActivityStatus.Developed)",
+                        description: "@Localizer["enums_ActivitiesStatus_Canceled_description"]"
+                    },
+                    {
+                        name: "@Localizer["_tested"]",
+                        value: "@Convert.ToInt32(ActivityStatus.Tested)",
+                        description: "@Localizer["enums_ActivityStatus_Tested_description"]"
+                    },
+                    {
+                        name: "@Localizer["_completed"]",
+                        value: "@Convert.ToInt32(ActivityStatus.Completed)",
+                        description: "@Localizer["enums_ActivityStatus_Completed_description"]"
+                    }
+                ],
+                cookieKey: "ActivityFilters",
+                refreshFunction: GetUserActivities
+            });
+
+            GetUserActivities();
+
+            EnableDataTable(".dt-activities", "UserActivitiesHiddenColumns");
+
+            // #region Load more functionality
+            $(document).on("click", ".load-more",
+                function() {
+                    var url = "@Url.Action("GetActivitiesFromParentEntity", "Activities")";
+                    LoadMore($(this), url);
+                });
+            // #endregion
+
+            $.bindColumnToggle({
+                cookieKey: "UserActivitiesHiddenColumns"
+            });
+            // #endregion
+
+            // #region Bind delete activity action
+            @if (User.UserHasThisPermission(Permissions.ActivityDelete))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".delete-entity-link",
+                        modalTitle: "@Localizer["shortCuts_deleteActivity"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_activity"]",
+                        successMessage: "@Localizer["messages_deleteActivitySuccess"]",
+                        errorMessage: "@Localizer["messages_deleteActivityError"]",
+                        eventFunction: function (result) {
+                            DeleteRowCompleted(result.id, "@Localizer["messages_noActivities"]", "@Localizer["messages_noOngoingActivities"]");
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+            $.confirmDelete();
+
+            // #region Bind shortcut actions
+            @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+            {
+                <text>
+                    // Rename
+                    $.bindFormModal({
+                        bindTo: ".rename-entity-link",
+                        modalTitle: "@Localizer["shortCuts_renameActivity"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            name: "data-name"
+                        }
+                    });
+
+                    // Log time
+                    $.bindFormModal({
+                        bindTo: ".log-time-link",
+                        modalTitle: "@Localizer["shortCuts_logTime"]",
+                        modalSize: "regular",
+                        data: {
+                            activityId: "data-activity-id",
+                            progress: "data-progress"
+                        }
+                    });
+
+                    // Set priority
+                    $.bindFormModal({
+                        bindTo: ".set-entity-priority-link",
+                        modalTitle: "@Localizer["shortCuts_setActivityPriority"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            priority: "data-priority"
+                        }
+                    });
+
+                    // Update status
+                    $.bindFormModal({
+                        bindTo: ".edit-entity-status-link",
+                        modalTitle: "@Localizer["shortCuts_updateActivityStatus"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            status: "data-status"
+                        }
+                    });
+
+                    // Move to list
+                    $.bindFormModal({
+                        bindTo: ".move-to-list-link",
+                        modalTitle: "@Localizer["shortCuts_moveActivityToList"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            activityListId: "data-list-id",
+                            projectId: "data-project-id"
+                        }
+                    });
+
+                    // Assign to sprint
+                    $.bindFormModal({
+                        bindTo: ".assign-to-sprint-link",
+                        modalTitle: "@Localizer["shortCuts_assignToSprint"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            sprintId: "data-sprint-id",
+                            projectId: "data-project-id"
+                        }
+                    });
+
+                    // Edit activity assignees
+                    $.bindFormModal({
+                        bindTo: ".edit-entity-assignees-link",
+                        modalTitle: "@Localizer["shortCuts_editActivityAssignees"]",
+                        modalSize: "regular"
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind bulk actions
+            @if (User.UserHasThisPermission(Permissions.ActivityDelete))
+            {
+                <text>
+                    // Bulk delete
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-delete-link",
+                        modalTitle: "@Localizer["bulk_deleteActivities"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_activities"]",
+                        successMessage: "@Localizer["messages_bulkDeleteActivitiesSuccess"]",
+                        errorMessage: "@Localizer["messages_bulkDeleteActivitiesError"]",
+                        eventFunction: function(result) {
+                            $.each(result.deletedRows,
+                                function(key, value) {
+                                    DeleteRowCompleted(value,
+                                        "@Localizer["messages_noActivities"]",
+                                        "@Localizer["messages_noOngoingActivities"]");
+                                });
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+            {
+                <text>
+                    // Bulk update status
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-update-status",
+                        modalTitle: "@Localizer["shortCuts_updateActivityStatus"]",
+                        modalSize: "regular"
+                    });
+
+                    // Bulk set priority
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-set-priority",
+                        modalTitle: "@Localizer["shortCuts_setActivityPriority"]",
+                        modalSize: "regular"
+                    });
+
+                    // Bulk move to list
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-move-to-list",
+                        modalTitle: "@Localizer["shortCuts_moveToList"]",
+                        modalSize: "regular",
+                        optionalParam: "data-project-id",
+                        optionalParamName: "projectId"
+                    });
+
+                    // Bulk assign to sprint
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-assign-to-sprint",
+                        modalTitle: "@Localizer["shortCuts_assignToSprint"]",
+                        modalSize: "regular",
+                        optionalParam: "data-project-id",
+                        optionalParamName: "projectId"
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind search
+            $(".search-input").keyup(function() {
+                $(".bizon-datatable").DataTable().search($(this).val()).draw();
+            });
+            // #endregion
+            $(".nav-link").not("[data-selected='true']").click(function() {
+                DeselectAll();
+            });
+        });
+    </script>
+}
+
+

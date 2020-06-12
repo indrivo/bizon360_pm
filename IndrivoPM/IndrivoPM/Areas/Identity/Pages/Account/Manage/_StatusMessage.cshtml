@@ -1,0 +1,11 @@
+﻿@model string
+
+@if (!String.IsNullOrEmpty(Model))
+{
+    var statusMessageClass = Model.StartsWith("Error") ? "danger" : "success";
+    var image = Model.StartsWith("Error") ? "red" : "green";
+    <div class="alert alert-@statusMessageClass alert-dismissible fade show font-size-14 mt-2 pl-3 pr-2 py-2" role="alert">
+        @Model
+        <img src="~/svg/xs-@image-20px.svg" class="alert-close" data-dismiss="alert" aria-label="Close" />
+    </div>
+}

@@ -1,0 +1,53 @@
+﻿@model Gear.Manager.Core.EntityServices.Notifications.Commands.CreateNotificationProfile.CreateNotificationProfileCommand
+
+<form asp-action="Create">
+    <div class="modal-body">
+        <div class="row">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-3">
+                            <label asp-for="Name" class="font-weight-600"></label>
+                        </div>
+                        <div class="col-8">
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-3">
+                        <label asp-for="EventList" class="font-weight-600"></label>
+                    </div>
+                    <div class="col-8">
+                        <select multiple="multiple" class="form-control" asp-for="EventList" asp-items="@(new SelectList(ViewBag.EventList, "Key", "Value", null))">
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-3">
+                            <label asp-for="UserList" class="font-weight-600"></label>
+                        </div>
+                        <div class="col-8">
+                            <select multiple="multiple" class="form-control select2" style="width: 100%" asp-for="UserList" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)"></select>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <input type="submit" value="Create" class="btn btn-success" />
+    </div>
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

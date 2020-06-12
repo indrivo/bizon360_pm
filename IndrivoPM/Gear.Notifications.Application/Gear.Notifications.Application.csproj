@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IndrivoPM.Application\Gear.Manager.Core.csproj" />
+    <ProjectReference Include="..\Modules\Notifications\Gear.Notifications\Gear.Notifications.Abstractions\Gear.Notifications.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

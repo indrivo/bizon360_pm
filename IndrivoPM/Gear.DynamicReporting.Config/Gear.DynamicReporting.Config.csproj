@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gear.DynamicReporting\Gear.DynamicReporting.Abstractions.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Domain\Gear.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,232 @@
+﻿@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Guid
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = ViewBag.FullName;
+    ViewData["Platform"] = Platform.Pm;
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = "Employees";
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+@section Styles {
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.css" rel="stylesheet" />
+    <link href="~/lib/Chart.js/Chart.css" rel="stylesheet" />
+}
+
+<ul class="nav nav-tabs main-nav-tabs px-40" id="employee-tabs">
+    <li class="nav-item">
+        <a class="nav-link active" id="employee-logged-time-tab" data-toggle="tab" href="#employee-logged-time" role="tab" aria-selected="true" data-loaded="false">Logged Time</a>
+    </li>
+</ul>
+
+<div class="tab-pane fade employee-logged-time-tab show active" id="employee-logged-time" role="tabpanel" aria-labelledby="employee-logged-time-tab">
+    <div class="row mx-n-20 mb-4">
+        <div class="col-12 bg-white border rounded py-15 px-20">
+            <h6>Time spent</h6>
+            <hr class="hr-description mb-3" />
+
+            <div class="row mb-3">
+                <div class="custom-control custom-switch" style="padding-left: 3.25rem;">
+                    <input type="checkbox" class="custom-control-input" id="customSwitch">
+                    <label class="custom-control-label" for="customSwitch">@Localizer["_byPeriod"]</label>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-lg-2 month">
+                    <label class="float-label">Choose month:</label>
+                    <input class="form-control" placeholder="Click to select" type="text" id="month-selector" autocomplete="off" readonly />
+                </div>
+                <div class="col-xl-2 col-lg-3 period" style="display:none">
+                    <label class="float-label">@Localizer["_chooseStartDate"]</label>
+                    <input name="startDate" id="emp-start-date" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker start-date" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                    <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none">@Localizer["validation_notEmptyStartDate"]</span></span>
+                </div>
+                <div class="col-xl-2 col-lg-3 period" style="display:none">
+                    <label class="float-label">@Localizer["_chooseDueDate"]</label>
+                    <input id="emp-due-date" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                    <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none">@Localizer["validation_notEmptyDueDate"]</span></span>
+                </div>
+
+                <div class="col-lg-10">
+                    <p class="p-sm d-inline-block mt-lg-3 mb-0 mr-4">Est. <span class="color-black" id="total-estimated"></span></p>
+                    <p class="p-sm d-inline-block mt-lg-3 mb-0">Log. <span class="color-black total-per-month"></span></p>
+                </div>
+            </div>
+
+            <hr class="hr-description mb-3" />
+
+            <div id="monthly-logs"></div>
+            <div class="graph-container">
+                <canvas id="log-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="logs-by-activity"></div>
+</div>
+@section Scripts {
+    <script src="~/lib/Chart.js/Chart.js"></script>
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.js"></script>
+    <script src="~/js/dev/reports.js"></script>
+
+    <script>
+        var canvas = document.getElementById('log-canvas').getContext('2d');
+        var chart = new Chart(canvas, {});
+
+        function GetLogsByActivity(startDate, endDate) {
+            $("#logs-by-activity").html(LOADER);
+
+            $.ajax({
+                url: "@Url.Action("GetMonthlyLoggedTimeByActivity", "LoggedTime")",
+                type: "GET",
+                data: {
+                    employeeId: "@Model",
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                success: function (result) {
+                    $("#logs-by-activity").html(result);
+                    EnableDataTable(".ignore-search", "None", true, 0);
+                    RenderChart(startDate, endDate);
+                }
+            });
+        }
+
+        function RenderChart(startDate, endDate) {
+            $.ajax({
+                url: "/LoggedTime/GetMonthlyLoggedTimeForEmployee",
+                type: "GET",
+                data: {
+                    employeeId: "@Model",
+                    dateTime: startDate,
+                    endDate: endDate
+                },
+                success: function (result) {
+                    $(".total-per-month").html(result.totalPerMonth + "h");
+                    $("#total-estimated").html(result.totalEstimated + "h");
+                    chart.destroy();
+                    chart = new Chart(canvas, {
+                        type: "bar",
+                        data: {
+                            labels: result.daysOfWeek,
+                            datasets: [{
+                                label: "Logged Time (hours)",
+                                backgroundColor: "#20BC40",
+                                borderColor: "#DCF4E4",
+                                data: result.timeLogs
+                            }]
+                        },
+                        options: {
+                            tooltips: {
+                                bodyFontFamily: "'Blinker', 'sans-serif'",
+                                titleFontFamily: "'Blinker', 'sans-serif'"
+                            },
+                            maintainAspectRatio: false,
+                            scales: {
+                                yAxes: [{
+                                    ticks: {
+                                        beginAtZero: true,
+                                        min: 0,
+                                        max: 12,
+                                        fontColor: "rgb(128, 136, 144)",
+                                        fontFamily: "'Blinker', 'sans-serif'",
+                                        stepSize: 2
+                                    },
+                                    gridLines: {
+                                        color: "rgba(128, 136, 144, 0.25)",
+                                        drawBorder: false,
+                                        zeroLineColor: 'transparent'
+                                    }
+                                }],
+                                xAxes: [{
+                                    gridLines: {
+                                        color: "rgba(128, 136, 144, 0.25)"
+                                    },
+                                    ticks: {
+                                        fontColor: "rgb(128, 136, 144)",
+                                        fontFamily: "'Blinker', 'sans-serif'"
+                                    }
+                                }]
+                            },
+                            legend: {
+                                display: false
+                            }
+                        }
+                    });
+                },
+                error: function (result) {
+                    $("#monthly-logs").html(ERROR_MESSAGE);
+                    feather.replace();
+                }
+            });
+        }
+
+    </script>
+    <script>
+        $(document).ready(function () {
+
+            $("#customSwitch").click(function () {
+                if ($("#customSwitch").prop( "checked" )) { 
+                    $(".month").hide();
+                    $(".period").show();
+                } else { 
+                    $(".period").hide();
+                    $(".month").show();
+                } 
+            });
+
+
+            // #region Chart
+            $("#month-selector").change(function () {
+                var startDate = $("#month-selector").val();
+                GetLogsByActivity(startDate, null);
+            });
+
+            $("#month-selector").datepicker({
+                startView: 1,
+                minViewMode: 1,
+                maxViewMode: 3,
+                format: "MM yyyy"
+            }).datepicker("setDate", "0");
+
+            $(".datepicker").datepicker({
+                format: "yyyy/mm/dd",
+                maxViewMode: 3,
+                todayBtn: "linked",
+                autoclose: true,
+                orientation: "bottom auto"
+            });
+
+            // #endregion
+
+            // #region time by period
+
+            $("#emp-start-date, #emp-due-date").change(function () {
+                startDate = $("#emp-start-date");
+                dueDate = $("#emp-due-date");
+                // Validation date time.
+                validationRangeDate(startDate, dueDate);
+                
+                if (validationRangeDate(startDate, dueDate)) {
+                    GetLogsByActivity(startDate.val(), dueDate.val());
+                }
+
+            });
+
+            // #endregion
+
+            $(".nav-link").not("[data-selected='true']").click(function () {
+                DeselectAll();
+            });
+        });
+    </script>
+}

@@ -1,0 +1,60 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.Projects.ProjectTabModel
+@using Bizon360.Models
+@using Bizon360.Views.Projects
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+    <ul class="nav nav-tabs main-nav-tabs project-tabs px-40">
+        @if (Model.Settings.ProjectProjectTab || Model.ProjectManagerId == Guid.Parse(User.FindFirst("userId").Value))
+        {
+            <li class="nav-item">
+                <a class="nav-link @ProjectTabs.ProjectNavClass(ViewContext)" asp-controller="Projects" asp-action="Details" asp-route-id="@Model.Id">@Localizer["_project"]</a>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.ActivityRead) && Model.Settings.ProjectDashboardTab)
+        {
+            <li class="nav-item">
+                <a class="nav-link @ProjectTabs.DashboardNavClass(ViewContext)" asp-controller="Projects" asp-action="Dashboard" asp-route-id="@Model.Id">@Localizer["_dashboard"]</a>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.ActivityRead) && Model.Settings.ProjectActivitiesTab || Model.ProjectManagerId == Guid.Parse(User.FindFirst("userId").Value))
+        {
+            <li class="nav-item">
+                <a class="nav-link @ProjectTabs.ActivitiesNavClass(ViewContext)" asp-controller="Activities" asp-action="Index" asp-route-id="@Model.Id">@Localizer["_activities"]</a>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.ChangeRequestRead) && (Model.Settings.ProjectChangeRequestsTab || Model.ProjectManagerId == Guid.Parse(User.FindFirst("userId").Value)))
+        {
+            <li class="nav-item">
+                <a class="nav-link @ProjectTabs.ChangeRequestsNavClass(ViewContext)" asp-controller="ChangeRequests" asp-action="Index" asp-route-id="@Model.Id">@Localizer["changeRequests"]</a>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.LogTimeRead) && (Model.Settings.ProjectLoggedTimeTab || Model.ProjectManagerId == Guid.Parse(User.FindFirst("userId").Value)))
+        {
+            <li class="nav-item">
+                <a class="nav-link @ProjectTabs.LoggedTimeNavClass(ViewContext)" asp-controller="Projects" asp-action="LoggedTime" asp-route-id="@Model.Id">@Localizer["_loggedTime"]</a>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.WikiRead) && Model.Settings.ActivityTypesTab && (Model.Settings.ActivityTypesTab || Model.ProjectManagerId == Guid.Parse(User.FindFirst("userId").Value)))
+        {
+            <li class="nav-item">
+                <a class="nav-link @ProjectTabs.ActivityTypesNavClass(ViewContext)" asp-controller="Projects" asp-action="ActivityTypes" asp-route-projectId="@Model.Id">@Localizer["_activityTypes"]</a>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.WikiRead) && Model.Settings.ProjectWikiAndFilesTab && (Model.Settings.ProjectWikiAndFilesTab || Model.ProjectManagerId == Guid.Parse(User.FindFirst("userId").Value)))
+        {
+            <li class="nav-item">
+                <a class="nav-link @ProjectTabs.WikiNavClass(ViewContext)" asp-controller="Wiki" asp-action="Index" asp-route-projectId="@Model.Id">@Localizer["_wikiAndFiles"]</a>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.ReportsManagement) || Model.Settings.ProjectReportsTab || Model.ProjectManagerId == Guid.Parse(User.FindFirst("userId").Value))
+        {
+            <li class="nav-item">
+                <a class="nav-link @ProjectTabs.ReportsNavClass(ViewContext)" asp-controller="Projects" asp-action="Reports" asp-route-id="@Model.Id">@Localizer["_reports"]</a>
+            </li>
+        }
+    </ul>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 59.1 (86144) - https://sketch.com -->
+    <title>grid-blue</title>
+    <desc>Created with Sketch.</desc>
+    <g id="grid-blue" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="grid" transform="translate(4.000000, 4.000000)" fill="#2850F0">
+            <rect id="Rectangle" x="0" y="0" width="5" height="5" rx="1"></rect>
+            <rect id="Rectangle" x="7" y="0" width="5" height="5" rx="1"></rect>
+            <rect id="Rectangle" x="7" y="7" width="5" height="5" rx="1"></rect>
+            <rect id="Rectangle" x="0" y="7" width="5" height="5" rx="1"></rect>
+        </g>
+    </g>
+</svg>

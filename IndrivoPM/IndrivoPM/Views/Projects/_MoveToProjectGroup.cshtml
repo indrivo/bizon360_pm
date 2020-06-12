@@ -1,0 +1,46 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.Commands.ShortcutActions.MoveToProjectGroup.MoveToProjectGroupCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="Projects" asp-action="MoveToProjectGroup" id="form-move-to-project-group">
+    <div class="modal-body">
+        <input asp-for="Id" class="form-control" hidden />
+
+        <label asp-for="ProjectGroupId" class="float-label-select"></label>
+        <select asp-for="ProjectGroupId" asp-items="@((List<SelectListItem>) ViewBag.ProjectGroups)" class="form-control selectpicker" data-live-search="true"></select>
+        <span asp-validation-for="ProjectGroupId" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-move-to-project-group">@Localizer["shortCuts_update"]</button>
+    </div>
+</form>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script>
+    $(".selectpicker").selectpicker();
+
+    $.saveChanges({
+        bindTo: "#btn-move-to-project-group",
+        formId: "#form-move-to-project-group",
+        ajaxUrl: "@Url.Action("MoveToProjectGroup", "Projects")",
+        successMessage: "@Localizer["messages_editProjectSuccess"]",
+        errorMessage: "@Localizer["messages_editProjectError"]",
+        buttonText: "@Localizer["shortCuts_update"]",
+        eventFunction: function (result) {
+            if (GetCurrentView() == "@ProjectsViewByStatus.Current") {
+                if (result.id != "@ViewBag.OldProjectGroup") {
+                    // Remove old row
+                    DeleteTableRowCollapseUpdate(result.projectId, "@Localizer["messages_noProjectsInGroup"]");
+
+                    // Move entity row in the new table
+                    $("[id='parent-" + result.id + "'].collapse").html(result.view);
+                    $("[id='count-" + result.id + "'].collapse-count").html(result.count);
+                }
+            }
+        }
+    });
+</script>

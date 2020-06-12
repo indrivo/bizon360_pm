@@ -1,0 +1,216 @@
+﻿@using Bizon360.Models
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Gear.Manager.Core.EntityServices.Departments.Queries.GetDepartmentsByParent
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@model Gear.Manager.Core.EntityServices.BusinessUnits.Queries.GetBusinessUnitList.BusinessUnitListViewModel
+
+@{
+    var notDeletableBusinessUnit = Model.BusinessUnits.FirstOrDefault(x => !x.IsDeletable);
+}
+
+@if (Model.BusinessUnits.Any())
+{
+    @foreach (var bu in Model.BusinessUnits.Where(x => x.Active && x.IsDeletable))
+    {
+        <div class="parent-content" id="@bu.Id">
+            <div class="cursor-pointer row row-m-20 bg-white border rounded collapse-container collapse-lg hover-invisible-toggle position-relative pb-lg-0 pb-3" data-toggle="collapse" href="#parent-@bu.Id">
+                <div class="d-lg-flex d-block w-100 px-20">
+                    <div class="d-flex pt-collapse">
+                        <a class="border collapse-switcher d-inline-block">
+                            <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                        </a>
+                        @if (bu.BusinessUnitLeadFullName == "Not Specified")
+                        {
+                            <a href="#" class="btn btn-outline-success user-rectangle assign-leader" data-controller="BusinessUnits" data-action="AssignLeader" data-id="@bu.Id"> + </a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-outline-primary user-rectangle" asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@bu.BusinessUnitLeadId">@bu.BusinessUnitLeadFullName.ToInitials()</a>
+                        }
+
+                        <div class="d-block collapse-title-group">
+                            <span class="collapse-title" data-id="@bu.Id">
+                                @bu.Name
+                                <span class="collapse-count" id="count-@bu.Id">@bu.DepartmentLookups.Count</span>
+                            </span>
+                            <span class="collapse-title-description">@bu.Address</span>
+                        </div>
+                        @if (User.UserHasThisPermission(Permissions.BusinessUnitUpdate) || User.UserHasThisPermission(Permissions.BusinessUnitDelete))
+                        {
+                            <div class="dropdown collapse-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    @if (User.UserHasThisPermission(Permissions.BusinessUnitUpdate))
+                                    {
+                                        <a href="javascript:" class="dropdown-item edit-parent-link" data-toggle="modal" data-target="#modal" data-controller="BusinessUnits" data-action="Edit" data-id="@bu.Id">@Localizer["shortCuts_edit"]</a>
+                                        <a href="javascript:" class="dropdown-item rename-businessUnit" data-controller="BusinessUnits" data-action="Rename" data-id="@bu.Id">@Localizer["_rename"]</a>
+                                        @if (bu.BusinessUnitLeadFullName == "Not Specified")
+                                        {
+                                            <a href="#" class="dropdown-item assign-leader" data-controller="BusinessUnits" data-action="AssignLeader" data-id="@bu.Id">@Localizer["shortCuts_assignLeader"] </a>
+                                        }
+                                        @if (User.UserHasThisPermission(Permissions.DepartmentTeamUpdate))
+                                        {
+                                            <a href="javascript:" class="dropdown-item add-to-parent-link" data-toggle="modal" data-target="#modal" data-controller="BusinessUnits" data-action="AddDepartments" data-id="@bu.Id">@Localizer["shortCuts_assignDepartment"]</a>
+                                        }
+                                        <a href="javascript:" class="dropdown-item deactivate-bu" data-controller="BusinessUnits" data-action="DeactivateBusinessUnit" data-id="@bu.Id" data-name="@bu.Name">@Localizer["shortCuts_deactivate"]</a>
+                                    }
+                                    @if (User.UserHasThisPermission(Permissions.BusinessUnitDelete))
+                                    {
+                                        <a href="javascript:" class="dropdown-item delete-parent-link" data-toggle="modal" data-target="#modal" data-controller="BusinessUnits" data-action="Delete" data-id="@bu.Id" data-name="@bu.Name">@Localizer["shortCuts_delete"]</a>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                    <div class="d-lg-none collapse-divider"></div>
+                    @if (User.UserHasThisPermission(Permissions.DepartmentCreate))
+                    {
+                        <div class="d-lg-block d-inline-block">
+                            <button class="btn btn-success collapse-button hover-invisible hover-lg ml-lg-20 mt-lg-15 add-entity-link" data-toggle="modal" data-target="#modal" data-controller="Departments" data-action="Create" data-parent-id="@bu.Id">@Localizer["shortCuts_addDepartment"]</button>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="collapse collapse-datatable" id="parent-@bu.Id">
+                @await Html.PartialAsync("AdmViews/_DepartmentsFromBU", new DepartmentByParentModel { Departments = bu.DepartmentLookups, BusinessUnitId = bu.Id })
+            </div>
+            <hr class="no-gutters" />
+        </div>
+    }
+
+    <!-- Uncategorized business unit-->
+
+    @if (notDeletableBusinessUnit != null)
+    {
+        <div class="parent-content" id="@notDeletableBusinessUnit.Id">
+            <div class="cursor-pointer row row-m-20 bg-white border rounded collapse-container collapse-lg hover-invisible-toggle position-relative pb-lg-0 pb-3" data-toggle="collapse" href="#parent-@notDeletableBusinessUnit.Id">
+                <div class="d-lg-flex d-block w-100 px-20">
+                    <div class="d-flex pt-collapse">
+                        <a class="border collapse-switcher d-inline-block">
+                            <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                        </a>
+
+                        <div class="d-block collapse-title-group pt-2">
+                            <span class="collapse-title" data-id="@notDeletableBusinessUnit.Id">
+                                @notDeletableBusinessUnit.Name
+                                <span class="collapse-count" id="count-@notDeletableBusinessUnit.Id">@notDeletableBusinessUnit.DepartmentLookups.Count</span>
+                            </span>
+                        </div>
+
+                    </div>
+                    <div class="d-lg-none collapse-divider"></div>
+                    @if (User.UserHasThisPermission(Permissions.DepartmentCreate))
+                    {
+                        <div class="d-lg-block d-inline-block pt-2">
+                            <button class="btn btn-success collapse-button details hover-invisible hover-lg ml-lg-20 mt-lg-10 add-entity-link" data-toggle="modal" data-target="#modal" data-controller="Departments" data-action="Create" data-parent-id="@notDeletableBusinessUnit.Id">@Localizer["shortCuts_addDepartment"]</button>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="collapse collapse-datatable" id="parent-@notDeletableBusinessUnit.Id">
+                @await Html.PartialAsync("AdmViews/_DepartmentsFromBU", new DepartmentByParentModel { Departments = notDeletableBusinessUnit.DepartmentLookups, BusinessUnitId = notDeletableBusinessUnit.Id })
+            </div>
+            <hr class="no-gutters" />
+        </div>
+
+    }
+
+    <!-- Inactive business unit-->
+
+
+    @if (Model.BusinessUnits.Count(x => !x.Active) != 0)
+    {
+        <div class="text-center my-3">
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-open="false" onclick="showInactive(this, '#show-inactive-bu')">Show inactive</button>
+            <p class="p-xs d-inline ml-2">@Model.BusinessUnits.Count(x => !x.Active) @Localizer["_inactiveBusinessUnits"]</p>
+        </div>
+
+        <div class="d-none" id="show-inactive-bu">
+
+            @foreach (var bu in Model.BusinessUnits.Where(x => !x.Active))
+            {
+                <div class="parent-content" id="@bu.Id">
+                    <div class="cursor-pointer row row-m-20 bg-white border rounded collapse-container collapse-lg hover-invisible-toggle position-relative pb-lg-0 pb-3" data-toggle="collapse" href="#parent-@bu.Id">
+                        <div class="d-lg-flex d-block w-100 px-20">
+                            <div class="d-flex pt-collapse">
+                                <a class="border collapse-switcher d-inline-block">
+                                    <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                                </a>
+                                @if (bu.BusinessUnitLeadFullName == "Not Specified")
+                                {
+                                    <a href="#" class="btn btn-outline-success user-rectangle assign-leader" data-controller="BusinessUnits" data-action="AssignLeader" data-id="@bu.Id"> + </a>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-outline-primary user-rectangle" asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@bu.BusinessUnitLeadId">@bu.BusinessUnitLeadFullName.ToInitials()</a>
+                                }
+
+                                <div class="d-block collapse-title-group">
+                                    <span class="collapse-title" data-id="@bu.Id">
+                                        @bu.Name
+                                        <span class="collapse-count" id="count-@bu.Id">@bu.DepartmentLookups.Count</span>
+                                    </span>
+                                    <span class="collapse-title-description">@bu.Address</span>
+
+                                </div>
+
+                                @if (User.UserHasThisPermission(Permissions.BusinessUnitUpdate) || User.UserHasThisPermission(Permissions.BusinessUnitDelete))
+                                {
+                                    <div class="dropdown collapse-dropdown">
+                                        <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            @if (User.UserHasThisPermission(Permissions.BusinessUnitUpdate))
+                                            {
+                                                <a href="javascript:" class="dropdown-item edit-parent-link" data-toggle="modal" data-target="#modal" data-controller="BusinessUnits" data-action="Edit" data-id="@bu.Id">@Localizer["shortCuts_edit"]</a>
+                                                <a href="javascript:" class="dropdown-item rename-businessUnit" data-controller="BusinessUnits" data-action="Rename" data-id="@bu.Id">@Localizer["_rename"]</a>
+                                                @if (bu.BusinessUnitLeadFullName == "Not Specified")
+                                                {
+                                                    <a href="#" class="dropdown-item assign-leader" data-controller="BusinessUnits" data-action="AssignLeader" data-id="@bu.Id">@Localizer["shortCuts_assignLeader"] </a>
+                                                }
+                                                @if (User.UserHasThisPermission(Permissions.DepartmentTeamUpdate))
+                                                {
+                                                    <a href="javascript:" class="dropdown-item add-to-parent-link" data-toggle="modal" data-target="#modal" data-controller="BusinessUnits" data-action="AddDepartments" data-id="@bu.Id">@Localizer["shortCuts_assignDepartment"]</a>
+                                                }
+                                                <a href="javascript:" class="dropdown-item activate-bu" data-controller="BusinessUnits" data-action="ActivateBusinessUnit" data-id="@bu.Id" data-name="@bu.Name">@Localizer["shortCuts_activate"]</a>
+                                            }
+                                            @if (User.UserHasThisPermission(Permissions.BusinessUnitDelete))
+                                            {
+                                                <a href="javascript:" class="dropdown-item delete-parent-link" data-toggle="modal" data-target="#modal" data-controller="BusinessUnits" data-action="Delete" data-id="@bu.Id" data-name="@bu.Name">@Localizer["shortCuts_delete"]</a>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+
+                            </div>
+                            <div class="d-lg-none collapse-divider"></div>
+                            @if (User.UserHasThisPermission(Permissions.DepartmentCreate))
+                            {
+                                <div class="d-lg-block d-inline-block">
+                                    <button class="btn btn-success collapse-button details hover-invisible hover-lg ml-lg-20 mt-lg-10 add-entity-link" data-toggle="modal" data-target="#modal" data-controller="Departments" data-action="Create" data-parent-id="@bu.Id">@Localizer["shortCuts_addDepartment"]</button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="collapse collapse-datatable" id="parent-@bu.Id">
+                        @await Html.PartialAsync("AdmViews/_DepartmentsFromBU", new DepartmentByParentModel { Departments = bu.DepartmentLookups, BusinessUnitId = bu.Id })
+                    </div>
+                    <hr class="no-gutters" />
+                </div>
+
+            }
+        </div>
+    }
+}
+else
+{
+    <p class="mb-0 mt-2">@Localizer["msg_noBusinessUnits"]</p>
+}
+

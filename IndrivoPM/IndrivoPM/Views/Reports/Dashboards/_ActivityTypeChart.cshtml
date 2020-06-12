@@ -1,0 +1,94 @@
+﻿@model Gear.Manager.Core.EntityServices.Reports.Queries.Charts.GetTasksByTypeReport.ProjectTaskStatisticListViewModel
+@{
+    Layout = null;
+}
+
+<div class="d-flex">
+    <canvas id="pie-chart-activity-type" width="800" height="450"></canvas>
+    <div id="tracker-type" style="width: 100%;"></div>
+</div>
+
+<script>
+    function GetActivityTypeNames() {
+        const result = [];
+
+        @foreach (var item in Model.ActivityTypes.Select(x => x.ActivityTypeName))
+        {
+            @:result.push("@item");
+        }
+
+        return result;
+    }
+
+    function GetActivityCounters() {
+        const result = [];
+
+        @foreach (var item in Model.ActivityTypes.Select(x => x.ActivitiesCount))
+        {
+            @:result.push("@item");
+        }
+
+        return result;
+    }
+
+    function GetActivityTypeIds() {
+        const result = [];
+
+        @foreach (var item in Model.ActivityTypes.Select(x => x.ActivityTypeId))
+        {
+            @:result.push("@item");
+        }
+
+        return result;
+    }
+</script>
+
+<script>
+    const activityTypeIds = GetActivityTypeIds();
+
+    var activityTypeChart = new Chart(document.getElementById("pie-chart-activity-type"),
+        {
+            type: 'pie',
+            data: {
+                labels: GetActivityTypeNames(),
+                datasets: [
+                    {
+                        label: "Population (millions)",
+                        backgroundColor: ["#3e95cd", "#8e5ea2", "#3cba9f", "#e8c3b9", "#c45850"],
+                        data: GetActivityCounters()
+                    }
+                ]
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: 'Activity Types'
+                }
+            }
+        });
+
+    $("#pie-chart-activity-type").click(function(event) {
+        const element = activityTypeChart.getElementAtEvent(event);
+        if (element && element[0]) {
+            const index = element[0]._index;
+            console.log(index);
+            $.ajax(
+                {
+                    url: `@Url.Action("ActivityTypeTrackerChart", "Reports")`,
+                    type: "GET",
+                    data: {
+                        projectId: '@Model.ProjectId',
+                        activityTypeId: activityTypeIds[index]
+                    },
+                    success: function (result) {
+                        console.log(result);
+                        $("#tracker-type").html(result);
+                    },
+                    error: function(error) {
+                        $("#tracker-type").html("Could not load data.");
+                    }
+                });
+        }
+    });
+</script>
+

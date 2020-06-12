@@ -1,0 +1,53 @@
+﻿@using Microsoft.Extensions.Localization
+@model Gear.ProjectManagement.Manager.Domain.ActivityCheckList.Commands.CreateCheckItem.CreateCheckItemCommand
+@inject IStringLocalizer Localizer
+
+@{
+    Layout = null;
+}
+
+<form asp-action="Create" asp-controller="Checklist" id="form-checklist-item-create">
+    <div class="row">
+        <div class="col-12">
+            <input asp-for="Id" class="form-control" hidden />
+            <input asp-for="ActivityId" class="form-control" hidden />
+
+            <div class="custom-control custom-checkbox checklist-row d-flex">
+                <input type="checkbox" class="custom-control-input" disabled />
+                <label class="custom-control-label"></label>
+                <input class="checklist-input" asp-for="Content" placeholder="@Localizer["placeholders_checkListItemCreate"]" autocomplete="off" />
+            </div>
+
+        </div>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+<script>
+    $("#form-checklist-item-create").keypress(function (e) {
+        if (e.which == "13") {
+            if ($(this).valid()) {
+                $.ajax({
+                    url: "@Url.Action("Create", "Checklist")",
+                    type: "POST",
+                    data: $(this).serialize(),
+                    success: function(result) {
+                        $("#form-checklist-item-create").trigger("reset");
+                        $(".checklist-items").html(result);
+                        feather.replace();
+                    },
+                    error: function(result) {
+                        Swal.fire({
+                            type: "error",
+                            title: "Error!",
+                            text: "Could not add checklist item."
+                        });
+                    }
+                });
+            }
+            e.preventDefault();
+        }
+
+    })
+</script>

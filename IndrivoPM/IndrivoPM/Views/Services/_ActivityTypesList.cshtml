@@ -1,0 +1,150 @@
+﻿@using Bizon360.Models
+@using Gear.Common.Extensions.EnumExtensions
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Gear.ProjectManagement.Manager.Domain.TrackerTypes.Queries.GetTrackerTypeList
+@model Gear.ProjectManagement.Manager.Domain.ActivityTypes.Queries.GetActivityTypeList.ActivityTypeListViewModel
+
+
+@if (Model.ActivityTypes.Any())
+{
+    @foreach (var item in Model.ActivityTypes.Where(x => x.Active))
+    {
+        <div id="@item.Id" class="parent-content cursor-pointer ui-state-default">
+            <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative pb-lg-0 pb-3" data-toggle="collapse" href="#parent-@item.Id">
+                <div class="d-lg-flex d-block w-100 px-20">
+                    <div class="d-flex pt-collapse">
+                        <a class="border collapse-switcher d-inline-block">
+                            <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                        </a>
+                        <span class="ml-2 d-inline-block all-scroll">
+                            <img class="pb-2" src="~/svg/drag-drop.svg" />
+                        </span>
+                        <span class="badge @item.ColorBadge.ToString().BadgeColorConvert() collapse-badge">@item.Abbreviation</span>
+                        <span class="collapse-title">
+                            @item.Name
+                            <span class="collapse-count" id="count-@item.Id">@item.TrackerTypes.Count</span>
+                        </span>
+                        @if (User.UserHasThisPermission(Permissions.ActivityTypeUpdate) || User.UserHasThisPermission(Permissions.ActivityTypeDelete))
+                        {
+                            <div class="dropdown collapse-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                    @if (User.UserHasThisPermission(Permissions.ActivityTypeUpdate))
+                                    {
+                                        <a href="#" class="dropdown-item edit-activity" data-controller="Services" data-action="EditActivityType" data-id="@item.Id">@Localizer["_edit"]</a>
+                                        <a href="#" class="dropdown-item rename-activity" data-controller="Services" data-action="RenameActivityType" data-id="@item.Id">@Localizer["_rename"]</a>
+                                        @if (item.Active)
+                                        {
+                                            <a href="#" class="dropdown-item deactivate-activity" data-controller="Services" data-action="DeactivateActivityType" data-id="@item.Id" data-name="@item.Name">@Localizer["_deactivate"]</a>
+                                        }
+                                        else
+                                        {
+                                            <a href="#" class="dropdown-item activate-activity" data-controller="Services" data-action="ActivateActivityType" data-id="@item.Id" data-name="@item.Name">@Localizer["_activate"]</a>
+                                        }
+                                    }
+                                    @if (User.UserHasThisPermission(Permissions.ActivityTypeDelete))
+                                    {
+                                        <a href="#" class="dropdown-item delete-activity" data-controller="Services" data-action="DeleteActivityType" data-id="@item.Id" data-name="@item.Name">@Localizer["_delete"]</a>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="d-lg-none collapse-divider"></div>
+                    @if (User.UserHasThisPermission(Permissions.ActivityTypeDelete))
+                    {
+                        <div class="d-lg-block d-inline-block">
+                            <a href="#" class="btn btn-success collapse-button hover-invisible hover-lg ml-lg-20 mt-lg-10 add-entity-link" data-controller="Services" data-action="CreateTracker" data-parent-id="@item.Id">@Localizer["shortCuts_addSubtype"]</a>
+                        </div>
+                    }
+
+                </div>
+            </div>
+            <div class="collapse collapse-datatable" id="parent-@item.Id">
+                @await Html.PartialAsync("_TrackersList", new TrackerTypeListViewModel { Trackers = item.TrackerTypes, ActivityTypeId = item.Id })
+            </div>
+            <hr class="no-gutters" />
+        </div>
+    }
+
+    @if (Model.ActivityTypes.Count(x => !x.Active) != 0)
+    {
+        <div class="text-center my-3">
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-open="false" onclick="showInactive(this, '#inactive-activities')">Show inactive</button>
+            <p class="p-xs d-inline ml-2">@Model.ActivityTypes.Count(x => !x.Active) @Localizer["_subtypes"]</p>
+        </div>
+
+        <div class="d-none" id="inactive-activities">
+            @foreach (var item in Model.ActivityTypes.Where(x => !x.Active))
+            {
+                <div id="@item.Id" class="parent-content cursor-pointer">
+                    <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative pb-lg-0 pb-3" data-toggle="collapse" href="#parent-@item.Id">
+                        <div class="d-lg-flex d-block w-100 px-20">
+                            <div class="d-flex pt-collapse">
+                                <a class="border collapse-switcher d-inline-block">
+                                    <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                                </a>
+                                <span class="badge @item.ColorBadge.ToString().BadgeColorConvert() collapse-badge">@item.Abbreviation</span>
+                                <span class="collapse-title">
+                                    @item.Name
+                                    <span class="collapse-count" id="count-@item.Id">@item.TrackerTypes.Count</span>
+                                </span>
+                                @if (User.UserHasThisPermission(Permissions.ActivityTypeUpdate) || User.UserHasThisPermission(Permissions.ActivityTypeDelete))
+                                {
+                                    <div class="dropdown collapse-dropdown">
+                                        <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                            @if (User.UserHasThisPermission(Permissions.ActivityTypeUpdate))
+                                            {
+                                                <a href="#" class="dropdown-item edit-activity" data-controller="Services" data-action="EditActivityType" data-id="@item.Id">@Localizer["_edit"]</a>
+                                                <a href="#" class="dropdown-item rename-activity" data-controller="Services" data-action="RenameActivityType" data-id="@item.Id">@Localizer["_rename"]</a>
+                                                @if (item.Active)
+                                                {
+                                                    <a href="#" class="dropdown-item deactivate-activity" data-controller="Services" data-action="DeactivateActivityType" data-id="@item.Id" data-name="@item.Name">@Localizer["_deactivate"]</a>
+                                                }
+                                                else
+                                                {
+                                                    <a href="#" class="dropdown-item activate-activity" data-controller="Services" data-action="ActivateActivityType" data-id="@item.Id" data-name="@item.Name">@Localizer["_activate"]</a>
+                                                }
+                                            }
+                                            @if (User.UserHasThisPermission(Permissions.ActivityTypeDelete))
+                                            {
+                                                <a href="#" class="dropdown-item delete-activity" data-controller="Services" data-action="DeleteActivityType" data-id="@item.Id" data-name="@item.Name">@Localizer["_delete"]</a>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="d-lg-none collapse-divider"></div>
+                            @if (User.UserHasThisPermission(Permissions.ActivityTypeDelete))
+                            {
+                                <div class="d-lg-block d-inline-block">
+                                    <a href="#" class="btn btn-success collapse-button hover-invisible hover-lg ml-lg-20 mt-lg-10 add-entity-link" data-controller="Services" data-action="CreateTracker" data-parent-id="@item.Id">@Localizer["shortCuts_addSubtype"]</a>
+                                </div>
+                            }
+
+                        </div>
+                    </div>
+                    <div class="collapse collapse-datatable" id="parent-@item.Id">
+                        @await Html.PartialAsync("_TrackersList", new TrackerTypeListViewModel { Trackers = item.TrackerTypes, ActivityTypeId = item.Id })
+                    </div>
+                    <hr class="no-gutters" />
+                </div>
+            }
+        </div>
+    }
+
+}
+else
+{
+    <div>
+        <p class="ml-3">@Localizer["msg_noActivityTypes"]</p>
+    </div>
+}
+
+

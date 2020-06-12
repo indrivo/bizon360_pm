@@ -1,0 +1,55 @@
+﻿@using Bizon360.Models
+@using Gear.ProjectManagement.Manager.Domain.Projects
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.Queries.GetProjectDetails.ProjectDetailModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@{
+    Layout = "_BizonLayout";
+    ViewData["ActivePage"] = "Activity Types";
+    ViewData["Title"] = Model.Name;
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+@section Styles {
+    <link href="~/css/summer-note.css" rel="stylesheet" />
+}
+
+@{ await Html.RenderPartialAsync("_ProjectTabs", new ProjectTabModel { Id = Model.Id, Name = Model.Name, ProjectManagerId = Model.ProjectManagerId, EndDate = Model.EndDate, Settings = Model.ProjectSettings }); }
+
+@if (Model?.ProjectActivityTypes != null && Model.ProjectActivityTypes.Any())
+{
+    <div class="container">
+        @using (Html.BeginForm("ActivityTypes", "Projects", FormMethod.Post))
+        {
+            <input asp-for="Id" hidden/>
+            <div class="checkbox checkboxlist col-sm-9">
+                <ul>
+                    @for (var i = 0; i < Model.ProjectActivityTypes.Count; i++)
+                    {
+                        <li class="list-unstyled">
+                            <input asp-for="@Model.ProjectActivityTypes[i].Active" type="checkbox" />
+                            <label asp-for="@Model.ProjectActivityTypes[i].Active">@Model.ProjectActivityTypes[i].ActivityTypeName</label>
+                            <input asp-for="@Model.ProjectActivityTypes[i].ActivityTypeId" hidden />
+                        </li>
+                    }
+                </ul>
+                <div class="form-group text-center">
+                    <input type="submit" class="btn btn-primary" value="Submit" id="post-activity-types"/>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<script>
+    $(document).ready(function() {
+        $("#post-activity-types").click(function() {
+
+        });
+    });
+</script>

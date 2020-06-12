@@ -1,0 +1,123 @@
+﻿@using Microsoft.Extensions.Localization
+@model Bizon360.ViewComponents.OneDriveListViewModel
+@inject IStringLocalizer Localizer
+@{
+    ViewData["Title"] = "OneDriveFiles";
+
+}
+
+@if (Model.MetaData.Any())
+{
+
+    @foreach (var item in Model.MetaData)
+    {
+        <div class="d-block mb-sm-0 mb-1 hover-invisible-toggle file" id="@item.Id">
+            <a class="font-size-14  d-inline-block color-primary" href="@item.WebUrl" target="_blank" class="pull-left">
+                @item.Name
+            </a>
+            @($"\u00B7")
+            <span class="file-size font-size-12 color-secondary" value="@item.Size">@item.Size</span>
+            @($"\u00B7")
+            <span class="font-size-12 color-secondary">@($"{item.CreateDateTime:yyyy-MM-dd}")</span>
+
+            <img class="cursor-pointer hover-invisible open-delete-file" file-name="@item.Name" id="@item.Id" data-toggle="modal" data-target="#modal-delete-file" src="~/svg/xs-red-20px.svg" />
+        </div>
+    }
+}
+else
+{
+    <div class="d-block mb-sm-0 mb-1">
+        <p class="font-size-14">No files yet in this activity.</p>
+    </div>
+}
+
+<!-- MODAL: Confirm File will be deleted -->
+<div class="modal fade" id="modal-delete-file" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content delete-file">
+            <div class="modal-header">
+                <h6 class="modal-title mb-0" id="modal-label">@Localizer["shortCuts_deleteFile"]</h6>
+                <i data-feather="x" class="modal-close-icon" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-inner"></div>
+            <div class="modal-bulk-delete-content">
+                <div class="modal-body-delete-file" style="padding-left: 20px;"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger btn-delete-file">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $(".file-size").each(function () {
+            var bytes = $(this).html();
+            $(this).html(formatBytes(bytes));
+        });
+    });
+</script>
+<script>
+    function GetPaths() {
+        const result = [];
+
+        @foreach (var item in Model.Paths)
+            {
+                @:result.push("@item");
+            }
+
+        return result;
+    }
+
+    $(document).on("click", ".open-delete-file", function () {
+        const id = $(this).attr('id');
+        const fileName = $(this).attr('file-name');
+
+        $(".modal-body-delete-file").html(`Delete file "<b>${fileName}</b>" from cloud?`);
+
+        $(".btn-delete-file").attr("file-id", id);
+        $(".btn-delete-file").attr("file-name", fileName);
+        $(".btn-delete-file").attr("paths", GetPaths());
+    });
+
+    $(".btn-delete-file").click(function () {
+
+        $(this).prop("disabled", true).html(BUTTON_LOADER);
+
+        $.ajax({
+            url: "@Url.Action("DeleteFile", "Activities")",
+            type: "POST",
+            data: {
+                id: $(this).attr('file-id'),
+                paths: GetPaths(),
+                fileName: $(this).attr('file-name')
+            },
+            success: function (result) {
+                $(".file[id='" + result + "']").remove();
+              
+                if (!$(".files").find('.file').length){
+                    $( ".files" ).append( " <p class='font-size-14'>No files yet in this activity.</p>" );
+                } 
+
+                $.successAlert({
+                    title:"Success",
+                    message: "File has been deleted!"
+                });
+            },
+            error: function (result) {
+                $.errorAlert({
+                    title: "Error",
+                    message: "Could not delete file."
+                });
+            },
+            complete: function() {
+                $("#modal-delete-file").modal("hide");
+                $(".btn-delete-file").prop("disabled", false).html("Delete");
+            }
+        });
+
+    });
+
+</script>

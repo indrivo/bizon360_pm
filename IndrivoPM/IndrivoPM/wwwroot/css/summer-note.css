@@ -1,0 +1,28 @@
+﻿.card-header.note-toolbar{
+    background: none;
+}
+
+.note-btn {
+    border: none;
+    background-color: white;
+}
+
+.note-toolbar {
+    margin-top: 3px !important;
+    margin-bottom: 3px !important;
+    border-bottom-color: #DCE0E4;
+    padding-left: 10px;
+}
+
+.note-editable {
+    padding-top: 0 !important;
+}
+
+.note-editor p {
+    color: black;
+}
+
+.s-note-text-black p
+{
+    color: black;
+}

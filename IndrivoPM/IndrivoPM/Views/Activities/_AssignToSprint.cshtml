@@ -1,0 +1,82 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Activities.Commands.ShortcutActions.MoveToSprint.MoveToSprintCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="Activities" asp-action="AssignToSprint" id="form-assign-to-sprint">
+    <div class="modal-body">
+        <input asp-for="Id" hidden />
+
+        <label asp-for="SprintId" class="float-label-select"></label>
+        <select asp-for="SprintId" asp-items="@(((List<SelectListItem>) ViewBag.Sprints).Prepend(new SelectListItem
+                                                {
+                                                    Value = string.Empty,
+                                                    Text = "- Select -",
+                                                    Selected = true
+                                                }))"
+                class="form-control selectpicker" data-live-search="true">
+        </select>
+        <span asp-validation-for="SprintId" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-assign-to-sprint">@Localizer["shortCuts_update"]</button>
+    </div>
+</form>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script>
+    $(".selectpicker").selectpicker();
+
+    $.saveChanges({
+        bindTo: "#btn-assign-to-sprint",
+        formId: "#form-assign-to-sprint",
+        ajaxUrl: "@Url.Action("AssignToSprint", "Activities")",
+        successMessage: "@Localizer["messages_editActivitySuccess"]",
+        errorMessage: "@Localizer["messages_editActivityError"]",
+        buttonText: "@Localizer["shortCuts_update"]",
+        eventFunction: function (result) {
+            if (GetCurrentView() == "@ActivitiesView.Sprint") {
+                if (result.sprintId != "@ViewBag.OldSprintId") {
+                    var row = $("tr[id='entity-" + result.id + "']");
+                    var newTbody = null;
+                    var moveToCompleted = row.parents("tbody").attr("id").startsWith("tbody-comp");
+
+                    if (!moveToCompleted) {
+                        newTbody = $("tbody[id='tbody-" + result.sprintId + "']");
+                    } else {
+                        newTbody = $("tbody[id='tbody-comp-" + result.sprintId + "']");
+                    }
+
+                    var newDataTable = newTbody.parents(".bizon-datatable").DataTable();
+
+                    DeleteRowCompleted(result.id,
+                        "@Localizer["messages_noActivities"]",
+                        "@Localizer["messages_noOngoingActivities"]");
+
+                    // Append row to new table
+                    newDataTable.row.add($(row));
+                    newTbody.append(row);
+                    row.find(".assign-to-sprint-link").attr("data-sprint-id", result.sprintId);
+                    row.find(".entity-date").html(result.date);
+                    row.find(".sprint-badge").attr("class", row.parents(".collapse-datatable").find(".sprint-badge").attr("class")).attr("title", result.sprintName);
+
+                    var newCount = $("[id='count-" + result.sprintId + "'].collapse-count");
+                    newCount.html(parseInt(newCount.html()) + 1);
+                }
+            } else {
+                var tr = $("tr[id='entity-" + result.id + "']");
+                tr.find(".assign-to-sprint-link").attr("data-sprint-id", result.sprintId);
+                tr.find(".entity-date").html(result.date);
+                tr.find(".sprint-badge").attr("class", "").attr("title", result.sprintName);
+            }
+
+            $("[data-id='" + result.id + "'].assign-to-sprint-link").attr("data-sprint-id", result.sprintId);
+            if ($("[data-id='" + result.id + "'].global-assign-to-sprint-link") != null) {
+                $("[data-id='" + result.id + "'].global-assign-to-sprint-link").attr("data-sprint-id", result.sprintId);
+            }
+        }
+    });
+</script>

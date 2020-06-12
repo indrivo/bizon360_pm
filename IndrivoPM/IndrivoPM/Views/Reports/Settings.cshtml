@@ -1,0 +1,292 @@
+﻿@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Manager.Core.EntityServices.Reports.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = Localizer["_settings"];
+    ViewData["ActivePage"] = "Settings";
+    // Breadcrumb data
+    ViewData["FirstNode"] = ViewData["Title"];
+}
+
+@section Styles {
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+}
+
+@{ await Html.RenderPartialAsync("_ReportsIndexTabs"); }
+
+<div class="col-lg-12 bg-white border rounded py-15 px-20 details">
+    <div class="tab-content">
+        <h6>Teams Report Customizations</h6>
+        <form action="@Url.Action("TeamSettings", "Reports")" method="post" id="teams-form" style="padding-left: 15px;">
+            <input type="hidden" name="reportName" id="reportName" value="Teams by filters" />
+
+            <div role="tabpanel" class="tab-pane in active" id="notification-report-teams">
+                @*@{ await Html.RenderPartialAsync("SettingsPartials/_dailyLogsTeams"); }*@
+            </div>
+
+            <div class="form-check-inline">
+                <label class="form-check-label" for="form-check-input">
+                    <input type="checkbox" class="form-check-input" id="enabled-teams" name="enabledTeams" value="true">Enabled
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary" id="teams-btn">Submit</button>
+        </form>
+
+        <hr />
+
+        <h6>Projects Report Customizations</h6>
+        <form action="@Url.Action("ProjectSettings", "Reports")" method="post" id="project-form" style="padding-left: 15px;">
+            <input type="hidden" name="reportName" id="reportName" value="Projects by filters" />
+            <div role="tabpanel" class="tab-pane in active" id="notification-report-projects">
+                @*@{ await Html.RenderPartialAsync("SettingsPartials/_dailyLogsProjects"); }*@
+            </div>
+
+            <div class="form-check-inline">
+                <label class="form-check-label" for="enabled-projects">
+                    <input type="checkbox" class="form-check-input" id="enabled-projects" name="enabledProjects" value="true">Enabled
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary" id="projects-btn">Submit</button>
+        </form>
+
+        <hr />
+
+        <h6>Overdue Report Customizations</h6>
+        <form action="@Url.Action("OverdueSettings", "Reports")" method="post" id="overdue-form" style="padding-left: 15px;">
+            <input type="hidden" name="reportName" id="reportName" value="Overdue" />
+            <div role="tabpanel" class="tab-pane in active" id="notification-report-overdue">
+                @*@{ await Html.RenderPartialAsync("SettingsPartials/_overdue"); }*@
+            </div>
+
+            <div class="form-check-inline">
+                <label class="form-check-label" for="enabled-overdue">
+                    <input type="checkbox" class="form-check-input" id="enabled-overdue" name="enabledOverdue" value="true">Enabled
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary" id="overdue-btn">Submit</button>
+        </form>
+
+    </div>
+</div>
+@section Scripts {
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/js/dev/reports.js"></script>
+
+    <script>
+        $(document).ready(function() {
+
+
+            $("#teams-btn").prop('disabled', true);
+            $("#enabled-teams").prop('disabled', true);
+
+            $.ajax({
+                url: "@Url.Action("IsActiveReport", "Reports")",
+                type: "GET",
+                data: {
+                    reportName: "Teams by filters"
+                },
+                success: function(result) {
+                    $("#enabled-teams").prop("checked", result);
+                    $("#enabled-teams").prop('disabled', false);
+                },
+                error: function(response) {
+                    $("#enabled-teams").prop("checked", false);
+                    $("#enabled-teams").prop('disabled', false);
+                    console.log(response);
+                }
+            });
+
+            $("#projects-btn").prop('disabled', true);
+            $("#enabled-projects").prop('disabled', true);
+
+            $.ajax({
+                url: "@Url.Action("IsActiveReport", "Reports")",
+                type: "GET",
+                data: {
+                    reportName: "Projects by filters"
+                },
+                success: function(result) {
+                    $("#enabled-projects").prop("checked", result);
+                    $("#enabled-projects").prop('disabled', false);
+                },
+                error: function(response) {
+                    $("#enabled-projects").prop("checked", false);
+                    $("#enabled-projects").prop('disabled', false);
+                    console.log(response);
+                }
+            });
+
+            $("#overdue-btn").prop('disabled', true);
+            $("#enabled-overdue").prop('disabled', true);
+
+            $.ajax({
+                url: "@Url.Action("IsActiveReport", "Reports")",
+                type: "GET",
+                data: {
+                    reportName: "Overdue"
+                },
+                success: function(result) {
+                    $("#enabled-overdue").prop("checked", result);
+                    $("#enabled-overdue").prop('disabled', false);
+                },
+                error: function(response) {
+                    $("#enabled-overdue").prop("checked", false);
+                    $("#enabled-overdue").prop('disabled', false);
+                    console.log(response);
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+
+            $("#notification-report-teams").html(LOADER);
+
+            $.ajax({
+                url: "@Url.Action("GetDailyLogsByTeams", "Reports")",
+                type: "GET",
+                success: function(result) {
+                    $("#teams-btn").prop('disabled', false);
+                    $("#notification-report-teams").html(result);
+                },
+                error: function(response) {
+                    $("#notification-report-teams").html("Could not load data.");
+                    console.log(response);
+                }
+            });
+
+            $("#notification-report-projects").html(LOADER);
+
+            $.ajax({
+                url: "@Url.Action("GetDailyLogsByProjects", "Reports")",
+                type: "GET",
+                success: function(result) {
+                    $("#projects-btn").prop('disabled', false);
+                    $("#notification-report-projects").html(result);
+                },
+                error: function(response) {
+                    $("#notification-report-projects").html("Could not load data.");
+                    console.log(response);
+                }
+            });
+
+            $("#notification-report-overdue").html(LOADER);
+
+            $.ajax({
+                url: "@Url.Action("GetOverdue", "Reports")",
+                type: "GET",
+                success: function(result) {
+                    $("#overdue-btn").prop('disabled', false);
+                    $("#notification-report-overdue").html(result);
+                },
+                error: function(response) {
+                    $("#notification-report-overdue").html("Could not load data.");
+                    console.log(response);
+                }
+            });
+        });
+
+    </script>
+
+    <script>
+        $("#overdue-form").submit(function() {
+            var projectIds = $("#select-project-overdue").val();
+            var userIds = $("#select-employee-overdue").val();
+            var startDate = $("#overdue-start-date").val();
+            var overdueHeaders = $("#overdue-select-headers").val();
+
+            var checked = $("#enabled-overdue").is(":checked");
+
+            $.ajax({
+                url: "@Url.Action("OverdueSettings", "Reports")",
+                type: "POST",
+                data: {
+                    reportName: "Overdue",
+                    projectIds: projectIds,
+                    userIds: userIds,
+                    startDate: startDate,
+                    overdueHeaders: overdueHeaders,
+                    enabledOverdue: checked
+                },
+                success: function(result) {
+
+                },
+                error: function(response) {
+
+                    console.log(response);
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $("#teams-form").submit(function() {
+            var projectIds = $("#teams-select-project").val();
+            var userIds = $("#teams-select-employee").val();
+            var activityTypes = $("#teams-select-activity-type").val();
+            var activityStatuses = $("#teams-select-activity-status").val();
+            var teamHeaders = $("#teams-select-headers").val();
+
+            var checked = $("#enabled-teams").is(":checked");
+
+            $.ajax({
+                url: "@Url.Action("TeamSettings", "Reports")",
+                type: "POST",
+                data: {
+                    reportName: "Teams by filters",
+                    projectIds: projectIds,
+                    userIds: userIds,
+                    activityTypes: activityTypes,
+                    activityStatuses: activityStatuses,
+                    overdueHeaders: overdueHeaders,
+                    enabledTeams: checked
+                },
+                success: function(result) {
+
+                },
+                error: function(response) {
+
+                    console.log(response);
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $("#projects-form").submit(function() {
+            var projectIds = $("#projects-select-project").val();
+            var activityTypes = $("#projects-select-activity-type").val();
+            var activityStatuses = $("#projects-select-activity-status").val();
+            var teamHeaders = $("#projects-select-headers").val();
+
+            var checked = $("#enabled-projects").is(":checked");
+
+            $.ajax({
+                url: "@Url.Action("ProjectSettings", "Reports")",
+                type: "POST",
+                data: {
+                    reportName: "Projects by filters",
+                    projectIds: projectIds,
+                    activityTypes: activityTypes,
+                    activityStatuses: activityStatuses,
+                    overdueHeaders: overdueHeaders,
+                    enabledProjects: checked
+                },
+                success: function(result) {
+
+                },
+                error: function(response) {
+
+                    console.log(response);
+                }
+            });
+        });
+    </script>
+}

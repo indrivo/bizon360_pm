@@ -1,0 +1,285 @@
+﻿@using System.Security.Claims
+@using Bizon360.Utils
+@using Gear.Common.Extensions.EnumExtensions
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@model Gear.ProjectManagement.Manager.Domain.Activities.Queries.GetActivityListFromParentEntity.ActivityListViewModel
+@inject IStringLocalizer Localizer
+
+<h2 class="mb-0 d-inline-block">Search results</h2>
+<br />
+<a href="javascript:" id="global-reset">Clear results</a>
+
+<hr class="no-gutters" />
+
+@if (Model.Activities.Any())
+{
+    <div class="collapse-datatable">
+        <table class="table bizon-datatable no-parent dt-global" id="global-search-table" data-order='[[ 3, "asc" ]]'>
+            <thead>
+            <tr class="hover-invisible-toggle">
+                <th class="no-sort">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-global" disabled/>
+                        <label class="custom-control-label" for="bulk-global"></label>
+                    </div>
+                </th>
+                <th class="col-priority">@Localizer["_priority"]</th>
+                <th class="col-id d-sm-table-cell d-none">@Localizer["_id"]</th>
+                <th>@Localizer["_activity"]</th>
+                <th class="col-project d-md-table-cell d-none">@Localizer["_project"]</th>
+                <th class="col-est-log d-md-table-cell d-none">@Localizer["_est."]</th>
+                <th class="col-est-log d-md-table-cell d-none">@Localizer["_log."]</th>
+                <th class="col-progress d-md-table-cell d-none">@Localizer["_progress"]</th>
+                <th class="col-status d-md-table-cell d-none">@Localizer["_status"]</th>
+                <th class="col-users no-sort d-xl-table-cell d-none">@Localizer["_assignees"]</th>
+                <th class="col-date d-sm-table-cell d-none">@Localizer["_due"]</th>
+                <th class="no-sort">
+                    <div class="dropdown datatables-th-dropdown">
+                        <div class="more-vertical hover-invisible hover-lg" id="projects-th-dropdown" data-toggle="dropdown"></div>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="projects-th-dropdown">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-global-estimated" data-table-column-id="5" checked/>
+                                <label class="custom-control-label" for="dt-global-estimated">
+                                    @Localizer["_est."]
+                                    <span>@Localizer["_estimatedTime"]</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-global-logged" data-table-column-id="6" checked/>
+                                <label class="custom-control-label" for="dt-global-logged">
+                                    @Localizer["_log."]
+                                    <span>@Localizer["_loggedTime"]</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-global-progress" data-table-column-id="7" checked/>
+                                <label class="custom-control-label" for="dt-global-progress">
+                                    @Localizer["_progress"]
+                                    <span>@Localizer["_activityProgress"]</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-global-assignees" data-table-column-id="9" checked/>
+                                <label class="custom-control-label" for="dt-global-assignees">
+                                    @Localizer["_assignees"]
+                                    <span>@Localizer["_activityAssignees"]</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-global-due" data-table-column-id="10" checked/>
+                                <label class="custom-control-label" for="dt-global-due">
+                                    @Localizer["_due"]
+                                    <span>@Localizer["_deadline"]</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+            </tr>
+            </thead>
+            <tbody id="tbody-global">
+            @foreach (var activity in Model.Activities)
+            {
+                <tr class="hover-invisible-toggle" id="entity-@activity.Id">
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input datatables-check" id="@activity.Id" data-parent-id="global" disabled />
+                            <label class="custom-control-label" for="@activity.Id"></label>
+                        </div>
+                    </td>
+                    <td class="td-badge">
+                        <span class="d-none">@Convert.ToInt32(activity.Priority)</span>
+                        <span class="badge @ProjectsViewHelper.GetPriorityBadgeColor(activity.Priority)">@activity.Priority</span>
+                    </td>
+                    <td class="d-sm-table-cell d-none">
+                        @($"A{activity.Number:00000}")
+                    </td>
+                    <td>
+                        <a asp-controller="Activities" asp-action="Details" asp-route-id="@activity.Id" class="datatables-title entity-title">@activity.Name</a>
+                        <span class="badge @activity.ActivityTypeColor.ToString().BadgeColorConvert() top-webkit-inline-box d-lg-inline d-none ml-10">@activity.ActivityType</span>
+                        @if (activity.Assignees.Any(a => a.Id == Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)))
+                        {
+                            <div class="position-relative d-lg-inline-block d-none">
+                                <button class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box log-time-link" data-controller="LoggedTime" data-action="LogTimeFromActivitiesPage" data-activity-id="@activity.Id" data-progress="@activity.Progress">@Localizer["shortCuts_logTime"]</button>
+                            </div>
+                        }
+                    </td>
+                    <td class="d-md-table-cell d-none">
+                        <a asp-controller="Activities" asp-action="Index" asp-route-id="@activity.ProjectId">@activity.ProjectName</a>
+                    </td>
+                    <td class="d-md-table-cell d-none">@($"{activity.EstimatedTime}h")</td>
+                    <td class="d-md-table-cell d-none"><span class="td-logged-time" data-parent-id="@ViewBag.ParentId">@activity.LoggedTime</span>h</td>
+                    <td class="td-progress d-md-table-cell d-none">
+                        <span class="d-none">@activity.Progress</span>
+                        <div class="progress mb-1" title="@activity.Progress%">
+                            <div class="progress-bar @ProjectsViewHelper.GetProgressBarColor(activity.Progress)" role="progressbar" style="width: @activity.Progress%" aria-valuenow="@activity.Progress" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </td>
+                    <td class="d-md-table-cell d-none" id="status-@activity.Id">
+                        <div class="d-none">@Convert.ToInt32(activity.Status)</div>
+                        @activity.Status
+                    </td>
+                    <td class="td-users d-xl-table-cell d-none activity-assignees" data-id="@activity.Id">
+                        @if (activity.Assignees.Any())
+                        {
+                            <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@activity.Assignees.First().Id" title="@activity.Assignees.First().FullName" class="btn btn-outline-primary user-rectangle">@activity.Assignees.First().FullName.ToInitials()</a>
+
+                            if (activity.Assignees.Count > 1)
+                            {
+                                <a href="javascript:" class="btn btn-outline-primary user-rectangle" title="@string.Join(", ", activity.Assignees.Skip(1).Select(a => a.FullName))">+@(activity.Assignees.Count - 1)</a>
+                            }
+                        }
+                        @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+                        {
+                            <a href="javascript:" class="btn btn-outline-success user-rectangle global-edit-entity-assignees-link" title="@Localizer["shortCuts_editActivityAssignees"]" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="EditActivityAssignees" data-id="@activity.Id">+</a>
+                        }
+                        else
+                        {
+                            <span class="datatables-none">-</span>
+                        }
+                    </td>
+                    <td class="d-sm-table-cell d-none">
+                        @if (activity.DueDate != null)
+                        {
+                            if (activity.SprintId != null)
+                            {
+                                <span class="sprint-badge @ActivitiesViewHelper.GetSprintDotBadgeColor(activity.SprintDueDate.Value, activity.SprintIsCompleted)" title="@activity.Sprint"></span>
+                            }
+                            <span class="entity-date">@($"{activity.DueDate:yyyy-MM-dd}")</span>
+                        }
+                        else
+                        {
+                            <span class="datatables-none top-webkit-inline-box">-</span>
+                        }
+                    </td>
+                    <td class="td-options">
+                        <div class="dropdown datatables-dropdown">
+                            <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a asp-controller="Activities" asp-action="Details" asp-route-id="@activity.Id" class="dropdown-item">@Localizer["shortCuts_open"]</a>
+                                @if (activity.Assignees.Any(a => a.Id == Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)) || User.UserHasThisPermission(Permissions.ActivityUpdateOtherUsersEntry))
+                                {
+                                    <a asp-controller="Activities" asp-action="Edit" asp-route-id="@activity.Id" class="dropdown-item">@Localizer["shortCuts_edit"]</a>
+                                    <a href="javascript:" class="dropdown-item global-rename-entity-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="Rename" data-id="@activity.Id" data-name="@activity.Name">@Localizer["shortCuts_rename"]</a>
+                                    <a href="javascript:" class="dropdown-item global-log-time-link" data-controller="LoggedTime" data-action="LogTimeFromActivitiesPage" data-activity-id="@activity.Id" data-progress="@activity.Progress">@Localizer["shortCuts_logTime"]</a>
+                                    <a href="javascript:" class="dropdown-item global-set-entity-priority-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="EditPriority" data-id="@activity.Id" data-priority="@activity.Priority">@Localizer["shortCuts_setPriority"]</a>
+                                    <a href="javascript:" class="dropdown-item global-edit-entity-status-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="EditStatus" data-id="@activity.Id" data-status="@activity.Status">@Localizer["shortCuts_updateStatus"]</a>
+                                    <a href="javascript:" class="dropdown-item global-move-to-list-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="MoveToList" data-id="@activity.Id" data-list-id="@activity.ActivityListId" data-project-id="@activity.ProjectId">@Localizer["shortCuts_moveToList"]</a>
+                                    <a href="javascript:" class="dropdown-item global-assign-to-sprint-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="AssignToSprint" data-id="@activity.Id" data-sprint-id="@activity.SprintId" data-project-id="@activity.ProjectId">@Localizer["shortCuts_assignToSprint"]</a>
+                                }
+                                @*@if (activity.Assignees.Any(a => a.Id == Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)) || User.UserHasThisPermission(Permissions.ActivityDeleteOtherUsersEntry))
+                    {
+                        <div class="dropdown-divider"></div>
+                        <a href="javascript:" class="dropdown-item global-delete-entity-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="Delete" data-id="@activity.Id" data-name="@activity.Name">@Localizer["shortCuts_delete"]</a>
+                    }*@
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p>No matching records found</p>
+}
+
+<script>
+    EnableDataTableFromLocalStorage("#global-search-table", "GlobalActivitiesHiddenColumns");
+
+    $.bindColumnToggleLocalStorage({
+        cookieKey: "GlobalActivitiesHiddenColumns"
+    });
+
+    function GetCurrentView() {
+        return $("#current-view") != null ? $("#current-view").val() : -1;
+    }
+</script>
+
+
+<script>
+@if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+{
+<text>
+    // Rename
+    $.bindFormModal({
+        bindTo: ".global-rename-entity-link",
+        modalTitle: "@Localizer["shortCuts_renameActivity"]",
+        modalSize: "regular",
+        data: {
+            id: "data-id",
+            name: "data-name"
+        }
+    });
+
+    // Log time
+    $.bindFormModal({
+        bindTo: ".global-log-time-link",
+        modalTitle: "@Localizer["shortCuts_logTime"]",
+        modalSize: "regular",
+        data: {
+            activityId: "data-activity-id",
+            progress: "data-progress"
+        }
+    });
+
+    // Set priority
+    $.bindFormModal({
+        bindTo: ".global-set-entity-priority-link",
+        modalTitle: "@Localizer["shortCuts_setActivityPriority"]",
+        modalSize: "regular",
+        data: {
+            id: "data-id",
+            priority: "data-priority"
+        }
+    });
+
+    // Update status
+    $.bindFormModal({
+        bindTo: ".global-edit-entity-status-link",
+        modalTitle: "@Localizer["shortCuts_updateActivityStatus"]",
+        modalSize: "regular",
+        data: {
+            id: "data-id",
+            status: "data-status"
+        }
+    });
+
+    // Move to list
+    $.bindFormModal({
+        bindTo: ".global-move-to-list-link",
+        modalTitle: "@Localizer["shortCuts_moveActivityToList"]",
+        modalSize: "regular",
+        data: {
+            id: "data-id",
+            activityListId: "data-list-id",
+            projectId: "data-project-id"
+        }
+    });
+
+    // Assign to sprint
+    $.bindFormModal({
+        bindTo: ".global-assign-to-sprint-link",
+        modalTitle: "@Localizer["shortCuts_assignToSprint"]",
+        modalSize: "regular",
+        data: {
+            id: "data-id",
+            sprintId: "data-sprint-id",
+            projectId: "data-project-id"
+        }
+    });
+
+    // Edit activity assignees
+    $.bindFormModal({
+        bindTo: ".global-edit-entity-assignees-link",
+        modalTitle: "@Localizer["shortCuts_editActivityAssignees"]",
+        modalSize: "regular"
+    });
+</text>
+}
+</script>

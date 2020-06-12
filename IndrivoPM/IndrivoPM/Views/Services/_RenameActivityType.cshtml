@@ -1,0 +1,43 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.ActivityTypes.Commands.RenameActivityType.RenameActivityTypeCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+    <form id="form">
+        @Html.AntiForgeryToken()
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input hidden asp-for="Id" />
+                    <div class="mb-2">
+                        <label asp-for="Name" class="float-label"></label>
+                        <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_activityType"]" autofocus="autofocus" autocomplete="off" required />
+                        <span asp-validation-for="Name" class="invalid-feedback"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+            <button type="submit" class="btn btn-success" id="btn">@Localizer["_rename"]</button>
+        </div>
+    </form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+<script>
+    $(".selectpicker").selectpicker();
+    var services = new ServicesContainer();
+
+    $.saveChanges({
+        bindTo: "#btn",
+        formId: "#form",
+        ajaxUrl: "@Url.Action("RenameActivityType", "Services")",
+        successMessage: "@Localizer["msgSuccess_renameActivityType"]",
+        errorMessage: "@Localizer["msgError_renameActivityType"]",
+        eventFunction: services.getServices
+    });
+</script>

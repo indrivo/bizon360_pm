@@ -1,0 +1,38 @@
+﻿
+h4 {
+    margin-top: 13px;
+    margin-bottom: 13px;
+}
+.btn-outline-success {
+    margin-top: 13px;
+    margin-bottom: 13px;
+}
+.priority {
+    font-size: 12px;
+    font-weight: bold;
+}
+.activity-name {
+    font-size: 14px;
+    margin-left:3px
+}
+.activity-usecase {
+    font-size: 14px;
+}
+.activity-due-date {
+    font-size: 12px;
+    margin: 0px;
+}
+.card-title {
+    margin-top: -5px;
+    margin-bottom:0px;
+}
+.card-body {
+    padding: 15px 20px;
+}
+.line {
+    margin: 0px -20px 0px 0px;
+}
+p:empty {
+    display: none;
+}
+

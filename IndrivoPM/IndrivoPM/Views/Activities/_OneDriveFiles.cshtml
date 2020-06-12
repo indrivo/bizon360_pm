@@ -1,0 +1,73 @@
+﻿@model Bizon360.ViewComponents.OneDriveListViewModel
+@{
+    ViewData["Title"] = "OneDriveFiles";
+
+}
+
+@if (Model.MetaData.Any())
+{
+    <div class="some">
+        <table id="filesTable" class="table table-spacing">
+            <thead>
+                <tr class="bg-white">
+                    <th class="pl-4">Name</th>
+                    <th>Created by</th>
+                    <th>Created Time</th>
+                    <th>Modified by</th>
+                    <th>Modified at</th>
+                    <th class="no-sort"></th>
+                </tr>
+            </thead>
+            <tbody class="text-14">
+                @foreach (var item in Model.MetaData)
+                {
+
+                    <tr class="bg-white br-8">
+                        <td class="pl-4">
+                            <a class="font-weight-600 text-blue" href="@item.WebUrl" target="_blank" class="pull-left"> @item.Name</a>
+                        </td>
+                        <td class="font-weight-600">@*@item.CreatedBy.DisplayName*@</td>
+                        <td class="font-weight-600">@item.CreateDateTime</td>
+                        <td class="font-weight-600">@*@item.LastModifiedBy.DisplayName*@</td>
+                        <td class="font-weight-600">@item.ModifiedAt</td>
+                        <td>
+                            <div class="dropdown">
+                                <i class="position-absolute r-0 cursor-pointer" data-feather="more-vertical" data-toggle="dropdown"></i>
+                                <div class="dropdown-menu dropdown-menu-right dropdown">
+                                    <a class="dropdown-item font-weight-600" href="@item.DownloadUrl">Download</a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <script>
+        $(document).ready(function() {
+            $("#filesTable").dataTable({
+                "dom": "tip",
+                "orderMulti": false,
+
+                "searching": true,
+                "autoWidth": false,
+                "columnDefs": [
+                    { "targets": "no-sort", "orderable": false }
+                ],
+                "language": {
+                    "info": "_START_-_END_ of _TOTAL_",
+                    "paginate": {
+                        "previous": `<img src="/svg/chevron-left.svg" />`,
+                        "next": `<img src="/svg/chevron-right.svg" />`
+                    }
+                }
+            });
+        });
+    </script>
+}
+else
+{
+    <div>
+        <p class="pl-4 font-weight-600">No files yet in this activity.</p>
+    </div>
+}

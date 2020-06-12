@@ -1,0 +1,138 @@
+﻿@using Bizon360.Models
+@using Bizon360.Utils
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Newtonsoft.Json
+@model Gear.ProjectManagement.Manager.Domain.ChangeRequests.Queries.GetChangeRequestList.ChangeRequestListViewModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@{
+    ViewBag.TableId = Guid.NewGuid();
+}
+
+@if (Model.ChangeRequests.Any())
+{
+    <table class="table bizon-datatable dt-requests" id="table-@ViewBag.TableId" data-order='[[ 1, "desc" ]]'>
+        <thead>
+            <tr class="hover-invisible-toggle">
+                <th class="no-sort">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-@ProjectsViewHelper.GetRequestStatusString(ViewBag.Status)" />
+                        <label class="custom-control-label" for="bulk-@ProjectsViewHelper.GetRequestStatusString(ViewBag.Status)"></label>
+                    </div>
+                </th>
+                <th class="col-priority">@Localizer["_priority"]</th>
+                <th class="col-priority">ID</th>
+                <th>@Localizer["_request"]</th>
+                <th class="col-users d-xl-table-cell d-none">@Localizer["_requestBy"]</th>
+                <th class="col-date d-sm-table-cell d-none">@Localizer["_created"]</th>
+                <th class="col-date d-sm-table-cell d-none">@Localizer["_modified"]</th>
+                <th class="no-sort">
+                    <div class="dropdown datatables-th-dropdown">
+                        <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-requests-author-@ProjectsViewHelper.GetRequestStatusString(ViewBag.Status)" data-table-column-id="3" checked />
+                                <label class="custom-control-label" for="dt-requests-author-@ProjectsViewHelper.GetRequestStatusString(ViewBag.Status)">
+                                    @Localizer["_author"]
+                                    <span>@Localizer["_requestAuthor"]</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-requests-date-@ProjectsViewHelper.GetRequestStatusString(ViewBag.Status)" data-table-column-id="4" checked />
+                                <label class="custom-control-label" for="dt-requests-date-@ProjectsViewHelper.GetRequestStatusString(ViewBag.Status)">
+                                    @Localizer["_date"]
+                                    <span>@Localizer["_createdDate"]</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+            </tr>
+        </thead>
+        <tbody id="tbody-@ProjectsViewHelper.GetRequestStatusString(ViewBag.Status)">
+            @foreach (var request in Model.ChangeRequests.Where(r => r.Status == ViewBag.Status))
+            {
+                <tr class="hover-invisible-toggle" id="entity-@request.Id">
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input datatables-check" id="@request.Id" data-parent-id="@ProjectsViewHelper.GetRequestStatusString(ViewBag.Status)" />
+                            <label class="custom-control-label" for="@request.Id"></label>
+                        </div>
+                    </td>
+                    <td class="td-badge">
+                        <span class="d-none">@Convert.ToInt32(request.Priority)</span>
+                        <span class="badge @ProjectsViewHelper.GetPriorityBadgeColor(request.Priority)">@request.Priority</span>
+                    </td>
+                    <td>@($"R{request.Number:00000}")</td>
+                    <td>
+                        <a href="javascript:" class="datatables-title entity-title" data-toggle="modal" data-target="#modal" data-controller="ChangeRequests" data-action="Details" data-id="@request.Id">@request.Name</a>
+                        @if (User.UserHasThisPermission(Permissions.ChangeRequestApprove) && request.Status != ChangeRequestStatus.Approved)
+                        {
+                            <div class="position-relative d-lg-inline-block d-none">
+                                <a asp-controller="Activities" asp-action="Create"
+                                   asp-route-projectId="@request.ProjectId"
+                                   asp-route-changeRequestId="@request.Id"
+                                   asp-route-dtoJson="@(JsonConvert.SerializeObject(new ActivityDto{Name = request.Name, Description = request.Description, Priority = request.Priority, ProjectName = request.ProjectName}))"
+                                   class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box">@Localizer["shortCuts_accept"]</a>
+                            </div>
+                        }
+                    </td>
+                    <td class="td-users d-xl-table-cell d-none">
+                        <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@request.AuthorId" title="@request.AuthorName" class="btn btn-outline-primary user-rectangle">@request.AuthorName.ToInitials()</a>
+                    </td>
+                    <td class="d-sm-table-cell d-none">
+                        @($"{request.CreatedTime:yyyy-MM-dd}")
+                    </td>
+                    <td class="d-sm-table-cell d-none">
+                        @($"{request.ModifyTime:yyyy-MM-dd}")
+                    </td>
+                    <td class="td-options">
+                        <div class="dropdown datatables-dropdown">
+                            <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a href="javascript:" class="dropdown-item entity-title" data-toggle="modal" data-target="#modal" data-controller="ChangeRequests" data-action="Details" data-id="@request.Id">@Localizer["shortCuts_open"]</a>
+                                @if (User.UserHasThisPermission(Permissions.ChangeRequestUpdate) && request.Status != ChangeRequestStatus.Approved)
+                                {
+                                    <a href="javascript:" class="dropdown-item edit-entity-link" data-toggle="modal" data-target="#modal" data-controller="ChangeRequests" data-action="Edit" data-id="@request.Id">@Localizer["shortCuts_edit"]</a>
+                                }
+                                @if (User.UserHasThisPermission(Permissions.ChangeRequestApprove) && request.Status != ChangeRequestStatus.Approved)
+                                {
+                                    <a asp-controller="Activities" asp-action="Create"
+                                       asp-route-projectId="@request.ProjectId"
+                                       asp-route-changeRequestId="@request.Id"
+                                       asp-route-dtoJson="@(JsonConvert.SerializeObject(new ActivityDto{Name = request.Name, Description = request.Description, Priority = request.Priority, ProjectName = request.ProjectName}))"
+                                       class="dropdown-item">@Localizer["shortCuts_accept"]</a>
+                                }
+                                @if (User.UserHasThisPermission(Permissions.ChangeRequestReject) && request.Status != ChangeRequestStatus.Refused && request.Status != ChangeRequestStatus.Approved)
+                                {
+                                    <a href="javascript:" class="dropdown-item refuse-request-link" data-controller="ChangeRequests" data-action="RefuseChangeRequest" data-id="@request.Id" data-name="@request.Name">@Localizer["shortCuts_refuse"]</a>
+                                }
+                                @if (User.UserHasThisPermission(Permissions.ChangeRequestDelete))
+                                {
+                                    <div class="dropdown-divider"></div>
+                                    <a href="javascript:" class="dropdown-item delete-entity-link" data-toggle="modal" data-target="#modal" data-controller="ChangeRequests" data-action="Delete" data-id="@request.Id" data-name="@request.Name">@Localizer["shortCuts_delete"]</a>
+                                }
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p class="mb-0 mt-2">@Localizer["_messages_noRequests"]</p>
+}
+
+<script>
+    EnableDataTable("#table-" + "@ViewBag.TableId", "RequestsHiddenColumns");
+
+    $.bindColumnToggle({ cookieKey: "RequestsHiddenColumns" });
+</script>

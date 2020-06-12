@@ -1,0 +1,51 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.Commands.Wiki.Sections.UpdateSection.UpdateSectionCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form id="form-edit">
+    <div class="modal-body">
+        <div class="row">
+            <input asp-for="Id" hidden />
+            @Html.AntiForgeryToken()
+
+            <div class="col-12">
+                <div class="mb-2">
+                    <label asp-for="Title" class="float-label"></label>
+                    <input asp-for="Title" class="form-control" placeholder="@Localizer["placeholders_tabName"]" autofocus="autofocus" autocomplete="off" required />
+                    <span asp-validation-for="Title" class="invalid-feedback"></span>
+                </div>
+            </div>
+            
+            <div class="col-12">
+                <div class="position-relative">
+                    <label asp-for="Content" class="summernote-label"></label>
+                    <textarea asp-for="Content" id="summer-note" placeholder="@Localizer["placeholders_sectionContent"]"></textarea>
+                    <span asp-validation-for="Content" class="invalid-feedback mt-1 mb-2"></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-edit">@Localizer["_update"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    var wiki = new Wiki();
+    wiki.SummerNote("#summer-note");
+
+    $.saveChanges({
+        bindTo: "#btn-edit",
+        formId: "#form-edit",
+        ajaxUrl: "@Url.Action("EditSection", "Wiki")",
+        successMessage: "@Localizer["msgSuccess_editSection"]",
+        errorMessage: "@Localizer["msgError_editSection"]",
+        eventFunction:GetWiki
+    });
+</script>

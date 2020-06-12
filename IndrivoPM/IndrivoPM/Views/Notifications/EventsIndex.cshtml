@@ -1,0 +1,269 @@
+﻿@using Bizon360.Models
+@using Gear.Notifications.Abstractions.Domain
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@model IEnumerable<Gear.Notifications.Abstractions.Infrastructure.Resources.Dtos.EventDto>
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = "Administrative";
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = ViewData["Title"];
+}
+
+<partial name="_AdmTabs" />
+
+@if (Model.Any())
+{
+    <div class="row bizon-row">
+        <div class="col-lg-9 col-md-12 mb-lg-0 mb-3 bizon-col">
+
+            @if (Model.Any(x => x.EventGroupName.Contains("Project")))
+            {
+                <div class="bg-white rounded border px-20 py-15">
+                    <h6>Project notifications</h6>
+                    <hr class="hr-description mb-2" />
+                    @foreach (var ev in Model.Where(x => x.EventGroupName.Contains("Project")))
+                    {
+                        @if (ev.EventDescription != null)
+                        {
+                            <label class="d-inline font-size-14">@ev.EventDescription</label>
+                        }
+                        else
+                        {
+                            <label class="d-inline font-size-14">@ev.EventName</label>
+                        }
+
+                        <div class="custom-control custom-switch d-inline float-right">
+                            <input data-id="@ev.Id"
+                                   data-type="@PropagationType.Email"
+                                   type="checkbox"
+                                   checked="@(ev.PropagationTypes.Contains(PropagationType.Email))"
+                                   class="custom-control-input propagation-type"
+                                   id="email-@ev.GetHashCode()" />
+
+                            <label class="custom-control-label" for="email-@ev.GetHashCode()">Email notifications</label>
+                        </div>
+
+                        <div class="custom-control custom-switch d-inline float-right">
+                            <input data-id="@ev.Id"
+                                   data-type="@PropagationType.Application"
+                                   type="checkbox"
+                                   checked="@(ev.PropagationTypes.Contains(PropagationType.Application))"
+                                   class="custom-control-input propagation-type"
+                                   id="app-@ev.GetHashCode()" />
+                            <label class="custom-control-label pr-5" for="app-@ev.GetHashCode()">In-app notifications</label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+                    }
+                </div>
+            }
+
+            @if (Model.Any(x => x.EventGroupName.Contains("Activity")))
+            {
+                <div class="bg-white rounded border px-20 py-15 mt-2">
+                    <h6>Activity notifications</h6>
+                    <hr class="hr-description mb-2" />
+                    @foreach (var ev in Model.Where(x => x.EventGroupName.Contains("Activity")))
+                    {
+                        @if (ev.EventDescription != null)
+                        {
+                            <label class="d-inline font-size-14">@ev.EventDescription</label>
+                        }
+                        else
+                        {
+                            <label class="d-inline font-size-14">@ev.EventName</label>
+                        }
+
+                        <div class="custom-control custom-switch d-inline float-right">
+                            <input data-id="@ev.Id"
+                                   data-type="@PropagationType.Email"
+                                   type="checkbox"
+                                   checked="@(ev.PropagationTypes.Contains(PropagationType.Email))"
+                                   class="custom-control-input propagation-type"
+                                   id="email-@ev.GetHashCode()" />
+
+                            <label class="custom-control-label" for="email-@ev.GetHashCode()">Email notifications</label>
+                        </div>
+
+                        <div class="custom-control custom-switch d-inline float-right">
+                            <input data-id="@ev.Id"
+                                   data-type="@PropagationType.Application"
+                                   type="checkbox"
+                                   checked="@(ev.PropagationTypes.Contains(PropagationType.Application))"
+                                   class="custom-control-input propagation-type"
+                                   id="app-@ev.GetHashCode()" />
+                            <label class="custom-control-label pr-5" for="app-@ev.GetHashCode()">In-app notifications</label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+                    }
+                </div>
+            }
+
+            @if (Model.Any(x => x.EventGroupName.Contains("Sprint")))
+            {
+                <div class="bg-white rounded border px-20 py-15 mt-2">
+                    <h6>Sprint notifications</h6>
+                    <hr class="hr-description mb-2" />
+                    @foreach (var ev in Model.Where(x => x.EventGroupName.Contains("Sprint")))
+                    {
+                        @if (ev.EventDescription != null)
+                        {
+                            <label class="d-inline font-size-14">@ev.EventDescription</label>
+                        }
+                        else
+                        {
+                            <label class="d-inline font-size-14">@ev.EventName</label>
+                        }
+
+                        <div class="custom-control custom-switch d-inline float-right">
+                            <input data-id="@ev.Id"
+                                   data-type="@PropagationType.Email"
+                                   type="checkbox"
+                                   checked="@(ev.PropagationTypes.Contains(PropagationType.Email))"
+                                   class="custom-control-input propagation-type"
+                                   id="email-@ev.GetHashCode()" />
+
+                            <label class="custom-control-label" for="email-@ev.GetHashCode()">Email notifications</label>
+                        </div>
+
+                        <div class="custom-control custom-switch d-inline float-right">
+                            <input data-id="@ev.Id"
+                                   data-type="@PropagationType.Application"
+                                   type="checkbox"
+                                   checked="@(ev.PropagationTypes.Contains(PropagationType.Application))"
+                                   class="custom-control-input propagation-type"
+                                   id="app-@ev.GetHashCode()" />
+                            <label class="custom-control-label pr-5" for="app-@ev.GetHashCode()">In-app notifications</label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+                    }
+                </div>
+            }
+
+            @if (Model.Any(x => x.EventGroupName.Contains("Reports")))
+            {
+                <div class="bg-white rounded border px-20 py-15 mt-2">
+                    <h6>Reports notifications</h6>
+                    <hr class="hr-description mb-2" />
+                    @foreach (var ev in Model.Where(x => x.EventGroupName.Contains("Reports")))
+                    {
+                        @if (ev.EventDescription != null)
+                        {
+                            <label class="d-inline font-size-14">@ev.EventDescription</label>
+                        }
+                        else
+                        {
+                            <label class="d-inline font-size-14">@ev.EventName</label>
+                        }
+
+                        <div class="custom-control custom-switch d-inline float-right">
+                            <input data-id="@ev.Id"
+                                   data-type="@PropagationType.Email"
+                                   type="checkbox"
+                                   checked="@(ev.PropagationTypes.Contains(PropagationType.Email))"
+                                   class="custom-control-input propagation-type"
+                                   id="email-@ev.GetHashCode()" />
+
+                            <label class="custom-control-label" for="email-@ev.GetHashCode()">Email notifications</label>
+                        </div>
+
+                        <div class="custom-control custom-switch d-inline float-right">
+                            <input data-id="@ev.Id"
+                                   data-type="@PropagationType.Application"
+                                   type="checkbox"
+                                   checked="@(ev.PropagationTypes.Contains(PropagationType.Application))"
+                                   class="custom-control-input propagation-type"
+                                   id="app-@ev.GetHashCode()" />
+                            <label class="custom-control-label pr-5" for="app-@ev.GetHashCode()">In-app notifications</label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+                    }
+                </div>
+            }
+
+            @if (Model.Any(x => x.EventGroupName.Contains("Administration")))
+            {
+                <div class="bg-white rounded border px-20 py-15 mt-2">
+                    <h6>Administration notifications</h6>
+                    <hr class="hr-description mb-2" />
+                    @foreach (var ev in Model.Where(x => x.EventGroupName.Contains("Administration")))
+                    {
+                        @if (ev.EventDescription != null)
+                        {
+                            <label class="d-inline font-size-14">@ev.EventDescription</label>
+                        }
+                        else
+                        {
+                            <label class="d-inline font-size-14">@ev.EventName</label>
+                        }
+
+                        <div class="custom-control custom-switch d-inline float-right">
+                            <input data-id="@ev.Id"
+                                   data-type="@PropagationType.Email"
+                                   type="checkbox"
+                                   checked="@(ev.PropagationTypes.Contains(PropagationType.Email))"
+                                   class="custom-control-input propagation-type"
+                                   id="email-@ev.GetHashCode()" />
+
+                            <label class="custom-control-label" for="email-@ev.GetHashCode()">Email notifications</label>
+                        </div>
+
+                        <div class="custom-control custom-switch d-inline float-right">
+                            <input data-id="@ev.Id"
+                                   data-type="@PropagationType.Application"
+                                   type="checkbox"
+                                   checked="@(ev.PropagationTypes.Contains(PropagationType.Application))"
+                                   class="custom-control-input propagation-type"
+                                   id="app-@ev.GetHashCode()" />
+                            <label class="custom-control-label pr-5" for="app-@ev.GetHashCode()">In-app notifications</label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+                    }
+                </div>
+            }
+
+        </div>
+    </div>
+
+}
+else
+{
+    <p>There are no events imported.</p>
+}
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        $(document).ready(function () {
+            $("#tab-notifications").addClass("active");
+
+            $(".propagation-type").change(function () {
+                var id = $(this).data("id");
+                var type = $(this).data("type");
+
+                $.get("/Notifications/ChangePropagationType/?id=" + id + "&type=" + type)
+                    .done(function () {
+                        $.successAlert({
+                            title: "Success",
+                            message: "Changes saved."
+                        });
+                    });
+
+            });
+        });
+    </script>
+}

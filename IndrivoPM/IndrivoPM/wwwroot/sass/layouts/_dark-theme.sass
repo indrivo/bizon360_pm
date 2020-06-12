@@ -1,0 +1,70 @@
+.dark-mode-switcher
+  height: 20px
+  width: 20px
+  background: url("/svg/moon.svg")
+
+  .dark-theme &
+    background: url("/svg/sun.svg")
+
+.dark-theme
+  hr
+    border-color: $dark-color-border
+
+  input.form-control
+    background-color: $dark-color-wh !important
+    border-color: $dark-color-border !important
+    color: #FFFFFF !important
+
+  div.form-control
+    background-color: $dark-color-wh
+
+  .bg-white
+    background-color: $dark-color-wh !important
+
+  .border, .border-left, .border-right, .border-top, .border-bottom
+    border-color: $dark-color-border !important
+
+  .navbar-brand, .navbar-brand:hover
+    color: $color-border
+
+  a.nav-link:hover
+    color: $color-border !important
+
+  .progress
+    background-color: $dark-color-bg
+    box-shadow: inset 0 0 0 1px $dark-color-border
+
+  .color-black
+    color: $color-border
+
+  .modal-content
+    background-color: $dark-color-wh
+
+  .dropdown-menu
+    background-color: $dark-color-wh
+    border-color: $dark-color-border !important
+    color: $color-border
+
+    .dropdown-item:hover, .dropdown-item:focus
+      background-color: $dark-color-bg
+      color: $color-border
+
+    .dropdown-divider
+      border-color: $dark-color-border !important
+
+    .table-condensed
+      & th:hover, & td.day:hover
+        background-color: $dark-color-bg
+
+  .card
+    background-color: $dark-color-wh
+
+  .nav-tabs .nav-link.active
+    background-color: transparent
+    color: $color-border
+
+  .nav-tabs .nav-link:not(.active):hover
+    border-color: transparent
+
+  .table th, .table td
+    border-color: $dark-color-border

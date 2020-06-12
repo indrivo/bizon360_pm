@@ -1,0 +1,61 @@
+﻿@model Gear.Manager.Core.EntityServices.Reports.Queries.Charts.GetProjectActivityTypeTrackers.ProjectActivityTrackersListViewModel
+@{
+    Layout = null;
+}
+
+<canvas id="pie-chart-tracker-types" width="800" height="450"></canvas>
+
+<script>
+    function GetActivityTrackerNames() {
+        const result = [];
+
+        @foreach (var item in Model.ActivityTrackers.Select(x => x.ActivityTrackName))
+        {
+            @:result.push("@item");
+        }
+
+        return result;
+    }
+
+    function GetActivityTrackersLoggedTime() {
+        const result = [];
+
+        @foreach (var item in Model.ActivityTrackers.Select(x => x.TotalLoggedTime))
+        {
+            @:result.push("@item");
+        }
+
+        return result;
+    }
+
+    function GetDifferentColors(counter) {
+        const result = [];
+
+        const maxValue = 16777215;
+
+        for(var i = 0; i < counter; i++)
+            result.push('#' + (Math.floor((Math.random() + 0.01) * (i + 1) * (maxValue / counter))).toString(16));
+
+        return result;
+    }
+</script>
+
+<script>
+    var chartTrackerTypes = new Chart(document.getElementById("pie-chart-tracker-types"), {
+        type: 'pie',
+        data: {
+            labels: GetActivityTrackerNames(),
+            datasets: [{
+                label: "@Model.ActivityTypeName",
+                backgroundColor: GetDifferentColors(@Model.ActivityTrackers.Count),
+                data: GetActivityTrackersLoggedTime()
+            }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: "@Model.ActivityTypeName"
+            }
+        }
+    });
+</script>

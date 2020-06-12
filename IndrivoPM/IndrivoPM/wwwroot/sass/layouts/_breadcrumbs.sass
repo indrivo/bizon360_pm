@@ -1,0 +1,25 @@
+nav.nav-breadcrumb
+  padding-top: 2px
+
+  ol.breadcrumb
+    li
+      font-size: 14px
+      color: $color-gray
+
+      a
+        color: $color-black
+
+        &:hover
+          color: $color-gray-light !important
+
+        .dark-theme &
+          color: $color-border
+
+          &:hover
+            color: $color-gray-light !important
+
+.breadcrumb-item + .breadcrumb-item::before
+  color: $color-border
+
+  .dark-theme &
+    color: $dark-color-border

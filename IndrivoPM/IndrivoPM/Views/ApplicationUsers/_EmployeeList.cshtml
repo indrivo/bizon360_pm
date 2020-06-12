@@ -1,0 +1,349 @@
+﻿@model Gear.Manager.Core.EntityServices.ApplicationUsers.Querries.GetApplicationUserList.ApplicationUserListViewModel
+@using System.Security.Claims
+@using Bizon360.Models
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Newtonsoft.Json
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@if (Model.ApplicationUsers.Any())
+{
+    <div class="collapse-datatable" id="datatables-employees">
+        <table class="table bizon-datatable dt-employees no-parent" data-order='[[ 3, "asc" ]]'>
+            <thead>
+                <tr class="hover-invisible-toggle">
+                    <th class="no-sort">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-employees" />
+                            <label class="custom-control-label" for="bulk-employees"></label>
+                        </div>
+                    </th>
+                    <th style="width: 30px" class="no-sort">#</th>
+                    <th class="col-email d-sm-table-cell d-none">@Localizer["_employees"]</th>
+                    <th class="col-email d-sm-table-cell d-none">@Localizer["_email"]</th>
+                    <th class="col-job-position d-lg-table-cell d-none">@Localizer["_jobPositions"]</th>
+                    <th class="col-date d-xl-table-cell d-none no-sort">@Localizer["_projects"]</th>
+                    <th class="col-roles d-xl-table-cell d-none no-sort">Roles & permissions</th>
+                    <th class="col-date d-xl-table-cell d-none no-sort">@Localizer["_status"]</th>
+                    <th class="col-date d-lg-table-cell d-none">@Localizer["_created"]</th>
+                    <th class="col-date d-lg-table-cell d-none">@Localizer["_modified"]</th>
+                    <th class="no-sort">
+                        <div class="dropdown datatables-th-dropdown">
+                            <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-employee-email" data-table-column-id="3" checked />
+                                    <label class="custom-control-label" for="dt-employee-email">
+                                        @Localizer["_email"]
+                                        <span>Employee email</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-employee-job-position" data-table-column-id="4" checked />
+                                    <label class="custom-control-label" for="dt-employee-job-position">
+                                        @Localizer["_jobPositions"]
+                                        <span>Employee position</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-employee-roles" data-table-column-id="5" checked />
+                                    <label class="custom-control-label" for="dt-employee-roles">
+                                        Roles
+                                        <span>Employee roles</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-employee-status" data-table-column-id="6" checked />
+                                    <label class="custom-control-label" for="dt-employee-status">
+                                        @Localizer["_status"]
+                                        <span>Employee status</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-employee-created" data-table-column-id="7" checked />
+                                    <label class="custom-control-label" for="dt-employee-created">
+                                        @Localizer["_created"]
+                                        <span>Created time</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-employee-modified" data-table-column-id="8" checked />
+                                    <label class="custom-control-label" for="dt-employee-modified">
+                                        @Localizer["_modified"]
+                                        <span>Modified time</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var us in Model.ApplicationUsers.Where(x => x.Active))
+                {
+                    <tr class="hover-invisible-toggle" id="entity-@us.Id">
+                        <td>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-check" id="@us.Id" data-parent-id="employees" />
+                                <label class="custom-control-label" for="@us.Id"></label>
+                            </div>
+                        </td>
+                        <td></td>
+                        <td>
+                            <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@us.Id" class="datatables-title">@us.FullName</a>
+                            <div class="position-relative d-lg-inline-block d-none">
+                                <a class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box" asp-controller="ApplicationUsers" asp-action="Edit" asp-route-id="@us.Id">@Localizer["shortCuts_edit"]</a>
+                            </div>
+                        </td>
+                        <td class="d-sm-table-cell d-none">@us.Username</td>
+                        <td class="d-lg-table-cell d-none">@us.JobPosition</td>
+                        
+                        <td class="d-xl-table-cell d-none td-badge sorting_1">
+                            <a href="javascript:"  class="badge badge-outline-success view-user-projects" style="cursor: pointer" data-toggle="modal" data-target="#modal" data-controller="ApplicationUsers" data-action="GetUserProjects" data-id="@us.Id">
+                                @Localizer["shortCuts_viewAll"]
+                            </a>
+                        </td>
+
+                        <td class="d-xl-table-cell d-none">
+                            @foreach (var role in us.Roles)
+                            {
+                                <span class="badge badge-outline-purple">@role</span>
+                            }
+                        </td>
+
+                        @if (us.Active)
+                        {
+                            <td class="d-xl-table-cell d-none td-badge sorting_1">
+                                <span class="badge badge-outline-success">@Localizer["_active"]</span>
+                            </td>
+                        }
+                        else
+                        {
+                            <td class="d-xl-table-cell d-none td-badge sorting_1">
+                                <span class="badge badge-outline-secondary">@Localizer["_inactive"]</span>
+                            </td>
+                        }
+                        <td class="d-lg-table-cell d-none">@us.CreatedTime.ToString("yyyy-MM-dd")</td>
+                        <td class="d-lg-table-cell d-none">@us.ModifiedTime.ToString("yyyy-MM-dd")</td>
+                        <td class="td-options">
+                            <div class="dropdown datatables-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                    <a class="dropdown-item" asp-controller="ApplicationUsers" asp-action="Edit" asp-route-id="@us.Id">@Localizer["shortCuts_edit"]</a>
+
+                                    <a href="javascript:" class="dropdown-item add-to-role"
+                                       data-controller="ApplicationUsers" data-action="AddToRoles" data-id="@us.Id">@Localizer["shortCuts_roleManagement"]</a>
+                                    @if (us.Active)
+                                    {
+                                        <a href="javascript:" class="dropdown-item deactivate-user"
+                                           data-controller="ApplicationUsers" data-action="DeactivateApplicationUser" data-id="@us.Id" data-name="@us.FullName">@Localizer["shortCuts_deactivate"]</a>
+                                    }
+                                    else
+                                    {
+                                        <a href="javascript:" class="dropdown-item activate-user"
+                                           data-controller="ApplicationUsers" data-action="ActivateApplicationUser" data-id="@us.Id" data-name="@us.FullName">@Localizer["shortCuts_activate"]</a>
+                                    }
+                                    @if (User.UserHasThisPermission(Permissions.EmployeeDelete))
+                                    {
+                                        <div class="dropdown-divider"></div>
+                                        <a href="javascript:" class="dropdown-item delete-entity-link"
+                                           data-controller="ApplicationUsers" data-action="DeleteEmployees" data-id="@us.Id" data-name="@us.FullName">@Localizer["shortCuts_delete"]</a>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.ApplicationUsers.Count(x => !x.Active) != 0)
+    {
+        <div class="text-center my-3">
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-open="false" onclick="showInactive(this, '#datatables-inactive-employees', true)">Show inactive</button>
+            <p class="p-xs d-inline ml-2">@Model.ApplicationUsers.Count(x => !x.Active) @Localizer["_employees"]</p>
+        </div>
+
+        <div class="collapse-datatable d-none" id="datatables-inactive-employees">
+            <table class="table bizon-datatable dt-employees" data-order='[[ 3, "asc" ]]'>
+                <thead>
+                    <tr class="hover-invisible-toggle">
+                        <th class="no-sort">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-inactive-employees" />
+                                <label class="custom-control-label" for="bulk-inactive-employees"></label>
+                            </div>
+                        </th>
+                        <th style="width: 30px" class="no-sort">#</th>
+                        <th class="col-email d-sm-table-cell d-none">@Localizer["_employees"]</th>
+                        <th class="col-email d-sm-table-cell d-none">@Localizer["_email"]</th>
+                        <th class="col-job-position d-lg-table-cell d-none">@Localizer["_jobPositions"]</th>
+                        <th class="col-date d-xl-table-cell d-none no-sort">@Localizer["_projects"]</th>
+                        <th class="col-roles d-xl-table-cell d-none no-sort">Roles & permissions</th>
+                        <th class="col-date  d-xl-table-cell d-none">@Localizer["_status"]</th>
+                        <th class="col-date  d-lg-table-cell d-none">@Localizer["_created"]</th>
+                        <th class="col-date  d-lg-table-cell d-none">@Localizer["_modified"]</th>
+                        <th class="no-sort">
+                            <div class="dropdown datatables-th-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-inactive-employee-email" data-table-column-id="3" checked />
+                                        <label class="custom-control-label" for="dt-inactive-employee-email">
+                                            @Localizer["_email"]
+                                            <span>Employee email</span>
+                                        </label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-inactive-employee-job-position" data-table-column-id="4" checked />
+                                        <label class="custom-control-label" for="dt-inactive-employee-job-position">
+                                            @Localizer["_jobPositions"]
+                                            <span>Employee position</span>
+                                        </label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-inactive-employee-roles" data-table-column-id="5" checked />
+                                        <label class="custom-control-label" for="dt-inactive-employee-roles">
+                                            Roles
+                                            <span>Employee roles</span>
+                                        </label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-inactive-employee-status" data-table-column-id="6" checked />
+                                        <label class="custom-control-label" for="dt-inactive-employee-status">
+                                            @Localizer["_status"]
+                                            <span>Employee status</span>
+                                        </label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-inactive-employee-created" data-table-column-id="7" checked />
+                                        <label class="custom-control-label" for="dt-inactive-employee-created">
+                                            @Localizer["_created"]
+                                            <span>Created time</span>
+                                        </label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-inactive-employee-modified" data-table-column-id="8" checked />
+                                        <label class="custom-control-label" for="dt-inactive-employee-modified">
+                                            @Localizer["_modified"]
+                                            <span>Created time</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var us in Model.ApplicationUsers.Where(x => !x.Active))
+                    {
+                        <tr class="hover-invisible-toggle" id="entity-@us.Id">
+                            <td>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-check" id="@us.Id" data-parent-id="inactive-employees" />
+                                    <label class="custom-control-label" for="@us.Id"></label>
+                                </div>
+                            </td>
+                            <td></td>
+                            <td>
+                                <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@us.Id" class="datatables-title">@us.FullName</a>
+                                <div class="position-relative d-lg-inline-block d-none">
+                                    <a class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box" asp-controller="ApplicationUsers" asp-action="Edit" asp-route-id="@us.Id">@Localizer["shortCuts_edit"]</a>
+                                </div>
+                            </td>
+                            <td class="d-sm-table-cell d-none">@us.Username</td>
+                            <td class="d-lg-table-cell d-none">@us.JobPosition</td>
+                            <td class="d-xl-table-cell d-none td-badge sorting_1">
+                                <a href="javascript:"  class="badge badge-outline-success view-user-projects" style="cursor: pointer" data-toggle="modal" data-target="#modal" data-controller="ApplicationUsers" data-action="GetUserProjects" data-id="@us.Id">
+                                    @Localizer["shortCuts_viewAll"]
+                                </a>
+                            </td>
+                            <td class="d-xl-table-cell d-none">
+                                @foreach (var role in us.Roles)
+                                {
+                                    <span class="badge badge-outline-purple">@role</span>
+                                }
+                            </td>
+
+                            @if (us.Active)
+                            {
+                                <td class="d-xl-table-cell d-none td-badge sorting_1">
+                                    <span class="badge badge-outline-success">@Localizer["_active"]</span>
+                                </td>
+                            }
+                            else
+                            {
+                                <td class="d-xl-table-cell d-none td-badge sorting_1">
+                                    <span class="badge badge-outline-secondary">@Localizer["_inactive"]</span>
+                                </td>
+                            }
+                            <td class="d-lg-table-cell d-none">@us.CreatedTime.ToString("yyyy-MM-dd")</td>
+                            <td class="d-lg-table-cell d-none">@us.ModifiedTime.ToString("yyyy-MM-dd")</td>
+                            <td class="td-options">
+                                <div class="dropdown datatables-dropdown">
+                                    <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                        <a class="dropdown-item" asp-controller="ApplicationUsers" asp-action="Edit" asp-route-id="@us.Id">@Localizer["shortCuts_edit"]</a>
+
+                                        <a href="javascript:" class="dropdown-item add-to-role"
+                                           data-controller="ApplicationUsers" data-action="AddToRoles" data-id="@us.Id">@Localizer["shortCuts_roleManagement"]</a>
+                                        @if (us.Active)
+                                        {
+                                            <a href="javascript:" class="dropdown-item deactivate-user"
+                                               data-controller="ApplicationUsers" data-action="DeactivateApplicationUser" data-id="@us.Id" data-name="@us.FullName">@Localizer["shortCuts_deactivate"]</a>
+                                        }
+                                        else
+                                        {
+                                            <a href="javascript:" class="dropdown-item activate-user"
+                                               data-controller="ApplicationUsers" data-action="ActivateApplicationUser" data-id="@us.Id" data-name="@us.FullName">@Localizer["shortCuts_activate"]</a>
+                                        }
+                                        @if (User.UserHasThisPermission(Permissions.EmployeeDelete))
+                                        {
+                                            <div class="dropdown-divider"></div>
+                                            <a href="javascript:" class="dropdown-item delete-entity-link"
+                                               data-controller="ApplicationUsers" data-action="DeleteEmployees" data-id="@us.Id" data-name="@us.FullName">@Localizer["shortCuts_delete"]</a>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    }
+}
+else
+{
+    <div>
+        <p class="ml-3">There aren't any employees</p>
+    </div>
+}
+
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+<script>
+    $(document).ready(function () {
+
+        $(".bizon-datatable").each(function () {
+            EnableDataTable($(this), "UsersColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)", true);
+        });
+
+        $.bindColumnToggle({
+            cookieKey: "UsersColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)"
+        });
+
+        $.bindFormModal({
+            bindTo: ".view-user-projects",
+            modalTitle: "@Localizer["shortCuts_viewUserProjects"]",
+            modalSize: "regular"
+        });
+
+    });
+</script>

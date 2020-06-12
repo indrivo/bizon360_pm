@@ -1,0 +1,161 @@
+﻿@using Bizon360.Models
+@using Bizon360.Utils
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.Queries.GetProjectListByGroup.ProjectListViewModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@if (Model.Projects.Any())
+{
+    <div class="collapse-datatable">
+        <table class="table bizon-datatable no-parent dt-projects" data-order='[[ 1, "desc" ]]'>
+            <thead>
+                <tr class="hover-invisible-toggle">
+                    <th class="no-sort">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-no-group" />
+                            <label class="custom-control-label" for="bulk-no-group"></label>
+                        </div>
+                    </th>
+                    <th class="col-priority">@Localizer["_priority"]</th>
+                    <th class="col-project">@Localizer["_project"]</th>
+                    <th class="col-progress d-md-table-cell d-none">@Localizer["_progress"]</th>
+                    <th class="col-status d-md-table-cell d-none">@Localizer["_status"]</th>
+                    <th class="col-users no-sort d-xl-table-cell d-none">@Localizer["_team"]</th>
+                    <th class="col-date d-sm-table-cell d-none">@Localizer["_due"]</th>
+                    <th class="no-sort">
+                        <div class="dropdown datatables-th-dropdown">
+                            <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-progress-projects" data-table-column-id="3" checked />
+                                    <label class="custom-control-label" for="dt-progress-projects">
+                                        @Localizer["_progress"]
+                                        <span>@Localizer["_projectProgress"]</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-team-projects" data-table-column-id="4" checked />
+                                    <label class="custom-control-label" for="dt-team-projects">
+                                        @Localizer["_team"]
+                                        <span>@Localizer["_teamMembers"]</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-due-projects" data-table-column-id="5" checked />
+                                    <label class="custom-control-label" for="dt-due-projects">
+                                        @Localizer["_due"]
+                                        <span>@Localizer["_deadline"]</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="tbody-no-group">
+                @foreach (var project in Model.Projects)
+                {
+                    <tr class="hover-invisible-toggle" id="entity-@project.Id">
+                        <td>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-check" id="@project.Id" data-parent-id="no-group" />
+                                <label class="custom-control-label" for="@project.Id"></label>
+                            </div>
+                        </td>
+                        <td class="td-badge">
+                            <span class="d-none">@Convert.ToInt32(project.Priority)</span>
+                            <span class="badge @ProjectsViewHelper.GetPriorityBadgeColor(project.Priority)">@project.Priority</span>
+                        </td>
+                        <td>
+                            <a asp-controller="Activities" asp-action="Index" asp-route-id="@project.Id" class="datatables-title entity-title">@project.Name</a>
+                            @if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+                            {
+                                <div class="position-relative d-lg-inline-block d-none">
+                                    <button class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box edit-entity-link" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="Edit" data-id="@project.Id">@Localizer["shortCuts_edit"]</button>
+                                </div>
+                            }
+                        </td>
+                        <td class="td-progress d-md-table-cell d-none">
+                            <span class="d-none">NaN</span>
+                            <div class="d-flex">
+                                <div class="progress mb-1" title="NaN%">
+                                    <div class="progress-bar @ProjectsViewHelper.GetProgressBarColor(0)" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <span class="pb-percentage">NaN%</span>
+                            </div>
+                        </td>
+                        <td class="td-users d-xl-table-cell d-none">
+                            @if (project.Team.Any())
+                            {
+                                foreach (var member in project.Team.Take(3))
+                                {
+                                    <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@member.Id" title="@member.FullName" class="btn btn-outline-primary user-rectangle">@member.FullName.ToInitials()</a>
+                                }
+                                if (project.Team.Count - 3 > 0)
+                                {
+                                    <a href="javascript:" class="btn btn-outline-primary user-rectangle">+@(project.Team.Count - 3)</a>
+                                }
+                                if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+                                {
+                                    <a href="javascript:" class="btn btn-outline-success user-rectangle hover-invisible edit-entity-members-link" title="@Localizer["shortCuts_editProjectMembers"]" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="EditProjectMembers" data-id="@project.Id">+</a>
+                                }
+                            }
+                            else
+                            {
+                                if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+                                {
+                                    <a href="javascript:" class="btn btn-outline-success user-rectangle hover-invisible edit-entity-members-link" title="@Localizer["shortCuts_editProjectMembers"]" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="EditProjectMembers" data-id="@project.Id">+</a>
+                                }
+                                else
+                                {
+                                    <span class="datatables-none">-</span>
+                                }
+                            }
+                        </td>
+                        <td class="d-sm-table-cell d-none">
+                            @if (project.DueDate != null)
+                            {
+                                @($"{project.DueDate:yyyy-MM-dd}")
+
+                            }
+                            else
+                            {
+                                <span class="datatables-none top-webkit-inline-box">-</span>
+                            }
+                        </td>
+                        <td class="td-options">
+                            <div class="dropdown datatables-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                    <a asp-controller="Activities" asp-action="Index" asp-route-id="@project.Id" class="dropdown-item">@Localizer["shortCuts_open"]</a>
+                                    @if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+                                    {
+                                        <a href="javascript:" class="dropdown-item edit-entity-link" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="Edit" data-id="@project.Id">@Localizer["shortCuts_edit"]</a>
+                                        <a href="javascript:" class="dropdown-item rename-entity-link" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="Rename" data-id="@project.Id" data-name="@project.Name">@Localizer["shortCuts_rename"]</a>
+                                        <a href="javascript:" class="dropdown-item edit-entity-status-link" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="EditStatus" data-id="@project.Id" data-status="@project.Status">@Localizer["shortCuts_updateStatus"]</a>
+                                        <a href="javascript:" class="dropdown-item set-entity-priority-link" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="SetPriority" data-id="@project.Id" data-priority="@project.Priority">@Localizer["shortCuts_setPriority"]</a>
+                                        <a href="javascript:" class="dropdown-item move-to-parent-link" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="MoveToProjectGroup" data-id="@project.Id" data-project-group-id="@project.ProjectGroupId">@Localizer["shortCuts_moveToGroup"]</a>
+                                    }
+                                    @if (User.UserHasThisPermission(Permissions.ProjectDelete))
+                                    {
+                                        <div class="dropdown-divider"></div>
+                                        <a href="javascript:" class="dropdown-item delete-entity-link" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="Delete" data-id="@project.Id" data-name="@project.Name">@Localizer["shortCuts_delete"]</a>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="mb-0 mt-2">@Localizer["_messages_noProjects"]</p>
+}

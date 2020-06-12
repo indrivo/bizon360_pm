@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gear.Sales.Domain\Gear.Sales.Domain.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Application\Gear.Manager.Core.csproj" />
+  </ItemGroup>
+
+</Project>

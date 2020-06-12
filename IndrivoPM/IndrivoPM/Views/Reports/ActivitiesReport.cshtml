@@ -1,0 +1,97 @@
+﻿@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = Localizer["_reports"];
+    ViewData["ActivePage"] = "ActivitiesReport";
+    // Breadcrumb data
+    ViewData["FirstNode"] = ViewData["Title"];
+}
+
+@section Styles {
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+}
+
+@{ await Html.RenderPartialAsync("_ReportsIndexTabs"); }
+
+<div role="tabpanel" class="tab-pane in active" id="activities-report">
+    <div class="row mx-n-20">
+        <div class="col-12 bg-white border rounded py-15 px-20">
+            <h6>@Localizer["text_generateReport"]</h6>
+            <hr class="hr-description" />
+
+            <div class="row mt-3">
+                <div class="col-xl-2 col-lg-3">
+                    <label class="float-label-select">@Localizer["_chooseProject"]</label>
+                    <select name="projectId" id="select-project-for-activities" asp-items="@(ViewBag.Projects)" class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true" hidden="hidden"></select>
+                    <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["_chooseProject"]</span></span>
+                </div>
+                <div class="col-xl-2 col-lg-3">
+                    <label class="float-label-select">@Localizer["_chooseType"]</label>
+                    <select name="sprintIds" id="select-activity-types" class="form-control selectpicker" asp-items="@((List<SelectListItem>)ViewBag.ActivityTypes)" multiple data-live-search="true" data-actions-box="true" hidden="hidden"></select>
+                    <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["_chooseType"]</span></span>
+                </div>
+                <div class="col-xl-2 col-lg-3">
+                    <label class="float-label-select">@Localizer["_chooseActivityStatus"]</label>
+                    <select name="sprintIds" id="select-activity-statuses" class="form-control selectpicker" asp-items="Html.GetEnumSelectList<ActivityStatus>()" multiple data-live-search="true" data-actions-box="true" hidden="hidden"></select>
+                    <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["_chooseActivityStatus"]</span></span>
+                </div>
+                <div class="col-xl-2 col-lg-3">
+                    <label class="float-label">@Localizer["_chooseStartDate"]</label>
+                    <input id="start-date-filtered-project" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                    <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none">@Localizer["validation_notEmptyStartDate"]</span></span>
+                </div>
+                <div class="col-xl-2 col-lg-3">
+                    <label class="float-label">@Localizer["_chooseDueDate"]</label>
+                    <input id="due-date-filtered-project" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                    <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none">@Localizer["validation_notEmptyDueDate"]</span></span>
+                </div>
+                <div class="col-xl-2 col-lg-3">
+                    <label class="float-label-select">@Localizer["_chooseReportColumns"]</label>
+                    <select name="tableHeaders" id="select-activity-headers" class="form-control selectpicker" asp-items="@(ViewBag.FilteredReportTableHeaders)" multiple data-live-search="true" data-actions-box="true" hidden="hidden"></select>
+                    <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["_chooseReportColumns"]</span></span>
+                </div>
+                <div class="col text-right mt-lg-2">
+                    <button onclick="downloadFilteredProjectReport(this, '/Reports/GetFilteredProjectReportXml', 'EmployeeActivities-report.xlsx')" data-original-text="XLSX" type="button" class="btn btn-outline-primary">XLSX</button>
+                    <button onclick="downloadFilteredProjectReport(this, '/Reports/GetFilteredProjectReportCsv', 'EmployeeActivities-report.csv')" data-original-text="CSV" type="button" class="btn btn-outline-primary mx-1">CSV</button>
+                    <button type="button" onclick="generateProjectFilteredReport(this, '/Reports/GetFilteredProjectReportOnUi')" class="btn btn-success">
+                        @Localizer["_generate"]
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr class="no-gutters" />
+
+    <div id="report-activities" class="collapse-datatable"></div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/js/dev/reports.js"></script>
+
+    <script>
+        $("#select-activity-headers").on('change', checkHeaders);
+
+        function checkHeaders() {
+            var values = [];
+            $('#select-activity-headers option').each(function () {
+                values.push($(this).attr('value'));
+            });
+
+            for (var i = 0; i < values.length; i++) {
+                var table = $("#project-filtered-report").DataTable();
+                var column = table.column(i);
+                var isSelected = $(`#select-activity-headers option:nth(${i})`).is(':selected');
+                column.visible(isSelected);
+            }
+        }
+    </script>
+}
+

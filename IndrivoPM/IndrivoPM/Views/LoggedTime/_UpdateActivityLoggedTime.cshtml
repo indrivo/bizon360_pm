@@ -1,0 +1,71 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.LoggedTimes.Commands.UpdateLoggedTime.UpdateLoggedTimeCommand
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="LoggedTime" asp-action="UpdateActivityLoggedTime" id="form-update-time-activities">
+    <div class="modal-body">
+        <input asp-for="Id" class="form-control" hidden />
+        <input asp-for="ActivityId"  id ="activityId" class="form-control" hidden />
+
+        <label asp-for="Time" class="float-label"></label>
+        <input asp-for="Time" class="form-control" type="number" min="0" max="12" autofocus="autofocus" autocomplete="off" required />
+        <span asp-validation-for="Time" class="invalid-feedback mt-1 mb-2"></span>
+
+        <label asp-for="DateOfWork" class="float-label"></label>
+        <input asp-for="DateOfWork" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" required readonly />
+        <span asp-validation-for="DateOfWork" class="invalid-feedback mt-1 mb-2"></span>
+        
+
+        <label asp-for="TrackerId" class="float-label-select"></label>
+        <select asp-for="TrackerId" asp-items="@(new SelectList(ViewBag.TrackerTypes, "Id", "Name", null))" class="form-control selectpicker" id="input-tracker" required></select>
+        <span asp-validation-for="TrackerId" class="invalid-feedback mt-1 mb-2"></span>
+
+        @*<label asp-for="Progress" class="float-label-select"></label>
+        <select asp-for="Progress" class="form-control selectpicker">
+            @for (int i = 0; i <= 100; i += 10)
+            {
+                <option value="@i">@i %</option>
+            }
+        </select>
+        <span asp-validation-for="Progress" class="invalid-feedback mt-1 mb-2"></span>*@
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-update-time-activities">@Localizer["shortCuts_update"]</button>
+    </div>
+</form>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script>
+    $(".selectpicker").selectpicker();
+    $(".datepicker").datepicker({
+        format: "yyyy/mm/dd",
+        maxViewMode: 3,
+        todayBtn: "linked",
+        autoclose: true
+    });
+</script>
+
+<script>
+    $.saveChanges({
+        bindTo: "#btn-update-time-activities",
+        formId: "#form-update-time-activities",
+        ajaxUrl: "@Url.Action("Update", "LoggedTime")",
+        successMessage: "@Localizer["messages_logTimeSuccess"]",
+        errorMessage: "@Localizer["messages_logTimeError"]",
+        buttonText: "@Localizer["shortCuts_update"]",
+        eventFunction: function (result) {
+
+            if ($("#logged-time-list").length) {
+                getLoggedTime();
+            } else {
+                getChecklistItems();
+            }
+        }
+    });
+</script>
+
+

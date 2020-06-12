@@ -1,0 +1,53 @@
+﻿@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+        <div class="row mt-3" id="daily-logs-teams-notifications">
+
+            <hr class="hr-description" />
+
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label-select">@Localizer["_chooseProject"]</label>
+                <select name="projectIds" id="teams-select-project" asp-items="@((List<SelectListItem>) ViewBag.SelectedProjects)" class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["validation_notEmptyEmployeeList"]</span></span>
+            </div>
+
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label-select">@Localizer["_chooseEmployee"]</label>
+                <select name="userIds" id="teams-select-employee" asp-items="@((List<SelectListItem>) ViewBag.SelectedEmployees)"
+                        class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["validation_notEmptyEmployeeList"]</span></span>
+            </div>
+
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label-select">@Localizer["_chooseActivityType"]</label>
+                <select name="activityTypes" id="teams-select-activity-type" asp-items="@((List<SelectListItem>) ViewBag.SelectedActivityTypes)"
+                        class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["validation_notEmptyActivityTypeList"]</span></span>
+            </div>
+
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label-select">@Localizer["_chooseActivityStatus"]</label>
+                <select name="activityStatuses" id="teams-select-activity-status" asp-items="@((List<SelectListItem>) ViewBag.SelectedActivityStatuses)"
+                        class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["validation_notEmptyActivityStatusList"]</span></span>
+            </div>
+
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label-select">@Localizer["_chooseHeaders"]</label>
+                <select name="teamHeaders" id="teams-select-headers" asp-items="@((List<SelectListItem>) ViewBag.TeamHeaders)"
+                        class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["validation_notEmptyActivityStatusList"]</span></span>
+            </div>
+
+        </div>
+    
+        <script>
+            $('.selectpicker').selectpicker('render');
+        </script>
+
+        <script>
+            $(".datepicker").datepicker();
+        </script>

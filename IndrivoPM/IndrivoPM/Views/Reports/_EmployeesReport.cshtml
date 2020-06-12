@@ -1,0 +1,87 @@
+﻿@model Gear.Manager.Core.EntityServices.Reports.Queries.Filters.GetEmployeeFiltersReport.EmployeeFilteredReportListViewModel
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@{
+    var index = 0;
+    foreach (var assignee in Model.Assignees)
+    {
+        index++;
+
+        <div id="report-@index" class="collapse-datatable">
+            <table id="employee-report-@(index)" class="table bizon-datatable no-parent dt-logged-time" data-order='[[ 1, "asc" ]]'>
+                <thead>
+                    <tr class="hover-invisible-toggle">
+                        <th class="no-sort" style="width: 30px">#</th>
+                        <th class="col-date d-md-table-cell" style="width: 70px">@Localizer["_employee"]</th>
+                        <th class="col-date d-md-table-cell" style="width: 70px">@Localizer["_activity"]</th>
+                        <th class="col-date d-md-table-cell" style="width: 70px">@Localizer["_project"]</th>
+                        <th class="col-date d-md-table-cell" style="width: 50px">@Localizer["_activityStatus"]</th>
+                        <th class="col-date d-md-table-cell" style="width: 50px">@Localizer["_est."]</th>
+                        <th class="col-date d-sm-table-cell" style="width: 50px">@Localizer["_log."]</th>
+                        <th class="col-date d-sm-table-cell" style="width: 50px">@Localizer["_created"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var activity in assignee.ActivityView.Activities)
+                    {
+                    <tr class="hover-invisible-toggle">
+                        <td></td>
+                        <td class="d-md-table-cell"><a href="@Url.Action("Details", "ApplicationUsers", new { id = assignee.AssigneeId })">@assignee.AssigneeName</a></td>
+                        <td class="d-md-table-cell"><a href="@Url.Action("Details", "Activities", new { id = activity.ActivityId })">@activity.ActivityName</a></td>
+                        <td class="d-sm-table-cell"><a href="@Url.Action("Details", "Projects", new { id = activity.ProjectId })">@activity.ProjectName</a></td>
+                        <td class="d-sm-table-cell">@activity.ActivityStatus</td>
+                        <td class="d-sm-table-cell">@activity.EstimatedTime.ToString("N")h</td>
+                        <td class="d-sm-table-cell">@activity.LoggedTimeView.TotalLoggedTime.ToString("N")h</td>
+                        <td class="d-sm-table-cell">@activity.CreateTime.ToShortDateString()</td>
+                    </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="hover-invisible-toggle">
+                        <td></td>
+                        <td class="font-size-14 font-weight-600 px-0 py-1">@Localizer["_total"]</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="font-size-14 d-md-table-cell font-weight-600 px-0 py-1">@assignee.ActivityView.TotalEstimatedTime.ToString("N")h</td>
+                        <td class="font-size-14 d-sm-table-cell font-weight-600 px-0 py-1">@assignee.ActivityView.TotalLoggedTime.ToString("N")h</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <hr class="no-gutters" />
+
+        <script>
+            EnableDataTable("#employee-report-@(index)", null, true, 0);
+        </script>
+    }
+}
+
+<script>
+    $(document).ready(function() {
+        @for (int i = 0; i++ < Model.Assignees.Count; )
+        {
+            <text>
+                checkHeaders("#employee-report-@(i)"); 
+            </text>
+        }
+    });
+</script>
+
+<script>
+    $("#select-headers").change(function () {
+        @for (var i = 0; i++ < Model.Assignees.Count;)
+        {
+            <text>
+                checkHeaders('#employee-report-@(i)');
+            </text>
+        }
+    });
+</script>
+

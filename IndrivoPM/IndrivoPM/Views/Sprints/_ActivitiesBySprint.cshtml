@@ -1,0 +1,296 @@
+﻿@*@using Gear.Common.Extensions.IntegerExtensions
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using IndrivoPM.Utils
+@using Newtonsoft.Json
+@model Gear.Application.EntityServices.Sprints.Queries.GetSprintListQuery.SprintListViewModel
+
+@if (!Model.Sprints.Any() || !ViewBag.HasResults)
+{
+    if (!ViewBag.HasResults)
+    {
+        <div class="row mt-2">
+            <div class="col-12 text-center font-weight-600 ls-sm">Nothing matches.</div>
+        </div>
+    }
+    else
+    {
+        <div class="row mt-2">
+            <div class="col-12 text-center font-weight-600 ls-sm">No activities yet.</div>
+        </div>
+    }
+}
+else
+{
+    foreach (var sprint in Model.Sprints)
+    {
+        if (ViewBag.Searching == false || (ViewBag.Searching == true && sprint.Activities.Any()))
+        {
+            <div class="row bg-white rounded br-8 border mx-0 pl-4 pr-2 hover-invisible-toggler hover-shadow mb-0 mt-2 group-card">
+                @if (Model.OpenedSprintsById.Contains(sprint.Id.ToString()) || ViewBag.Searching == true)
+                {
+                    <a class="rounded border sprint-ds display-switcher" data-toggle="collapse" href="#parent-@sprint.Id">
+                        <i class="display-icon minus" data-feather="minus"></i>
+                        <i class="display-icon plus d-none" data-feather="plus"></i>
+                    </a>
+                }
+                else
+                {
+                    <a class="rounded border sprint-ds display-switcher collapsed" data-toggle="collapse" href="#parent-@sprint.Id">
+                        <i class="display-icon minus" data-feather="minus"></i>
+                        <i class="display-icon plus" data-feather="plus"></i>
+                    </a>
+                }
+                <span class="d-flex cursor-pointer collapse-span" data-toggle="collapse" href="#parent-@sprint.Id">
+                    <i data-feather="calendar"></i>
+                    <h6 class="ls-md font-weight-bold m-0 ml-2 project-group-name @{if (sprint.IsCompleted) {
+                                                                                        @:strike-through
+                                                                                    }}">
+                        @sprint.Name
+                        (@sprint.Activities.Count)
+                    </h6>
+                </span>
+                @if (User.UserHasThisPermission(Permissions.ActivityCreate))
+                {
+                    <div class="hover-invisible">
+                        <ul class="list-inline m-0 fs-14 font-weight-600 ls-md ml-3">
+                            <li class="list-inline-item"><a asp-action="Create" asp-controller="Activities" asp-route-projectId="@sprint.ProjectId" asp-route-sprintId="@sprint.Id" asp-route-dtoJson="@(JsonConvert.SerializeObject(new ActivityDto {SprintEndDate = sprint.EndDate, ProjectName = sprint.ProjectName}))" class="btn btn-success-custom btn-group-card">Add Activity</a></li>
+                        </ul>
+                    </div>
+                }
+                <div class="ml-auto">
+                    <ul class="list-inline m-0">
+                        <li class="list-inline-item fs-14 ls-sm font-weight-600 mr-4">
+                            Est.: @sprint.TotalEstimated h | Log.: @sprint.TotalLogged h
+                        </li>
+                        <li class="list-inline-item sprint-pb mr-4">
+                            <div class="progress progress-thin mt-2">
+                                @switch (sprint.Progress.GetProgressBarColor())
+                                {
+                                    case ColorByValue.Red:
+                                        <div class="progress-bar bg-danger" role="progressbar" style="width: @sprint.Progress%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                        break;
+                                    case ColorByValue.Orange:
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: @sprint.Progress%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                        break;
+                                    case ColorByValue.Yellow:
+                                        <div class="progress-bar bg-yellow" role="progressbar" style="width: @sprint.Progress%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                        break;
+                                    case ColorByValue.Green:
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: @sprint.Progress%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                        break;
+                                    default:
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: @sprint.Progress%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                        break;
+                                }
+                            </div>
+                        </li>
+                        @if (sprint.IsCompleted)
+                        {
+                            <li class="list-inline-item">
+                                <div class="badge badge-secondary-custom sprint-date-badge mr-3">@($"{sprint.EndDate:yyyy-MM-dd}")</div>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="list-inline-item">
+                                <div class="badge badge-danger-custom sprint-date-badge mr-3">@($"{sprint.EndDate:yyyy-MM-dd}")</div>
+                            </li>
+                        }
+                        @if (User.UserHasThisPermission(Permissions.SprintUpdate) || User.UserHasThisPermission(Permissions.SprintDelete))
+                        {
+                            <li class="list-inline-item">
+                                <div class="dropdown">
+                                    <i data-feather="more-vertical" class="hover-invisible cursor-pointer actions-icon-sprint" id="sprint-dropdown-@sprint.Id" data-toggle="dropdown"></i>
+                                    <div class="dropdown-menu dropdown-menu-right fs-14" aria-labelledby="sprint-dropdown-@sprint.Id">
+                                        <a href="javascript:" class="dropdown-item font-weight-600 edit-parent-link" data-id="@sprint.Id" data-toggle="modal" data-target="#modal-edit-parent">Edit</a>
+                                        @if (User.UserHasThisPermission(Permissions.SprintDelete))
+                                        {
+                                            <a href="javascript:" class="dropdown-item font-weight-600 delete-parent-link" data-id="@sprint.Id" data-name="@sprint.Name" data-toggle="modal" data-target="#modal-delete-parent">Delete</a>
+                                        }
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+            <div class="collapse parent-collapse @if (Model.OpenedSprintsById.Contains(sprint.Id.ToString()) || ViewBag.Searching == true)
+                                             {
+                                                @:show
+                                             }" id="parent-@sprint.Id">
+                @if (sprint.Activities.Any())
+                {
+                    <table class="table table-borderless activity-table pl-4 w-100">
+                        <thead>
+                            <tr class="hover-shadow">
+                                <th class="col-checkbox no-sort">
+                                    @if (User.UserHasThisPermission(Permissions.ActivityUpdate) || User.UserHasThisPermission(Permissions.ActivityDelete))
+                                    {
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" id="@sprint.Id" class="custom-control-input bulk-checkbox"/>
+                                            <label class="custom-control-label" for="@sprint.Id"></label>
+                                        </div>
+                                    }
+                                </th>
+                                <th class="col-priority">Priority</th>
+                                <th class="col-activity">Activity</th>
+                                <th class="col-estimated">Est.</th>
+                                <th class="col-logged">Log.</th>
+                                <th class="col-progress">Progress</th>
+                                <th class="col-assignees no-sort">Assignees</th>
+                                <th class="col-duedate">Due</th>
+                                <th class="col-actions no-sort"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var activity in sprint.Activities)
+                            {
+                                <tr class="bg-white hover-shadow hover-invisible-toggler">
+                                    <td>
+                                        @if (User.UserHasThisPermission(Permissions.ActivityUpdate) || User.UserHasThisPermission(Permissions.ActivityDelete))
+                                        {
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" id="@activity.Id" data-parent-id="@activity.SprintId" class="custom-control-input activity-check" />
+                                                <label class="custom-control-label" for="@activity.Id"></label>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="activity-priority" data-activityId="@activity.Id">
+                                        @switch (activity.Priority)
+                                        {
+                                            case ActivityPriority.Low:
+                                                <div class="badge badge-info-custom"><span class="d-none">1</span>@activity.Priority</div>
+                                                break;
+                                            case ActivityPriority.Medium:
+                                                <div class="badge badge-primary-custom"><span class="d-none">2</span>@activity.Priority</div>
+                                                break;
+                                            case ActivityPriority.High:
+                                                <div class="badge badge-warning-custom"><span class="d-none">3</span>@activity.Priority</div>
+                                                break;
+                                            default:
+                                                <div class="badge badge-danger-custom"><span class="d-none">4</span>@activity.Priority</div>
+                                                break;
+                                        }
+                                    </td>
+                                    <td class="position-relative">
+                                        <div class="d-inline-block activity-name @{if (activity.Status == ActivityStatus.Completed) {
+                                                                                       @:strike-through
+                                                                                   }}">
+                                            <a asp-action="Details" asp-controller="Activities" asp-route-id="@activity.Id" data-id="@activity.Id" class="link-default t-eio text-decoration-none activity-title">@activity.Name</a>
+                                        </div>
+                                        @if (User.UserHasThisPermission(Permissions.LogTimeCreate))
+                                        {
+                                            <div class="d-inline-block hover-invisible ml-2">
+                                                <a href="javascript:" class="btn btn-success-custom log-time-link" data-id="@activity.Id" data-progress="@activity.Progress" data-toggle="modal" data-target="#modal-medium">Log Time</a>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (activity.EstimatedHours != null)
+                                        {
+                                            <div class="fs-14 font-weight-600 ls-md">@string.Format($"{activity.EstimatedHours}h")</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="fs-14 font-weight-600 ls-md">-</div>
+                                        }
+                                    </td>
+                                    <td class="position-relative">
+                                        <div class="fs-14 font-weight-600 ls-md">@string.Format($"{activity.LoggedTime ?? 0}h")</div>
+                                    </td>
+                                    <td>
+                                        <span class="d-none">@activity.Progress</span>
+                                        <div class="progress progress-thin mt-2 ignore-position">
+                                            @switch (activity.Progress.GetProgressBarColor())
+                                            {
+                                                case ColorByValue.Red:
+                                                    <div class="progress-bar bg-danger ignore-position" role="progressbar" style="width: @activity.Progress%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    break;
+                                                case ColorByValue.Orange:
+                                                    <div class="progress-bar bg-warning ignore-position" role="progressbar" style="width: @activity.Progress%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    break;
+                                                case ColorByValue.Yellow:
+                                                    <div class="progress-bar bg-yellow ignore-position" role="progressbar" style="width: @activity.Progress%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    break;
+                                                case ColorByValue.Green:
+                                                    <div class="progress-bar bg-success ignore-position" role="progressbar" style="width: @activity.Progress%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    break;
+                                                default:
+                                                    <div class="progress-bar bg-info ignore-position" role="progressbar" style="width: @activity.Progress%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    break;
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="py-0">
+                                        @if (activity.Assignees.Any())
+                                        {
+                                            foreach (var assignee in activity.Assignees.Take(4))
+                                            {
+                                                <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@assignee.Id" class="btn btn-primary-custom user-button-card font-weight-bold" title="@assignee.FullName">@assignee.FullName.ToInitials()</a>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="fs-14 font-weight-600 ls-md oopsie">-</div>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (activity.DueDate != null)
+                                        {
+                                            <div class="fs-14 font-weight-600">@($"{activity.DueDate:yyyy-MM-dd}")</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="fs-14 font-weight-600">-</div>
+                                        }
+                                    </td>
+                                    <td class="text-right">
+                                        <div class="dropdown">
+                                            <i class="cursor-pointer hover-invisible" data-feather="more-vertical" data-toggle="dropdown"></i>
+                                            <div class="dropdown-menu dropdown-menu-right user-dropdown dropdown fs-14">
+                                                <a asp-action="Details" asp-controller="Activities" asp-route-id="@activity.Id" class="dropdown-item font-weight-600">Open</a>
+                                                @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+                                                {
+                                                    <a asp-action="Edit" asp-controller="Activities" asp-route-id="@activity.Id" asp-route-projectId="@activity.ProjectId" asp-route-projectName="@activity.ProjectName" class="dropdown-item font-weight-600">Edit</a>
+                                                    <a href="javascript:" class="dropdown-item font-weight-600 rename-activity-link" data-id="@activity.Id" data-name="@activity.Name" data-toggle="modal" data-target="#modal-medium">Rename</a>
+                                                    <a href="javascript:" class="dropdown-item font-weight-600 set-priority-link" data-id="@activity.Id" data-priority="@activity.Priority" data-toggle="modal" data-target="#modal-medium">Set Priority</a>
+                                                    <a href="javascript:" class="dropdown-item font-weight-600 update-status-link" data-id="@activity.Id" data-status="@activity.Status" data-toggle="modal" data-target="#modal-medium">Update Status</a>
+                                                    <a href="javascript:" class="dropdown-item font-weight-600 move-to-list-link" data-id="@activity.Id" data-activity-list-id="@activity.ActivityListId" data-project-id="@activity.ProjectId" data-toggle="modal" data-target="#modal-medium">Move to List</a>
+                                                    <a href="javascript:" class="dropdown-item font-weight-600 assign-to-sprint-link" data-id="@activity.Id" data-sprint-id="@activity.SprintId" data-project-id="@activity.ProjectId" data-toggle="modal" data-target="#modal-medium">Assign to Sprint</a>
+                                                    <a href="javascript:" class="dropdown-item font-weight-600 remove-from-sprint-link" data-id="@activity.Id" data-activity-name="@activity.Name" data-toggle="modal" data-target="#modal-remove-from-sprint">Remove from Sprint</a>
+                                                }
+                                                @if (User.UserHasThisPermission(Permissions.ActivityDelete))
+                                                {
+                                                    <a href="javascript:" class="dropdown-item font-weight-600 delete-activity-link" data-id="@activity.Id" data-name="@activity.Name" data-toggle="modal" data-target="#modal-delete-activity">Delete</a>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="pl-4 font-weight-600">There are no activities in this sprint.</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+}
+
+<script src="~/js/dev/activities-dynamic.js"></script>
+<script>
+    InitializeDynamicActivities(
+        "@ActivitiesViewHelper.GetEditParentActionUrl(ViewBag.CurrentView)",
+        "sprint");
+    BindRemoveFromSprintAction();
+</script>*@

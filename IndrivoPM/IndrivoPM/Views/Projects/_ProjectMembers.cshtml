@@ -1,0 +1,28 @@
+﻿@using Bizon360.Models
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.Queries.GetProjectMembers.ApplicationUserListViewModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@if (Model.Users.Any())
+{
+    <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@Model.Users.First().Id" title="@Model.Users.First().FullName" class="btn btn-outline-primary user-rectangle">@Model.Users.First().FullName.ToInitials()</a>
+
+    if (Model.Users.Count > 1)
+    {
+        <a href="javascript:" class="btn btn-outline-primary user-rectangle" title="@string.Join(", ", Model.Users.Skip(1).Select(a => a.FullName))">+@(Model.Users.Count - 1)</a>
+    }
+
+}
+@if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+{
+    <a href="javascript:" class="btn btn-outline-success user-rectangle edit-entity-members-link" title="@Localizer["shortCuts_editActivityAssignees"]" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="EditProjectMembers" data-id="@ViewBag.ProjectId">+</a>
+}
+else
+{
+    <span class="datatables-none">-</span>
+}

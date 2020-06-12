@@ -1,0 +1,45 @@
+.alert-minimalist
+  background-color: $color-outline-gray
+  border-color: $color-border
+  border-radius: 8px
+  color: $color-black
+  padding: 5px 10px
+
+  & > [data-notify="icon"]
+    display: none
+
+  & > [data-notify="title"]
+    color: $color-black
+    display: block
+    font-size: 14px
+    line-height: 16px
+    font-weight: 600
+
+    & span
+      display: block
+      font-size: 12px
+      line-height: 14px
+      font-weight: normal
+      color: $color-gray
+
+  & > [data-notify="message"]
+    font-size: 14px
+    line-height: 16px
+    color: $color-gray
+    display: block
+    margin-top: 5px
+
+.alert-success, .alert-danger
+  border-radius: 8px
+  padding: 5px 10px
+
+  & > [data-notify="title"]
+    font-size: 14px
+    display: block
+    font-weight: 600
+
+.alert-success
+  background-color: $color-outline-green
+
+.alert-danger
+  background-color: $color-outline-red

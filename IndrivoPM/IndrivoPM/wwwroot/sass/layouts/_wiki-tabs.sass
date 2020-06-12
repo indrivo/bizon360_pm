@@ -1,0 +1,53 @@
+.wiki-tabs
+  display: block
+  border: none
+
+  a.nav-link
+    border: none
+    border-right: 3px solid transparent
+    border-radius: 0px
+    padding: 10px 0
+    font-size: 14px
+    line-height: 16px
+    font-weight: 600
+    color: $color-gray-light
+
+    &.active
+      color: $color-black
+      border-right: 3px solid $color-blue
+
+  .options
+    color: $color-gray
+    position: absolute
+    top: -25px
+    right: 10px
+    z-index: 5
+
+    &:hover
+      color: $color-black
+
+input.wiki-input
+  border: none
+  border-bottom: 1px solid #000000
+  border-radius: 0 !important
+  margin: 0
+  padding: 0 0 10px 0
+  height: 20px !important
+  font-weight: 600
+
+textarea.wiki-input
+  border: none
+  border-radius: 0 !important
+  margin: 5px 0 8px 0 !important
+  padding: 0
+  border-bottom: 1px solid #000000
+
+.headline-input
+  margin: 6px 0 0 0 !important
+  padding-bottom: 5px !important
+
+.headline-button
+  display: block
+  min-height: 26px !important
+  min-width: 26px !important
+  padding-left: 6px !important

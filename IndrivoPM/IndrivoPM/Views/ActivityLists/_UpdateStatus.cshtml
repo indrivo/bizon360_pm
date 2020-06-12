@@ -1,0 +1,61 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.ActivityLists.Commands.UpdateActivityListStatus.UpdateActivityListStatusCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="ActivityLists" asp-action="UpdateStatus" id="form-update-status-activity-list">
+    <div class="modal-body">
+        <input asp-for="Id" hidden />
+
+        <label asp-for="ActivityListStatus" class="float-label-select"></label>
+        <select asp-for="ActivityListStatus" asp-items="Html.GetEnumSelectList<ActivityListStatus>()" class="form-control selectpicker"></select>
+        <span asp-validation-for="ActivityListStatus" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-update-status-activity-list">@Localizer["shortCuts_update"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    $(".selectpicker").selectpicker();
+
+    $.saveChanges({
+        bindTo: "#btn-update-status-activity-list",
+        formId: "#form-update-status-activity-list",
+        ajaxUrl: "@Url.Action("UpdateStatus", "ActivityLists")",
+        successMessage: "@Localizer["messages_createActivityListSuccess"]",
+        errorMessage: "@Localizer["messages_createActivityListError"]",
+        buttonText: "@Localizer["_update"]",
+        eventFunction: function (data) {
+            if ("@((int)ViewBag.CurrentStatus)" == data.status) {
+                return;
+            }
+
+            if (data.status == @((int)ActivityListStatus.Completed)) {
+
+                var activityDom = $(`div[id='${data.id}'].parent-content`);
+                activityDom.find(".collapse-title").addClass("line-through color-secondary");
+                activityDom.find(".badge").attr("class", "badge badge-outline-secondary collapse-badge");
+                var activity = activityDom[0].outerHTML;
+                activityDom.remove();
+                $('#completed-activities').append(activity);
+            } else {
+                if ("@((int)ViewBag.CurrentStatus)" != @((int)ActivityListStatus.Completed)) {
+                    return;
+                }
+
+                var activityCompletedDom = $(`div[id='${data.id}'].parent-content`);
+                activityCompletedDom.find(".color-secondary").attr("class", "collapse-title collapse-title");
+                activityCompletedDom.find(".badge").attr("class", "badge badge-outline-danger collapse-badge sprint-date");
+                var activityCompleted = activityCompletedDom[0].outerHTML;
+                activityCompletedDom.remove();
+                $('#ongoing-activities').append(activityCompleted);
+            }
+        }
+    });
+</script>

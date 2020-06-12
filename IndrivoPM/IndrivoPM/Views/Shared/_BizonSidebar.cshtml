@@ -1,0 +1,102 @@
+﻿@using System.Security.Claims
+@using Bizon360.Models
+@using Gear.Domain.AppEntities
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<enviroment include="Development">
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</enviroment>
+<enviroment exclude="Development">
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="https://vuejs.org/js/vue.min.js"></script>
+</enviroment>
+
+<nav class="side-nav">
+    <div class="row col-12">
+        <i class="side-nav-close cursor-pointer" data-feather="x"></i>
+    </div>
+    <div class="row col-12">
+        <p class="p-xs mb-0">@DateTime.Now.ToString("D")</p>
+    </div>
+    <div class="row col-12">
+        <div class="d-block mt-1 side-nav-links">
+            <div class="side-nav-divider mb-2"></div>
+            <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)">My Profile</a>
+            <a asp-controller="ApplicationUsers" asp-action="GetUserActivities" asp-route-id="@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)">My Activities</a>
+            <a asp-controller="LoggedTime" asp-action="GetEmployeeLoggedTime" asp-route-id="@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)">My Logged Time</a>
+            <a asp-area="Identity" asp-page="/Account/Manage/Index">My Account</a>
+            <div class="side-nav-divider my-2"></div>
+            <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                <button type="submit">
+                    Log out
+                </button>
+            </form>
+        </div>
+    </div>
+    <div id="loader"></div>
+    <div id="notify" v-if="count > 0" class="row col-12 mt-4">
+        <h5>@Localizer["_notifications"] <span class="badge badge-danger rounded top-webkit-inline-box d-inline notification-counter ml-1">{{ count }}</span></h5>
+        <div class="d-block side-nav-notifications w-100">
+            <div class="side-nav-divider mb-1"></div>
+            <div class="notification-container mt-1">
+                <ul v-for="group, groupName in groups" v-bind:class="{ collapsed: isGroup(group) }" class="list-unstyled notification-list position-relative mb-0">
+                    <p v-if="group.notifications.length > 1" class="p-xs mb-1 mt-0">{{ group.notifications.length }} @Localizer["__notifications"]</p>
+
+                    <li v-show="item.display" v-for="item, i in group.notifications" class="notification hover-invisible-toggle">
+                        <div class="d-flex w-100 position-relative">
+                            <p v-if="item.groupName != ''" class="p-xs font-weight-600 color-black mb-0">{{ item.groupName }}</p>
+                            <p v-else class="p-xs font-weight-600 color-black mb-0">Bizon360 Platform</p>
+                            <img  v-on:click="deleteNotification(i, item)" class="notification-delete hover-invisible" src="~/svg/x.svg" />
+                            <span v-if="item.sentTime != '' || item.sentTime != null" class="ml-auto hover-hide">{{ item.sentTime }}</span>
+                        </div>
+                        <div class="d-flex mt-1 w-100">
+                            <div v-if="item.from != null && item.from != ''" class="badge badge-outline-primary user-rectangle notification-user-button">{{ item.from }}</div>
+                            <div v-else class="badge badge-outline-primary user-rectangle notification-user-button">SYS</div>
+                            <div class="d-block w-100 ml-2">
+                                <span class="d-block">{{ item.title }}</span>
+                                <p class="p-sm color-black mb-0 notification-description" style="white-space: pre-line">{{ item.body }}</p>
+                                <a v-if="item.url != '' || item.url != null" :href="item.url">Go to link.</a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <div class="text-center my-2" v-if="group.notifications.length > 1">
+                        <button v-on:click="expandGroup(group.notifications, groupName)"
+                                v-bind:class="{active: group.isActive}"
+                                class=" btn btn-outline-primary btn-sm">
+                            @Localizer["_expand"]
+                        </button>
+                        <button v-on:click="clearGroup($event, groupName)"
+                                class=" btn btn-outline-secondary btn-sm" data-original-name="@Localizer["_clear"]">
+                            @Localizer["_clear"]
+                        </button>
+                    </div>
+                    <hr class="my-2" />
+                </ul>
+
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            type: "GET",
+            url: "/Notifications/HasNotifications",
+            data: { email: "@User.Identity.Name" },
+            success: function (hasNotifications) {
+                if (hasNotifications) {
+                    $(".has-notifications").show();
+                }
+            }
+        });
+    });
+</script>

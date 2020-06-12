@@ -1,0 +1,117 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.LoggedTimes.Commands.CreateLoggedTime.CreateLoggedTimeCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="LoggedTime" asp-action="Create" id="form-log-time-projects">
+    <div class="modal-body">
+        <input asp-for="Id" class="form-control" hidden />
+        <input asp-for="UserId" class="form-control" hidden />
+
+        <label asp-for="Time" class="float-label"></label>
+        <input asp-for="Time" class="form-control" type="number" min="0" max="12" autofocus="autofocus" autocomplete="off" required />
+        <span asp-validation-for="Time" class="invalid-feedback mt-1 mb-2"></span>
+
+        <label asp-for="DateOfWork" class="float-label"></label>
+        <input asp-for="DateOfWork" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" required readonly />
+        <span asp-validation-for="DateOfWork" class="invalid-feedback mt-1 mb-2"></span>
+
+        <label asp-for="ActivityId" class="float-label-select"></label>
+        <select asp-for="ActivityId" asp-items="@(new SelectList(ViewBag.Activities, "Id", "Name"))" class="form-control selectpicker" id="input-activity" required data-live-search="true"></select>
+        <span asp-validation-for="ActivityId" class="invalid-feedback mt-1 mb-2"></span>
+
+        <label asp-for="TrackerId" class="float-label-select"></label>
+        <select asp-for="TrackerId" asp-items="@(new SelectList(ViewBag.TrackerTypes, "Id", "Name", null))" class="form-control selectpicker" id="input-tracker" required></select>
+        <span asp-validation-for="TrackerId" class="invalid-feedback mt-1 mb-2"></span>
+
+        @*<label asp-for="Progress" class="float-label-select"></label>
+        <select asp-for="Progress" class="form-control selectpicker" id="input-progress">
+            @for (int i = 0; i <= 100; i += 10)
+            {
+                <option value="@i">@i %</option>
+            }
+        </select>
+        <span asp-validation-for="Progress" class="invalid-feedback mt-1 mb-2"></span>*@
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-log-time-projects">@Localizer["shortCuts_logTime"]</button>
+    </div>
+</form>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script>
+    $(".selectpicker").selectpicker();
+    $(".datepicker").datepicker({
+        format: "yyyy/mm/dd",
+        maxViewMode: 3,
+        todayBtn: "linked",
+        autoclose: true
+    });
+</script>
+
+<script>
+    $.saveChanges({
+        bindTo: "#btn-log-time-projects",
+        formId: "#form-log-time-projects",
+        ajaxUrl: "@Url.Action("Create", "LoggedTime")",
+        successMessage: "@Localizer["messages_logTimeSuccess"]",
+        errorMessage: "@Localizer["messages_logTimeError"]",
+        buttonText: "@Localizer["shortCuts_logTime"]",
+        eventFunction: function(result) {
+            GetLoggedTime();
+        }
+    });
+</script>
+<script>
+    function GetActivityProgress(value)
+    {
+        $.ajax({
+            url: "@Url.Action("GetActivityProgress", "LoggedTime")",
+            type: "GET",
+            data: { id: value },
+            success: function(result) {
+                $("#input-progress").val(result.progress)
+                    .selectpicker("refresh");
+            }
+        });
+    }
+
+    function GetActivityTrackers(value) {
+        $.ajax({
+            url: "@Url.Action("GetActivityTrackers", "LoggedTime")",
+            type: "GET",
+            data: { id: value },
+            success: function(result) {
+                var trackerSelect = $("#input-tracker");
+                trackerSelect.empty().selectpicker("refresh");
+                for (var i = 0; i < result.length; i++) {
+                    trackerSelect.append($("<option/>",
+                            {
+                                value: result[i].value,
+                                text: result[i].text
+                            })
+                    );
+                }
+                trackerSelect.selectpicker("refresh");
+            }
+        });
+    }
+</script>
+<script>
+    if ($("#input-activity").val() != null) {
+        GetActivityProgress($("#input-activity").val());
+        GetActivityTrackers($("#input-activity").val());
+    } else {
+        $("#input-activity").append(new Option("You are not assigned to an activity yet.", null)).selectpicker("refresh");
+        $("#input-tracker").empty().prop("disabled", true).selectpicker("refresh");
+        $("#btn-log-time-projects").prop("disabled", true);
+    }
+
+    $("#input-activity").on("change", function () {
+        GetActivityProgress($(this).val());
+        GetActivityTrackers($(this).val());
+    });
+</script>

@@ -1,0 +1,119 @@
+﻿@using Microsoft.Extensions.Localization
+@inject IStringLocalizer Localizer
+@model Gear.ProjectManagement.Manager.Domain.ActivityCheckList.Commands.CompleteCheckItem.CompleteCheckItemCommand
+
+<link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+
+<form asp-action="CompleteChecklistItem" asp-controller="Checklist" id="form-checklist-item-check">
+    <div class="modal-body">
+
+        @*<div asp-validation-summary="ModelOnly" class="text-danger"></div>*@
+
+        <input asp-for="Id" class="form-control" hidden />
+        <input asp-for="ActivityId" class="form-control" hidden />
+
+        <label asp-for="LoggedTime" class="float-label"></label>
+        <input asp-for="LoggedTime" placeholder="Ex: 4" class="form-control" type="number" min="0" max="12" autocomplete="off" required />
+        <span asp-validation-for="LoggedTime" class="invalid-feedback"></span>
+
+        <label asp-for="DateOfWorkValue" class="float-label"></label>
+        <input asp-for="DateOfWorkValue" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+        <span asp-validation-for="DateOfWorkValue" class="invalid-feedback"></span>
+
+        <label asp-for="TrackerTypeId" class="float-label-select"></label>
+        <select asp-for="TrackerTypeId" asp-items="@((List<SelectListItem>) ViewBag.TrackerTypes)" class="form-control selectpicker" id="input-tracker" required></select>
+        <span asp-validation-for="TrackerTypeId" class="invalid-feedback"></span>
+
+        @*<label asp-for="Progress" class="float-label-select"></label>
+            <select asp-for="Progress" class="form-control selectpicker" id="input-progress">
+                @for (int i = 0; i <= 100; i += 10)
+                {
+                    <option value="@i">@i %</option>
+                }
+            </select>
+            <span asp-validation-for="Progress" class="invalid-feedback mt-1 mb-2"></span>*@
+
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-outline-success" id="btn-check-wlt">Just check</button>
+        <button type="submit" class="btn btn-success" id="btn-check-confirm">Log time</button>
+    </div>
+</form>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+<script>
+    $(".selectpicker").selectpicker();
+    $(".datepicker").datepicker({
+        format: "yyyy/mm/dd",
+        maxViewMode: 3,
+        todayBtn: "linked",
+        autoclose: true,
+        clearBtn: true
+    });
+</script>
+
+<script>
+    $("#btn-check-confirm").click(function (e) {
+        var form = $("#form-checklist-item-check");
+        var isValid = form.valid();
+        if (isValid) {
+            $(this)
+                .prop("disabled", true)
+                .html(BUTTON_LOADER);
+            $.ajax({
+                url: "@Url.Action("CompleteChecklistItem", "Checklist")",
+                type: "POST",
+                data: form.serialize(),
+                success: function (result) {
+
+                    $("#btn-check-confirm").removeAttr("disabled").html("Log Time");
+
+                    getLoggedTime();
+                    getChecklistItems();
+
+                    $("#modal-confirm-check").modal("hide");
+
+                    $.successAlert({
+                        title:"Success",
+                        message: "Time was logged successfully!"
+                    });
+                },
+                error: function (result) {
+                    $.errorAlert({
+                        title: "Error",
+                        message: "Could not log time.."
+                    });
+
+                    $("#btn-check-confirm")
+                        .removeAttr("disabled")
+                        .html("Log Time");
+                }
+            });
+        }
+        e.preventDefault();
+    });
+</script>
+<script>
+    $("#btn-check-wlt").click(function(e) {
+        $.ajax({
+            url: "@Url.Action("CompleteWithoutLoggingTime", "Checklist")",
+            type: "POST",
+            data: {
+                command: {
+                    Id: "@ViewBag.Id",
+                    ActivityId: "@ViewBag.ActivityId"
+                }
+            },
+            success: function(result) {
+                getChecklistItems();
+                $("#modal-confirm-check").modal("hide");
+            },
+            error: function(result) {
+
+            }
+        });
+        e.preventDefault();
+    })
+</script>

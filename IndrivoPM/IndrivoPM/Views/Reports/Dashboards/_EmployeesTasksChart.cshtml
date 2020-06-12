@@ -1,0 +1,84 @@
+﻿@model Gear.Manager.Core.EntityServices.Reports.Queries.Charts.GetTasksByEmployeesReport.ProjectTasksView
+@{
+    Layout = null;
+}
+
+<canvas id="bar-chart-employees" width="1250" height="450"></canvas>
+
+<script>
+    function GetEmployeeNames() {
+        const result = [];
+
+        @foreach (var item in Model.Employees.Select(x => x.EmployeeName))
+        {
+            @:result.push("@item");
+        }
+
+        return result;
+    }
+
+    function GetActivityCounters() {
+        const result = [];
+
+        @foreach (var item in Model.Employees.Select(x => x.ActivitiesCount))
+        {
+            @:result.push("@item");
+        }
+
+        return result;
+    }
+
+    function GetEmployeeIds() {
+        const result = [];
+
+        @foreach (var item in Model.Employees.Select(x => x.EmployeeId))
+        {
+            @:result.push("@item");
+        }
+
+        return result;
+    }
+
+    function GetRandomColors(counter) {
+        const result = [];
+
+        for(var i = 0; i < counter; i++)
+            result.push('#' + Math.floor(Math.random() * 16777215).toString(16));
+
+        return result;
+    }
+</script>
+
+<script>
+    var employeeIds = GetEmployeeIds();
+
+    var employeeTaskChart = new Chart(document.getElementById("bar-chart-employees"), {
+        type: 'bar',
+        data: {
+            labels: GetEmployeeNames(),
+            datasets: [{
+                barPercentage: 0.5,
+                barThickness: 6,
+                maxBarThickness: 8,
+                minBarLength: 2,
+                label: "Employees' Tasks",
+                backgroundColor: GetRandomColors(@Model.Employees.Count),
+                data: GetActivityCounters()
+            }]
+        },
+        options: {
+            title: {
+                display: false,
+                text: 'Employees'
+            }
+        }
+    });
+
+    $("#bar-chart-employees").click(function(event) {
+        const element = employeeTaskChart.getElementAtEvent(event);
+        if (element && element[0]) {
+            const index = element[0]._index;
+            window.location.href = '@Url.Action("GetEmployeeLoggedTime", "LoggedTime")?id=' + employeeIds[index];
+        }
+    });
+</script>

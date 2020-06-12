@@ -1,0 +1,41 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.Commands.Wiki.Headlines.UpdateHeadline.UpdateHeadlineCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form id="form-edit">
+    <div class="modal-body">
+        <div class="row">
+            <input asp-for="Id" hidden />
+            @Html.AntiForgeryToken()
+
+            <div class="col-md-12">
+                <div class="mb-2">
+                    <label asp-for="Title" class="float-label"></label>
+                    <input asp-for="Title" class="form-control" placeholder="@Localizer["placeholders_tabName"]" autofocus="autofocus" autocomplete="off" required />
+                    <span asp-validation-for="Title" class="invalid-feedback"></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-edit">@Localizer["_update"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+<script>
+    $.saveChanges({
+        bindTo: "#btn-edit",
+        formId: "#form-edit",
+        ajaxUrl: "@Url.Action("EditHeadline", "Wiki")",
+        successMessage: "@Localizer["msgSuccess_editHeadline"]",
+        errorMessage: "@Localizer["msgError_editHeadline"]",
+        eventFunction:GetWiki
+    });
+</script>

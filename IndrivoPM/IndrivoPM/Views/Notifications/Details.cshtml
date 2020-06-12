@@ -1,0 +1,218 @@
+﻿@model Gear.Manager.Core.EntityServices.Notifications.Querries.GetNotificationProfile.NotificationProfileDetailModel
+@using Bizon360.Models
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Gear.Notifications.Abstractions.Domain
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = Model.Name;
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = "Notifications";
+}
+
+<partial name="_AdmTabs" />
+
+<div class="row mx-n-20">
+    <div class="col-lg-8 bg-white border rounded py-15 px-20">
+        @if (Model.EventList.Any(x => x.EventGroupName.Contains("Project")))
+        {
+
+            <h6>@Localizer["text_projectNotifications"]</h6>
+            <hr class="hr-description" />
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "ProjectGroup").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "Project").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+
+            }
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "ChangeRequest").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "Members").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "ProjectReport").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+
+        }
+
+        @if (Model.EventList.Any(x => x.EventGroupName.Contains("Activity")))
+        {
+            <h6 class="mt-3">@Localizer["text_activityNotifications"]</h6>
+            <hr class="hr-description" />
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "ActivityList").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "Activity").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "ActivityReport").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+        }
+
+        @if (Model.EventList.Any(x => x.EventGroupName.Contains("Sprint")))
+        {
+            <h6 class="mt-3">@Localizer["text_sprintNotifications"]</h6>
+            <hr class="hr-description" />
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "Sprint").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "SprintReport").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+        }
+
+
+
+        @if (Model.EventList.Any(x => x.EventGroupName.Contains("Administration")))
+        {
+            <h6 class="mt-3">@Localizer["text_administrationNotifications"]</h6>
+            <hr class="hr-description" />
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "Department").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "Team").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "JobPosition").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "ActivityType").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+
+            @foreach (var ev in Model.EventList.Where(x => x.EventGroupName == "Subtype").OrderBy(x => x.EventDescription))
+            {
+                await Html.RenderPartialAsync("_ProfileBlockEvent", ev);
+            }
+        }
+
+
+
+    </div>
+    <div class="col-lg-4">
+        <h6 class="mt-3">@Localizer["_users"]</h6>
+        <hr class="hr-description" />
+
+        @foreach (var member in Model.UserList)
+        {
+            var fullName = $"{member.FirstName} {member.LastName}";
+
+            <div class="d-flex mb-2">
+
+                <div class="d-block mr-2">
+                    <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@member.Id" class="btn btn-outline-primary user-rectangle">@fullName.ToInitials()</a>
+                </div>
+                <div class="d-block">
+                    <h6 class="mb-0">
+                        <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@member.Id">@fullName</a>
+                    </h6>
+                    <span class="font-size-12 color-secondary d-block">@member.JobPosition.Name</span>
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+<footer class="bulk-actions-container show">
+    <ul class="list-unstyled list-inline d-md-inline-block d-block float-lg-right mt-lg-0 mt-2 mb-0">
+        @if (User.UserHasThisPermission(Permissions.NotificationProfileUpdate) || User.UserHasThisPermission(Permissions.NotificationProfileDelete))
+        {
+            @if (User.UserHasThisPermission(Permissions.NotificationProfileDelete))
+            {
+                <li class="list-inline-item">
+                    <a href="#" class="btn btn-outline-secondary delete-ntf" data-toggle="model" data-target="#modal" data-controller="Notifications" data-action="Delete" data-id="@Model.Id" data-name="@Model.Name">@Localizer["shortCuts_delete"]</a>
+                </li>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.NotificationProfileUpdate))
+            {
+                <li class="list-inline-item">
+                    <a href="#" class="btn btn-success edit-ntf" data-controller="Notifications" data-action="Edit" data-id="@Model.Id" >@Localizer["_editProfile"]</a>
+                </li>
+            }
+
+        }
+    </ul>
+</footer>
+<div class="bulk-hidden-space"></div>
+
+@section Scripts {
+
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+   
+    <script>
+        $("#tab-notifications").addClass("active");
+        $.confirmDelete();
+
+        @if (User.UserHasThisPermission(Permissions.NotificationProfileUpdate))
+        {
+            <text>
+                $.bindFormModal({
+                    bindTo: ".edit-ntf",
+                    modalTitle: "@Localizer["_edit"]",
+                    modalSize: "regular"
+                });
+            </text>
+        }
+
+        @if (User.UserHasThisPermission(Permissions.NotificationProfileDelete))
+        {
+            <text>
+                $.bindDeleteModal({
+                    bindTo: ".delete-ntf",
+                    modalTitle: "@Localizer["shortCuts_deleteNotificationProfile"]",
+                    modalSize: "regular",
+                    type: "@Localizer["types_NotificationProfile"]",
+                    successMessage: "@Localizer["msgSuccess_deleteNotificationProfile"]",
+                    errorMessage: "@Localizer["msgError_deleteNotificationProfile"]",
+                    eventFunction: function() {
+                        window.location.href = "/Notifications/Index/";
+                    }
+                });
+            </text>
+        }
+    </script>
+
+}

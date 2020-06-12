@@ -1,0 +1,605 @@
+﻿@using Bizon360.Models
+@using Bizon360.Utils
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.ProjectTabModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@{
+    Layout = "_BizonLayout";
+    ViewData["ActivePage"] = "Activities";
+    ViewData["Title"] = Model.Name;
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+@section Styles {
+    <link href="~/lib/jqueryui/jquery-ui.min.css" rel="stylesheet" />
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+    <link href="~/lib/summernote/summernote.css" rel="stylesheet" />
+    <link href="~/css/grid.css" rel="stylesheet" />
+}
+
+@{ await Html.RenderPartialAsync("_ProjectTabs", Model); }
+
+<div class="row row-m-20 bg-white border rounded top-bar pl-20 pr-20">
+    <div class="nav col-12 p-0 d-md-inline-flex" style="align-items: center">
+        @if (ViewBag.CurrentView != ActivitiesView.Grid)
+        {
+            <div id="filter" class="d-flex col-xs-2"></div>
+        }
+        <div class="btn-group ml-auto mr-3 col-xs-2">
+            @if (User.UserHasThisPermission(Permissions.ActivityRead))
+            {
+                <a asp-controller="Activities" asp-action="Index" asp-route-id="@Model.Id" asp-route-view="@ActivitiesView.List" class="btn @ActivitiesViewHelper.ListNavClass(ViewContext) layout-list" title="@Localizer["views_activityList"]"></a>
+                <a asp-controller="Activities" asp-action="Index" asp-route-id="@Model.Id" asp-route-view="@ActivitiesView.Grid" class="btn @ActivitiesViewHelper.GridNavClass(ViewContext) layout-grid" title="@Localizer["views_grid"]"></a>
+                <a asp-controller="Activities" asp-action="Index" asp-route-id="@Model.Id" asp-route-view="@ActivitiesView.Sprint" class="btn @ActivitiesViewHelper.SprintNavClass(ViewContext) layout-sprint" title="@Localizer["views_sprint"]"></a>
+                <a asp-controller="Activities" asp-action="Index" asp-route-id="@Model.Id" asp-route-view="@ActivitiesView.Team" class="btn @ActivitiesViewHelper.TeamNavClass(ViewContext) layout-team" title="@Localizer["views_team"]"></a>
+            }
+        </div>
+
+        @if (ActivitiesViewHelper.CanCreateParent(User, ViewBag.CurrentView))
+        {
+            if (ViewBag.CurrentView == ActivitiesView.Grid)
+            {
+                <div class="col-xl-2 col-lg-3">
+                    <label class="float-label-select">@Localizer["_chooseSprints"]</label>
+                    <select name="sprintIds" id="select-sprints" class="form-control selectpicker" asp-items="@((List<SelectListItem>) ViewBag.SprintItems)" multiple data-live-search="true" data-actions-box="true" hidden="hidden"></select>
+                    <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["_chooseSprints"]</span></span>
+                </div>
+                <a asp-controller="Activities" asp-action="Create" asp-route-projectId="@Model.Id" class="btn btn-success float-md-none float-right">@Localizer["shortCuts_addActivity"]</a>
+            }
+            else
+            {
+                <button class="btn btn-success float-md-none float-right" id="add-parent"
+                        data-toggle="modal"
+                        data-target="#modal"
+                        data-controller="@ActivitiesViewHelper.ParentCreateController(ViewBag.CurrentView)"
+                        data-action="@ActivitiesViewHelper.ParentCreateAction(ViewBag.CurrentView)"
+                        data-project-id="@Model.Id">
+                    @ActivitiesViewHelper.ParentCreateButtonText(ViewBag.CurrentView, Localizer)
+                </button>
+            }
+
+            <div class="top-bar-divider d-md-block d-none"></div>
+        }
+        <input type="text" class="form-control search-input w-md-100-i mt-md-0 mt-2" placeholder="@Localizer["_search"]" />
+    </div>
+</div>
+
+
+
+<div id="parent-entities"></div>
+<div id="search-result"></div>
+
+<footer class="bulk-actions-container">
+    <div class="d-lg-inline-flex d-block">
+        <button type="button" class="btn d-block w-lg-auto w-100 btn-outline-secondary" id="deselect-all">@Localizer["shortCuts_deselectAll"] <span class="check-counter d-lg-none"></span></button>
+        @if (!User.UserHasThisPermission(Permissions.ActivityUpdate) && !User.UserHasThisPermission(Permissions.ActivityDelete))
+        {
+            <p class="d-lg-inline text-lg-left text-center">@Localizer["messages_noPermessionsEditDeleteActivity"]</p>
+        }
+        else
+        {
+            <p class="d-lg-inline d-none"><span class="check-counter"></span> @Localizer["messages_selectedActivities"]</p>
+        }
+    </div>
+    <ul class="list-unstyled list-inline d-lg-inline-block d-block float-lg-right mb-0">
+        @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+        {
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                <button type="button" class="bulk-update-status btn w-lg-auto w-100 btn-outline-primary mr-2" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="SetActivitiesStatus">@Localizer["shortCuts_updateStatus"]</button>
+                <button type="button" class="bulk-set-priority btn w-lg-auto w-100 btn-outline-primary mr-lg-2" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="SetActivitiesPriority">@Localizer["shortCuts_setPriority"]</button>
+            </li>
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                <button type="button" class="bulk-move-to-list btn w-lg-auto w-100 btn-outline-primary mr-2" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="MoveActivitiesToList" data-project-id="@Model.Id">@Localizer["shortCuts_moveToList"]</button>
+                <button type="button" class="bulk-assign-to-sprint btn w-lg-auto w-100 btn-outline-primary mr-lg-2" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="AssignActivitiesToSprint" data-project-id="@Model.Id">@Localizer["shortCuts_assignToSprint"]</button>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.ActivityDelete))
+        {
+            <li class="d-lg-inline-block d-none">
+                <div class="divider"></div>
+            </li>
+            <li class="d-lg-inline-block d-block mt-lg-0 mt-2">
+                <button type="button" class="bulk-delete-link btn d-block w-lg-auto w-100 btn-danger ml-lg-2" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="DeleteActivities">@Localizer["shortCuts_deleteSelected"]</button>
+            </li>
+        }
+    </ul>
+</footer>
+<div class="bulk-hidden-space d-none"></div>
+
+<input id="hidden-project-id" value="@Model.Id" hidden />
+
+<input id="current-view" value="@ViewBag.CurrentView" hidden />
+
+@section Scripts {
+    <script src="~/lib/jqueryui/jquery-ui.min.js"></script>
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/lib/summernote/summernote-bs4.js"></script>
+
+    <script>
+        function GetParentEntities() {
+            var collapses = localStorage.getItem("@ViewBag.CurrentView") === null
+                ? new Array()
+                : getCollapses(localStorage.getItem("@ViewBag.CurrentView"));
+
+            $.ajax({
+                url: "@ActivitiesViewHelper.ParentGetUrl(ViewBag.CurrentView)",
+                type: "GET",
+                data: {
+                    projectId: "@Model.Id",
+                    sprintIds: $('#select-sprints').val(),
+                    filter: GetFilterValues()
+                },
+                traditional: true,
+                success: function(result) {
+                    $("#parent-entities").html(result);
+                    StopCollapseButtonPropagation();
+                    feather.replace();
+
+                    for (var i in collapses) {
+                        if ($("#" + collapses[i]).hasClass("collapse")) $("#" + collapses[i]).collapse("show");
+                        var object = $("[href='#" + collapses[i] + "'].collapse-container");
+                        LoadActivitiesOnClick(object);
+                    }
+                },
+                error: function() {
+                    $.errorAlert({
+                        title: "@Localizer["_error"]",
+                        message: "@ActivitiesViewHelper.ParentGetErrorMessage(ViewBag.CurrentView, Localizer)"
+                    });
+                }
+            });
+        }
+
+        function GetCurrentView() {
+            return $("#current-view").val();
+        }
+    </script>
+    <script>
+        $(document).on("shown.bs.collapse",
+            ".collapse",
+            function() {
+                var active = $(this).attr("id");
+
+                var collapses = localStorage.getItem("@ViewBag.CurrentView") === null
+                    ? new Array()
+                    : getCollapses(localStorage.getItem("@ViewBag.CurrentView"));
+
+                if ($.inArray(active, collapses) == -1) collapses.push(active);
+
+                localStorage.setItem("@ViewBag.CurrentView", JSON.stringify(collapses));
+            });
+
+        function getCollapses(localStorage) {
+            var collapses = new Array();
+            for (var value of JSON.parse(localStorage).values()) {
+                collapses.push(value);
+            }
+            return collapses;
+        }
+
+        $(document).on("hidden.bs.collapse",
+            ".collapse",
+            function() {
+                var active = $(this).attr("id");
+                var collapses = localStorage.getItem("@ViewBag.CurrentView") === null
+                    ? new Array()
+                    : getCollapses(localStorage.getItem("@ViewBag.CurrentView"));
+                var elementIndex = $.inArray(active, collapses);
+
+                if (elementIndex !== -1) collapses.splice(elementIndex, 1);
+
+                localStorage.setItem("@ViewBag.CurrentView", JSON.stringify(collapses));
+            });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // #region Load parent entities on load
+            $("#parent-entities").html(LOADER);
+
+            $.bindFilter({
+                container: "#filter",
+                types: [
+                    {
+                        name: "@Localizer["_new"]",
+                        value: "@Convert.ToInt32(ActivityStatus.New)",
+                        description: "@Localizer["enums_ActivitytStatus_New_description"]",
+                        default: true
+                    },
+                    {
+                        name: "@Localizer["_inProgress"]",
+                        value: "@Convert.ToInt32(ActivityStatus.InProgress)",
+                        description: "@Localizer["enums_ActivityStatus_InProgress_description"]",
+                        default: true
+                    },
+                    {
+                        name: "@Localizer["_refused"]",
+                        value: "@Convert.ToInt32(ActivityStatus.Refused)",
+                        description: "@Localizer["enums_ActivityStatus_Refused_description"]"
+                    },
+                    {
+                        name: "@Localizer["_developed"]",
+                        value: "@Convert.ToInt32(ActivityStatus.Developed)",
+                        description: "@Localizer["enums_ActivitiesStatus_Canceled_description"]"
+                    },
+                    {
+                        name: "@Localizer["_tested"]",
+                        value: "@Convert.ToInt32(ActivityStatus.Tested)",
+                        description: "@Localizer["enums_ActivityStatus_Tested_description"]"
+                    },
+                    {
+                        name: "@Localizer["_completed"]",
+                        value: "@Convert.ToInt32(ActivityStatus.Completed)",
+                        description: "@Localizer["enums_ActivityStatus_Completed_description"]"
+                    }
+                ],
+                cookieKey: "ActivityFilters",
+                refreshFunction: GetParentEntities
+            });
+            GetParentEntities();
+            // #endregiondata-loaded
+            // #region Bind create parent entity action
+            @if (User.UserHasThisPermission(Permissions.ActivityCreate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".add-activity",
+                        modalTitle: "@Localizer["shortCuts_addActivity"]",
+                        modalSize: "modal-lg",
+                        data: {
+                            projectId: "data-project-id",
+                            status: "data-status"
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+            // #region Bind create parent entity action
+            @if (ActivitiesViewHelper.CanCreateParent(User, ViewBag.CurrentView))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: "#add-parent",
+                        modalTitle: "@ActivitiesViewHelper.ParentCreateButtonText(ViewBag.CurrentView, Localizer)",
+                        modalSize:"@ActivitiesViewHelper.ParentGetModalSize(ViewBag.CurrentView)",
+                        data: {
+                            projectId: "data-project-id",
+                            id: "data-project-id"
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind update parent entity action
+            @if (ActivitiesViewHelper.CanUpdateParent(User, ViewBag.CurrentView))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".rename-parent-link",
+                        modalTitle: '@Localizer["shortCuts_renameActivityList"]',
+                        modalSize: "regular"
+                    });
+                </text>
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".edit-parent-link",
+                        modalTitle: "@ActivitiesViewHelper.ParentUpdateModalTitle(ViewBag.CurrentView, Localizer)",
+                        modalSize: "modal-lg"
+                    });
+                </text>
+
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".update-status-parent-link",
+                        modalTitle: '@Localizer["shortCuts_updateStatus"]',
+                        modalSize: "regular"
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind delete parent entity action
+            @if (ActivitiesViewHelper.CanDeleteParent(User, ViewBag.CurrentView))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".delete-parent-link",
+                        modalTitle: "@ActivitiesViewHelper.ParentDeleteModalTitle(ViewBag.CurrentView, Localizer)",
+                        modalSize: "regular",
+                        type: "@ActivitiesViewHelper.ParentType(ViewBag.CurrentView, Localizer)",
+                        successMessage: "@ActivitiesViewHelper.ParentDeleteSuccessMessage(ViewBag.CurrentView, Localizer)",
+                        errorMessage: "@ActivitiesViewHelper.ParentDeleteErrorMessage(ViewBag.CurrentView, Localizer)",
+                        eventFunction: function(result) {
+                            $("[id='" + result.id + "'].parent-content").remove();
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind delete activity action
+            @if (User.UserHasThisPermission(Permissions.ActivityDelete))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".delete-entity-link",
+                        modalTitle: "@Localizer["shortCuts_deleteActivity"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_activity"]",
+                        successMessage: "@Localizer["messages_deleteActivitySuccess"]",
+                        errorMessage: "@Localizer["messages_deleteActivityError"]",
+                        eventFunction: function(result) {
+                            if ($('div').hasClass('grid')) {
+                                var activityToDelete = $("li[data-activity-id='" + result.id + "']");
+                                activityToDelete.remove();
+                            } else {
+                                DeleteRowCompleted(result.id, "@Localizer["messages_noActivities"]", "@Localizer["messages_noOngoingActivities"]");
+                            }
+
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+            $.confirmDelete();
+
+            // #region Load activities on parent click
+            $(document).on("click",
+                ".collapse-container",
+                function() {
+                    var $this = $(this);
+                    LoadActivitiesOnClick($this);
+                });
+            // #endregion
+
+            // #region Load more functionality
+            $(document).on("click",
+                ".load-more",
+                function() {
+                    var url = "@Url.Action("GetActivitiesFromParentEntity", "Activities")";
+                    var projectId = "@Model.Id";
+                    LoadMore($(this), url, projectId);
+                });
+            // #endregion
+
+            // #region Bind shortcut actions
+            @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+            {
+                <text>
+                    // Rename
+                    $.bindFormModal({
+                        bindTo: ".rename-entity-link",
+                        modalTitle: "@Localizer["shortCuts_renameActivity"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            name: "data-name"
+                        }
+                    });
+
+                    // Log time
+                    $.bindFormModal({
+                        bindTo: ".log-time-link",
+                        modalTitle: "@Localizer["shortCuts_logTime"]",
+                        modalSize: "regular",
+                        data: {
+                            activityId: "data-activity-id",
+                            progress: "data-progress"
+                        }
+                    });
+
+                    // Set priority
+                    $.bindFormModal({
+                        bindTo: ".set-entity-priority-link",
+                        modalTitle: "@Localizer["shortCuts_setActivityPriority"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            priority: "data-priority"
+                        }
+                    });
+
+                    // Update status
+                    $.bindFormModal({
+                        bindTo: ".edit-entity-status-link",
+                        modalTitle: "@Localizer["shortCuts_updateActivityStatus"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            status: "data-status"
+                        }
+                    });
+
+                    // Move to list
+                    $.bindFormModal({
+                        bindTo: ".move-to-list-link",
+                        modalTitle: "@Localizer["shortCuts_moveActivityToList"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            activityListId: "data-list-id",
+                            projectId: "data-project-id"
+                        }
+                    });
+
+                    // Assign to sprint
+                    $.bindFormModal({
+                        bindTo: ".assign-to-sprint-link",
+                        modalTitle: "@Localizer["shortCuts_assignToSprint"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            sprintId: "data-sprint-id",
+                            projectId: "data-project-id"
+                        }
+                    });
+
+                    // Edit activity assignees
+                    $.bindFormModal({
+                        bindTo: ".edit-entity-assignees-link",
+                        modalTitle: "@Localizer["shortCuts_editActivityAssignees"]",
+                        modalSize: "regular"
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind bulk actions
+            @if (User.UserHasThisPermission(Permissions.ActivityDelete))
+            {
+                <text>
+                    // Bulk delete
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-delete-link",
+                        modalTitle: "@Localizer["bulk_deleteActivities"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_activities"]",
+                        successMessage: "@Localizer["messages_bulkDeleteActivitiesSuccess"]",
+                        errorMessage: "@Localizer["messages_bulkDeleteActivitiesError"]",
+                        eventFunction: function(result) {
+                            $.each(result.deletedRows,
+                                function(key, value) {
+                                    DeleteRowCompleted(value,
+                                        "@Localizer["messages_noActivities"]",
+                                        "@Localizer["messages_noOngoingActivities"]");
+                                });
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+            {
+                <text>
+                    // Bulk update status
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-update-status",
+                        modalTitle: "@Localizer["shortCuts_updateActivityStatus"]",
+                        modalSize: "regular"
+                    });
+
+                    // Bulk set priority
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-set-priority",
+                        modalTitle: "@Localizer["shortCuts_setActivityPriority"]",
+                        modalSize: "regular"
+                    });
+
+                    // Bulk move to list
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-move-to-list",
+                        modalTitle: "@Localizer["shortCuts_moveToList"]",
+                        modalSize: "regular",
+                        optionalParam: "data-project-id",
+                        optionalParamName: "projectId"
+                    });
+
+                    // Bulk assign to sprint
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-assign-to-sprint",
+                        modalTitle: "@Localizer["shortCuts_assignToSprint"]",
+                        modalSize: "regular",
+                        optionalParam: "data-project-id",
+                        optionalParamName: "projectId"
+                    });
+                </text>
+            }
+            // #endregion
+
+            $(".search-input").keyup(Delay(function() {
+                    var searchValue = $(this).val();
+                    var searchResultContainer = $("#search-result");
+                    var parentEntitiesContainer = $("#parent-entities");
+
+                    if (searchValue.length > 0) {
+                        $.ajax({
+                            url: "@ActivitiesViewHelper.SearchUrl(ViewBag.CurrentView)",
+                            type: "GET",
+                            data: {
+                                projectId: "@Model.Id",
+                                searchValue: searchValue
+                            },
+                            success: function(result) {
+                                DeselectAll();
+                                parentEntitiesContainer.addClass("d-none");
+                                searchResultContainer.removeClass("d-none").html(result);
+                                feather.replace();
+                            },
+                            error: function() {
+                                $.errorAlert({
+                                    title: "Error!",
+                                    message: "Search not working!"
+                                });
+                            }
+                        });
+                    } else {
+                        parentEntitiesContainer.removeClass("d-none");
+                        if (!searchResultContainer.hasClass("d-none"))
+                            $("#search-result").addClass("d-none");
+                        DeselectAll();
+                    }
+                },
+                500));
+        });
+    </script>
+    <script>
+        function LoadActivitiesOnClick(object) {
+            var $this = object;
+
+            if (typeof $this.attr("data-loaded") !== 'undefined') {
+                if (!JSON.parse($this.attr("data-loaded"))) {
+                    $this.find(".loader-container").html(LOADER_SM);
+
+                    $.ajax({
+                        url: "@Url.Action("GetActivitiesFromParentEntity", "Activities")",
+                        type: "GET",
+                        data: {
+                            parentType: $this.attr("data-type"),
+                            parentId: $this.attr("data-id"),
+                            projectId: "@Model.Id",
+                            filter: GetFilterValues()
+                        },
+                        traditional: true,
+                        success: function(result) {
+                            $this.attr("data-loaded", true);
+                            $this.find(".loader-container").remove();
+
+                            $("[id='" + $this.attr("href").split("#")[1] + "'].collapse-datatable").html(result);
+
+                            var activitiesCount = parseInt($this.find('.collapse-count').html());
+                            if (activitiesCount < 10) {
+                                $this.parent().find('.load-more').hide();
+                            }
+                        },
+                        error: function() {
+                            $.errorAlert({
+                                title: "@Localizer["_error"]",
+                                message: "@Localizer["error_loadActivities"]"
+                            });
+                        }
+                    });
+                }
+            }
+        }
+    </script>
+    <script>
+        $('#select-sprints').change(function () {
+            GetParentEntities();
+        });
+    </script>
+}

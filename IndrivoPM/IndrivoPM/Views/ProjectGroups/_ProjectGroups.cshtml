@@ -1,0 +1,58 @@
+﻿@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@model Gear.ProjectManagement.Manager.Domain.ProjectGroups.Queries.GetProjectGroupList.ProjectGroupListViewModel
+@inject IStringLocalizer Localizer
+
+@if (Model.ProjectGroups.Any())
+{
+    foreach (var projectGroup in Model.ProjectGroups)
+    {
+        <div class="parent-content" id="@projectGroup.Id">
+            <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative cursor-pointer pb-lg-0 pb-2" data-toggle="collapse" href="#parent-@projectGroup.Id" data-id="@projectGroup.Id" data-loaded="false">
+                <div class="d-lg-flex d-block w-100 px-20">
+                    <div class="d-flex pt-collapse">
+                        <a class="border collapse-switcher d-inline-block">
+                            <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                        </a>
+                        <span class="collapse-title" data-id="@projectGroup.Id">@projectGroup.Name</span>
+                        <span class="collapse-count" data-is-deletable="@projectGroup.IsDeletable" id="count-@projectGroup.Id">@projectGroup.ProjectsCount</span>
+                        @if (User.UserHasThisPermission(Permissions.ProjectGroupUpdate) || User.UserHasThisPermission(Permissions.ProjectGroupDelete))
+                        {
+                            if (projectGroup.IsDeletable)
+                            {
+                                <div class="dropdown collapse-dropdown">
+                                    <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        @if (User.UserHasThisPermission(Permissions.ProjectGroupUpdate))
+                                        {
+                                            <a href="javascript:" class="dropdown-item edit-parent-link" data-toggle="modal" data-target="#modal" data-controller="ProjectGroups" data-action="Edit" data-id="@projectGroup.Id">@Localizer["shortCuts_rename"]</a>
+                                        }
+                                        @if (User.UserHasThisPermission(Permissions.ProjectGroupDelete))
+                                        {
+                                            <a href="javascript:" class="dropdown-item delete-parent-link" data-toggle="modal" data-target="#modal" data-controller="ProjectGroups" data-action="Delete" data-id="@projectGroup.Id" data-name="@projectGroup.Name">@Localizer["shortCuts_delete"]</a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                    <div class="d-lg-none collapse-divider"></div>
+                    @if (User.UserHasThisPermission(Permissions.ProjectCreate))
+                    {
+                        <div class="d-lg-block d-inline-block">
+                            <button class="btn btn-success collapse-button details hover-invisible hover-lg ml-lg-20 mt-lg-10 add-entity-link" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="Create" data-parent-id="@projectGroup.Id">@Localizer["shortCuts_addProject"]</button>
+                        </div>
+                    }
+                    <div class="loader-container"></div>
+                </div>
+            </div>
+            <div class="collapse collapse-datatable" id="parent-@projectGroup.Id"></div>
+            <hr class="no-gutters" />
+        </div>
+    }
+}
+else
+{
+    <p class="mb-0 mt-2">@Localizer["_messages_noProjects"]</p>
+}

@@ -1,0 +1,89 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Newtonsoft.Json;
+@model Gear.ProjectManagement.Manager.Domain.Activities.Commands.ShortcutActions.MoveToList.MoveToListCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="Activities" asp-action="MoveToList" id="form-move-to-list">
+    <div class="modal-body">
+        <input asp-for="Id" class="form-control" hidden />
+
+        <label asp-for="ActivityListId" class="float-label-select"></label>
+        <select asp-for="ActivityListId" asp-items="@(((List<SelectListItem>) ViewBag.ActivityLists).Prepend(new SelectListItem
+                                                      {
+                                                          Value = string.Empty,
+                                                          Text = "- Select -",
+                                                          Selected = true
+                                                      }))"
+                class="form-control selectpicker" data-live-search="true">
+        </select>
+        <span asp-validation-for="ActivityListId" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-move-to-list">@Localizer["shortCuts_update"]</button>
+    </div>
+</form>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script>
+    $(".selectpicker").selectpicker();
+
+    $.saveChanges({
+        bindTo: "#btn-move-to-list",
+        formId: "#form-move-to-list",
+        ajaxUrl: "@Url.Action("MoveToList", "Activities")",
+        successMessage: "@Localizer["messages_editActivitySuccess"]",
+        errorMessage: "@Localizer["messages_editActivityError"]",
+        buttonText: "@Localizer["shortCuts_update"]",
+        eventFunction: function (result) {
+
+            if (GetCurrentView() == "@ActivitiesView.List") {
+               
+                if (result.activityListId != "@ViewBag.OldListId") {
+                    var row = $("tr[id='entity-" + result.id + "']");
+                    var newTbody = null;
+                    var moveToCompleted = row.parents("tbody").attr("id").startsWith("tbody-comp");
+
+                    if (!moveToCompleted) {
+                        newTbody = $("tbody[id='tbody-" + result.activityListId + "']");
+                    } else {
+                        newTbody = $("tbody[id='tbody-comp-" + result.activityListId + "']");
+                    }
+
+                    var newDataTable = newTbody.parents(".bizon-datatable").DataTable();
+
+                    DeleteRowCompleted(result.id,
+                        "@Localizer["messages_noActivities"]",
+                        "@Localizer["messages_noOngoingActivities"]");
+
+                    // Append row to new table
+                    newDataTable.row.add($(row));
+                    newTbody.append(row);
+                    row.find(".move-to-list-link").attr("data-list-id", result.activityListId);
+
+                    var newCount = $("[id='count-" + result.activityListId + "'].collapse-count");
+                    newCount.html(parseInt(newCount.html()) + 1);
+                }
+            } else {
+
+                if ($('div').hasClass('grid')) {
+
+                    var activityLists = @Html.Raw(JsonConvert.SerializeObject(ViewBag.ActivityLists) as String);
+
+                    var activityList = activityLists.find((item) => item.Value === result.activityListId);
+
+                    $("small[id='" + result.id + "'].activity-usecase").html(activityList.Text);
+                }
+
+                $("[data-id='" + result.id + "'].move-to-list-link").attr("data-list-id", result.activityListId);
+            }
+
+            if ($("[data-id='" + result.id + "'].global-move-to-list-link") != null) {
+                $("[data-id='" + result.id + "'].global-move-to-list-link").attr("data-list-id", result.activityListId);
+            }
+        }
+    });
+</script>

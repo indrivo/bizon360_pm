@@ -1,0 +1,93 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.LoggedTimes.Commands.CreateLoggedTime.CreateLoggedTimeCommand
+
+<form asp-action="Create" asp-controller="LoggedTime" id="form-create-logged-time">
+    <div class="modal-body pb-0">
+        <div class="row">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <input asp-for="UserId" class="form-control" hidden />
+                <input asp-for="ActivityId" class="form-control" hidden />
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <label asp-for="Time" class="col-3 col-form-label text-right font-weight-600 pr-0"></label>
+                    <div class="col-9">
+                        <input asp-for="Time" type="number" min="0" max="12" autocomplete="off" class="form-control" />
+                        <span asp-validation-for="Time" class="fs-14 color-danger"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="DateOfWork" class="col-3 pr-0 col-form-label text-right font-weight-600"></label>
+                    <div class="col-9">
+                        <input asp-for="DateOfWork" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" type="text" autocomplete="off" />
+                        <span asp-validation-for="DateOfWork" class="fs-14 color-danger"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="TrackerId" class="col-3 pr-0 col-form-label text-right font-weight-600"></label>
+                    <div class="col-9">
+                        <select asp-for="TrackerId" class="form-control" asp-items="@(new SelectList(ViewBag.TrackerTypes, "Id", "Name", null))"></select>
+                        <span asp-validation-for="TrackerId" class="fs-14 color-danger"></span>
+                    </div>
+                </div>
+                @*<div class="form-group row">
+                    <label asp-for="Progress" class="col-3 pr-0 col-form-label text-right font-weight-600"></label>
+                    <div class="col-9">
+                        <select asp-for="Progress" class="form-control">
+                            @for (int i = 0; i <= 100; i += 10)
+                            {
+                                <option value="@i">@i %</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Progress" class="fs-14 color-danger"></span>
+                    </div>
+                </div>*@
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-danger-custom font-weight-600" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-success-custom font-weight-600" id="btn-log-time-create">Log Time</button>
+    </div>
+</form>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script>
+    $(".datepicker").datepicker({
+        dateFormat: "yy/mm/dd"
+    });
+</script>
+<script>
+    $("#btn-log-time-create").click(function (e) {
+        var form = $("#form-create-logged-time");
+        var isValid = form.valid();
+        if (isValid) {
+            $(this)
+                .prop("disabled", true)
+                .html(BUTTON_LOADER);
+            $.ajax({
+                url: "@Url.Action("Create", "LoggedTime")",
+                type: "POST",
+                data: form.serialize(),
+                success: function(result) {
+                    $("#btn-log-time-create")
+                        .removeAttr("disabled")
+                        .html("Log Time");
+                    getLoggedTime();
+                    $("#modal-create-logged-time").modal("hide");
+                },
+                error: function(result) {
+                    Swal.fire({
+                        type: 'error',
+                        title: 'Error!',
+                        text: 'Could not log time.'
+                    });
+                    $("#btn-log-time-create")
+                        .removeAttr("disabled")
+                        .html("Log Time");
+                }
+            });
+        }
+        e.preventDefault();
+    })
+</script>

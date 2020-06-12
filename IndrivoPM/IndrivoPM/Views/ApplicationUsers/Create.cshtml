@@ -1,0 +1,143 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.HrmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@model Gear.Manager.Core.EntityServices.ApplicationUsers.Commands.CreateApplicationUser.CreateApplicationUserCommand
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = "Add employee";
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = Localizer["_employees"];
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+<partial name="_AdmTabs" />
+
+<form asp-controller="ApplicationUsers" asp-action="Create" >
+    <input asp-for="Id" class="form-control" hidden />
+
+    <div class="row bizon-row">
+        <div class="col-lg-3 col-md-6 mb-lg-0 mb-3 bizon-col">
+            <div class="bg-white rounded border px-20 py-15">
+                <h6>Overview</h6>
+                <hr class="hr-description mb-3" />
+
+                <label asp-for="FirstName" class="float-label"></label>
+                <input asp-for="FirstName" class="form-control" placeholder="@Localizer["placeholders_firstName"]" autofocus="autofocus" autocomplete="off" required />
+                <span asp-validation-for="FirstName" class="invalid-feedback mt-1 mb-2"></span>
+
+                <label asp-for="LastName" class="float-label"></label>
+                <input asp-for="LastName" class="form-control" placeholder="@Localizer["placeholders_lastName"]" autocomplete="off" />
+                <span asp-validation-for="LastName" class="invalid-feedback mt-1 mb-2"></span>
+                
+                <label asp-for="Email" class="float-label"></label>
+                <input asp-for="Email" class="form-control" placeholder="@Localizer["placeholders_email"]" autocomplete="off" />
+                <span asp-validation-for="Email" class="invalid-feedback mt-1 mb-2"></span>
+                
+                <label asp-for="PhoneNumber" class="float-label"></label>
+                <input asp-for="PhoneNumber" class="form-control" placeholder="@Localizer["placeholders_phoneNumber"]" autocomplete="off" />
+                <span asp-validation-for="PhoneNumber" class="invalid-feedback mt-1 mb-2"></span>
+                
+                <label asp-for="EmploymentType" class="float-label-select"></label>
+                <select asp-for="EmploymentType" asp-items="Html.GetEnumSelectList<EmploymentType>()" class="form-control selectpicker">
+                    <option selected disabled>@Localizer["placeholders_nothingSelected"]</option>
+                </select>
+                <span asp-validation-for="EmploymentType" class="invalid-feedback mt-1 mb-2"></span>
+
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-md-0 mb-3 bizon-col">
+            <div class="bg-white rounded border px-20 py-15">
+                <h6>Organizational details</h6>
+                <hr class="hr-description mb-3" />
+
+                <label asp-for="DepartmentTeamId" class="float-label-select"></label>
+                @if (ViewBag.Teams != null)
+                {
+                    <select id="team-list" asp-for="DepartmentTeamId" asp-items="@(new SelectList(ViewBag.Teams, "Id", "Name", null))" class="form-control selectpicker">
+                        <option selected disabled>@Localizer["placeholders_nothingSelected"]</option>
+                    </select>
+                }
+                else
+                {
+                    <select class="form-control selectpicker">
+                        <option selected>@Localizer["placeholders_noTeams"]</option>
+                    </select>
+                }
+
+
+                <span asp-validation-for="DepartmentTeamId" class="invalid-feedback mt-1 mb-2"></span>
+
+                <label asp-for="JobPositionId" class="float-label-select"></label>
+                <select disabled id="job-list" asp-for="JobPositionId" class="form-control selectpicker">
+                    <option selected disabled>@Localizer["placeholders_nothingSelected"]</option>
+                </select>
+                <span asp-validation-for="JobPositionId" class="invalid-feedback mt-1 mb-2"></span>
+
+                <label asp-for="RoleNames" class="float-label-select"></label>
+                <select asp-for="RoleNames" asp-items="@(new SelectList(ViewBag.Roles, "RoleName", "RoleName", null))" class="form-control selectpicker">
+                </select>
+                <span asp-validation-for="RoleNames" class="invalid-feedback mt-1 mb-2"></span>
+                
+                <label asp-for="Projects" class="float-label-select"></label>
+                <select asp-for="Projects" asp-items="@((List<SelectListItem>) ViewBag.Projects)"class="form-control selectpicker" data-live-search="true" multiple data-actions-box="true"></select>
+                <span asp-validation-for="Projects" class="invalid-feedback"></span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bulk-actions-container show">
+        <ul class="list-unstyled list-inline d-md-inline-block d-block float-lg-right mt-lg-0 mt-2 mb-0">
+            <li class="list-inline-item">
+                <a class="btn btn-outline-secondary" asp-controller="ApplicationUsers" asp-action="Index" >@Localizer["_discard"]</a>
+            </li>
+            <li class="list-inline-item">
+                <button type="submit" class="btn btn-success">@Localizer["_add"]</button>
+            </li>
+        </ul>
+    </footer>
+    <div class="bulk-hidden-space"></div>
+</form>
+
+
+@section Scripts{
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+    <script src="~/js/shared.js"></script>
+
+    <script>
+        $("#tab-users").addClass("active");
+
+        // Bind team list form department.
+        // -------------------------------
+        $("#department-list").change(function () {
+
+            var dataParams = {};
+            var dataResult = {};
+            dataParams.departmentId = $("#department-list").val();
+            console.log(dataParams.departmentId);
+            dataResult.appendIn = "#team-list";
+            dataResult.placeholder = "@Localizer["placeholders_nothingSelected"]";
+
+            BindSelectList("/ApplicationUsers/GetTeamsList", dataParams, dataResult);
+        })
+    </script>
+
+    <script>
+        // Bind job list form team.
+        // -------------------------------
+        $("#team-list").change(function () {
+
+            var dataParams = {};
+            var dataResult = {};
+            dataParams.teamIds = $("#team-list").val();
+            dataResult.appendIn = "#job-list";
+            dataResult.placeholder ="@Localizer["placeholders_nothingSelected"]";
+
+            BindSelectList("/ApplicationUsers/GetJobList", dataParams, dataResult);
+        })
+    </script>
+}

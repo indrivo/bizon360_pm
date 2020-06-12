@@ -1,0 +1,41 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.MainComments.Commands.UpdateMainComment.UpdateMainCommentCommand
+
+<form asp-action="EditMainComment" asp-controller="MainComments" id="form-update-comment">
+    <div class="card-header">
+        <h6 class="card-title font-weight-600">
+            Edit comment
+        </h6>
+    </div>
+
+    <div class="card-body p-1">
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input asp-for="Id" class="form-control" hidden />
+
+        <div class="col-12 p-0">
+            <textarea rows="3" id="message" asp-for="Message" class="form-control" onkeyup="uniKeyCode(event)" style="width: 340px" autofocus> </textarea>
+            <span asp-validation-for="Message" class="text-danger"></span>
+        </div>
+
+    </div>
+
+    <div class="card-footer">
+        <div class="text-center">
+            <a onclick="ClosePopper()" class="btn btn-danger btn-sm font-weight-600 text-white col-5">Cancel</a>
+            <input type="submit" value="Update" class="btn btn-sm btn-success font-weight-600 col-5" id="confirm-update-comment" />
+
+        </div>
+
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script src="~/js/dev/Comments.js"></script>
+
+<script>
+    SendForm({
+        bindTo: "#confirm-update-comment",
+        formId: "#form-update-comment",
+        ajaxUrl: "/MainComments/EditMainComment/"
+    });
+</script>

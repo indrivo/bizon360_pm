@@ -1,0 +1,206 @@
+﻿@using Bizon360.Models
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = "Administrative";
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = ViewData["Title"];
+}
+
+<partial name="_AdmTabs" />
+
+<div class="row row-m-20 bg-white border rounded top-bar pl-20 pr-20">
+    <div class="col-12 d-md-flex p-0">
+        <div class="d-md-block d-inline-block">
+            <button class="btn btn-primary">@Localizer["_list"]</button>
+            @*<button class="btn btn-outline-primary">@Localizer["_grid"]</button>*@
+        </div>
+        <div class="ml-auto d-inline-block"></div>
+        @if (User.UserHasThisPermission(Permissions.RoleCreate))
+        {
+            <a class="btn btn-success ml-auto float-md-none float-right" asp-controller="Roles" asp-action="Create">@Localizer["shortCuts_addRole"]</a>
+            <div class="top-bar-divider d-md-block d-none"></div>
+        }
+
+        <input type="text" class="form-control search-input w-md-100-i mt-md-0 mt-2" placeholder="@Localizer["_search"]" />
+    </div>
+</div>
+
+<hr class="no-gutters" />
+
+<div id="role-list"></div>
+
+<div class="no-results d-none">
+    <p class="mb-0">No matching records found</p>
+</div>
+
+<footer class="bulk-actions-container">
+    <div class="d-lg-inline-flex d-block">
+        <button type="button" class="btn d-block w-lg-auto w-100 btn-outline-secondary" id="deselect-all">@Localizer["shortCuts_deselectAll"] <span class="check-counter d-lg-none"></span></button>
+        @if (!User.UserHasThisPermission(Permissions.RoleUpdate) && !User.UserHasThisPermission(Permissions.RoleDelete))
+        {
+            <p class="d-lg-inline text-lg-left text-center">@Localizer["messages_noPermessionsEditDeleteRoles"]</p>
+        }
+        else
+        {
+            <p class="d-lg-inline d-none"><span class="check-counter"></span> @Localizer["msg_rolesSelected"]</p>
+        }
+    </div>
+    <ul class="list-unstyled list-inline d-lg-inline-block d-block float-lg-right mb-0">
+        @if (User.UserHasThisPermission(Permissions.RoleUpdate))
+        {
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                <button type="button" class="bulk-activate-link btn w-lg-auto w-100 btn-outline-primary mr-2" data-toggle="modal" data-target="#modal" data-controller="Roles" data-param-name="id" data-action="ActivateRole">@Localizer["shortCuts_activateSelected"]</button>
+                <button type="button" class="bulk-deactivate-link btn w-lg-auto w-100 btn-outline-primary mr-lg-2" data-toggle="modal" data-target="#modal" data-controller="Roles" data-param-name="id" data-action="DeactivateRole">@Localizer["shortCuts_deactivateSelected"]</button>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.RoleDelete))
+        {
+            <li class="d-lg-inline-block d-none">
+                <div class="divider"></div>
+            </li>
+            <li class="d-lg-inline-block d-block mt-lg-0 mt-2">
+                <button type="button" class="bulk-delete-link btn d-block w-lg-auto w-100 btn-danger ml-lg-2" data-toggle="modal" data-target="#modal" data-controller="Roles" data-param-name="id" data-action="Delete">@Localizer["shortCuts_deleteSelected"]</button>
+            </li>
+        }
+    </ul>
+</footer>
+<div class="bulk-hidden-space d-none"></div>
+
+@section Scripts {
+
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/dev/adm.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $("#role-list").html(LOADER);
+            var role = new RolesContainer();
+            role.getRoleList();
+
+            $("#tab-roles").addClass("active");
+            $(".search-input").keyup(function () {
+                $(".bizon-datatable").DataTable().search($(this).val()).draw();
+            });
+
+        // ------------------------
+        // Shortcut actions
+
+                    @if (User.UserHasThisPermission(Permissions.RoleUpdate))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".deactivate-role",
+                        bodyActionName: "Deactivate",
+                        modalTitle: "@Localizer["shortCuts_deactivateRole"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_role"]",
+                        successMessage: "@Localizer["msgSuccess_deactivateRole"]",
+                        errorMessage: "@Localizer["msgError_deactivateRole"]",
+                        eventFunction: role.getRoleList
+                    });
+                </text>
+
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".activate-role",
+                        bodyActionName: "Activate",
+                        colorButton: "success",
+                        modalTitle: "@Localizer["shortCuts_activateRole"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_role"]",
+                        successMessage: "@Localizer["msgSuccess_activateRole"]",
+                        errorMessage: "@Localizer["msgError_activateRole"]",
+                        eventFunction: role.getRoleList
+                    });
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.RoleDelete))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".delete-role",
+                        modalTitle: "@Localizer["shortCuts_deleteRole"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_role"]",
+                        successMessage: "@Localizer["msgSuccess_deleteRole"]",
+                        errorMessage: "@Localizer["msgError_deleteRole"]",
+                        eventFunction: role.getRoleList
+                    });
+                </text>
+            }
+
+            // ---------------------------------
+            // Bulk actions
+
+             @if (User.UserHasThisPermission(Permissions.RoleDelete))
+            {
+                <text>
+                    // Bulk delete jobs
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-delete-link",
+                        modalTitle: "@Localizer["shortCuts_deleteRole"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_role"]",
+                        successMessage: "@Localizer["msgSuccess_deleteRole"]",
+                        errorMessage: "@Localizer["msgError_deleteRole"]",
+                        eventFunction: function(result) {
+                            role.getRoleList();
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.RoleUpdate))
+            {
+                <text>
+                    // Bulk Activate projects
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-activate-link",
+                        bodyActionName: "Activate",
+                        colorButton: "success",
+                        modalTitle: "@Localizer["shortCuts_activateRole"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_role"]",
+                        successMessage: "@Localizer["msgSuccess_activateRole"]",
+                        errorMessage: "@Localizer["msgError_activateRole"]",
+                        eventFunction: function(result) {
+                            role.getRoleList();
+                            DeselectAll();
+                        }
+                    });
+
+                    // Bulk deactivate projects
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-deactivate-link",
+                        bodyActionName: "Deactivate",
+                        modalTitle: "@Localizer["shortCuts_deactivateRole"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_role"]",
+                        successMessage: "@Localizer["msgSuccess_deactivateRole"]",
+                        errorMessage: "@Localizer["msgError_deactivateRole"]",
+                        eventFunction: function(result) {
+                            role.getRoleList();
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+
+            $.confirmDelete();
+        });
+
+    </script>
+}

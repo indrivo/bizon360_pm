@@ -1,0 +1,162 @@
+﻿@using Bizon360.Models
+@using Gear.Identity.Permissions.Domain.Resources
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@model Gear.Manager.Core.EntityServices.Notifications.Querries.GetNotificationProfileList.NotificationProfileListLookupModel
+
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = "Administrative";
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = ViewData["Title"];
+}
+
+<partial name="_AdmTabs" />
+
+<div class="row row-m-20 bg-white border rounded top-bar pl-20 pr-20">
+    <div class="col-12 d-md-flex p-0">
+        <div class="d-md-block d-inline-block">
+            <button id="get-notifications" class="btn btn-primary">@Localizer["_profiles"]</button>
+            <button id="get-events" class="btn btn-outline-primary">@Localizer["_events"]</button>
+        </div>
+        <div class="ml-auto d-inline-block"></div>
+        @if (User.UserHasThisPermission(Permissions.NotificationProfileCreate))
+        {
+            <button class="btn btn-success ml-auto float-md-none float-right"
+                    id="add-profile" data-toggle="modal" data-target="#modal"
+                    data-controller="Notifications" data-action="Create">
+                @Localizer["shortCuts_addNotificationProfile"]
+            </button>
+
+            <div class="top-bar-divider d-md-block d-none"></div>
+        }
+        <input type="text" class="form-control search-input w-md-100-i mt-md-0 mt-2" placeholder="@Localizer["_search"]" />
+    </div>
+</div>
+
+<hr class="no-gutters" />
+
+<div id="entities"></div>
+
+<footer class="bulk-actions-container">
+    <div class="d-lg-inline-flex d-block">
+        <button type="button" class="btn d-block w-lg-auto w-100 btn-outline-secondary" id="deselect-all">@Localizer["shortCuts_deselectAll"] <span class="check-counter d-lg-none"></span></button>
+        @if (!User.UserHasThisPermission(Permissions.NotificationProfileDelete))
+        {
+            <p class="d-lg-inline text-lg-left text-center">@Localizer["messages_noPermessionsDeleteProfiles"]</p>
+        }
+        else
+        {
+            <p class="d-lg-inline d-none"><span class="check-counter"></span> @Localizer["msg_notificationProfileSelected"]</p>
+        }
+    </div>
+    <ul class="list-unstyled list-inline d-lg-inline-block d-block float-lg-right mb-0">
+        @if (User.UserHasThisPermission(Permissions.NotificationProfileDelete))
+        {
+            <li class="d-lg-inline-block d-block mt-lg-0 mt-2">
+                <button type="button" class="bulk-delete-link btn d-block w-lg-auto w-100 btn-danger ml-lg-2" data-toggle="modal" data-target="#modal" data-controller="Notifications" data-param-name="id" data-action="Delete">@Localizer["shortCuts_deleteSelected"]</button>
+            </li>
+        }
+    </ul>
+</footer>
+<div class="bulk-hidden-space d-none"></div>
+
+@section Scripts
+{
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+    <script src="~/js/dev/adm.js"></script>
+
+    <script>
+        $("#tab-notifications").addClass("active");
+        $("#entities").html(LOADER);
+        $.confirmDelete();
+
+        $(document).ready(function () {
+            GetEntityList("/Notifications/GetNotificationList", "#entities");
+        });
+
+        $("#get-events").click(function () {
+            $(this).attr("class", "btn btn-primary");
+            $("#get-notifications").attr("class", "btn btn-outline-primary");
+            GetEntityList("/Notifications/GetEvents", "#entities");
+        });
+
+        $("#get-notifications").click(function () {
+            $(this).attr("class", "btn btn-primary");
+            $("#get-events").attr("class", "btn btn-outline-primary");
+            GetEntityList("/Notifications/GetNotificationList", "#entities");
+        });
+
+        $(".search-input").keyup(function () {
+            $(".bizon-datatable").DataTable().search($(this).val()).draw();
+        });
+    </script>
+
+    <script>
+        @if (User.UserHasThisPermission(Permissions.NotificationProfileCreate))
+        {
+            <text>
+        $.bindFormModal({
+            bindTo: "#add-profile",
+            modalTitle: "@Localizer["shortCuts_addNotificationProfile"]",
+            modalSize: "regular"
+        });
+            </text>
+        }
+
+        @if (User.UserHasThisPermission(Permissions.NotificationProfileUpdate))
+        {
+            <text>
+                $.bindFormModal({
+                    bindTo: ".edit-ntf",
+                    modalTitle: "@Localizer["_edit"]",
+                    modalSize: "regular"
+                });
+            </text>
+            <text>
+                $.bindFormModal({
+                    bindTo: ".assign-users",
+                    modalTitle: "@Localizer["_assign"]",
+                    modalSize: "regular"
+                });
+            </text>
+        }
+
+        @if (User.UserHasThisPermission(Permissions.NotificationProfileDelete))
+        {
+            <text>
+                $.bindDeleteModal({
+                    bindTo: ".delete-ntf",
+                    modalTitle: "@Localizer["shortCuts_deleteNotificationProfile"]",
+                    modalSize: "regular",
+                    type: "@Localizer["types_NotificationProfile"]",
+                    successMessage: "@Localizer["msgSuccess_deleteNotificationProfile"]",
+                    errorMessage: "@Localizer["msgError_deleteNotificationProfile"]",
+                    eventFunction: function() {
+                        GetEntityList("/Notifications/GetNotificationList", "#entities");
+                    }
+                });
+
+                $.bindDeleteModal({
+                    bulk: true,
+                    bindTo: ".bulk-delete-link",
+                    modalTitle: "@Localizer["shortCuts_deleteNotificationProfile"]",
+                    modalSize: "regular",
+                    type: "@Localizer["types_NotificationProfile"]",
+                    successMessage: "@Localizer["msgSuccess_deleteNotificationProfile"]",
+                    errorMessage: "@Localizer["msgError_deleteNotificationProfile"]",
+                    eventFunction: function(result) {
+                        GetEntityList("/Notifications/GetNotificationList", "#entities");
+                        DeselectAll();
+                    }
+                });
+            </text>
+        }
+    </script>
+}

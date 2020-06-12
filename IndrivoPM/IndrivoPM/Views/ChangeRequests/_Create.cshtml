@@ -1,0 +1,258 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.ChangeRequests.Commands.CreateChangeRequest.CreateChangeRequestCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<link href="~/css/summer-note.css" rel="stylesheet" />
+<link href="~/css/custom-file-input.css" rel="stylesheet" />
+
+<form asp-controller="ChangeRequests" asp-action="Create" class="form-create-change-request" id="create-cr-form" method="post">
+    <div class="modal-body">
+        <input asp-for="ProjectName" value="@ViewBag.ProjectName" hidden />
+        <input asp-for="EntityId" value="@ViewBag.EntityId" hidden />
+        <input asp-for="ProjectNumber" value="@ViewBag.ProjectNumber" hidden />
+        <label asp-for="Name" class="float-label"></label>
+        <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_requestName"]" autofocus="autofocus" autocomplete="off" required />
+        <span asp-validation-for="Name" class="invalid-feedback mt-1 mb-2"></span>
+
+        <div class="row">
+            <div class="col-lg-6 col-sm-12">
+                <label asp-for="Priority" class="float-label-select"></label>
+                <select asp-for="Priority" asp-items="Html.GetEnumSelectList<ActivityPriority>()" class="form-control selectpicker"></select>
+                <span asp-validation-for="Priority" class="invalid-feedback mt-1 mb-2"></span>
+            </div>
+            <div class="col-lg-6 col-sm-12">
+                <label asp-for="ProjectId" class="float-label-select"></label>
+                <select asp-for="ProjectId" asp-items="@((List<SelectListItem>) ViewBag.Projects)" class="form-control selectpicker" required data-live-search="true"></select>
+                <span asp-validation-for="ProjectId" class="invalid-feedback mt-1 mb-2"></span>
+            </div>
+        </div>
+
+        <div class="position-relative">
+            <label asp-for="Description" class="summernote-label"></label>
+
+            <textarea asp-for="Description" class="summernote" required="required" data-msg="This field is required."></textarea>
+
+            <span asp-validation-for="Description" class="invalid-feedback mt-1 mb-2"></span>
+        </div>
+
+        <input type="file" name="File" id="file" class="inputfile inputfile-1" data-multiple-caption="{count} files selected" />
+        <label id="attach-file" for="file">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="17" viewBox="0 0 20 17">
+                <path d="M10 0l-5.2 4.9h3.3v5.1h3.8v-5.1h3.3l-5.2-4.9zm9.3 11.5l-3.2-2.1h-2l3.4 2.6h-3.5c-.1 0-.2.1-.2.1l-.8 2.3h-6l-.8-2.2c-.1-.1-.1-.2-.2-.2h-3.6l3.4-2.6h-2l-3.2 2.1c-.4.3-.7 1-.6 1.5l.6 3.1c.1.5.7.9 1.2.9h16.3c.6 0 1.1-.4 1.3-.9l.6-3.1c.1-.5-.2-1.2-.7-1.5z" />
+            </svg> <span>Attach files&hellip;</span>
+        </label>
+
+        <input class="btn btn-success login-on-cloud" type="submit" value="CloudAuth" form="LoginForm">
+
+        <button type="button" class="btn btn-outline-secondary js-copy-btn">Copy text</button>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-create-change-request">@Localizer["_add"]</button>
+    </div>
+</form>
+<form method="post" asp-controller="Home" asp-action="LogInMicrosoft" id="LoginForm"></form>
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script src="~/js/dev/custom-file-input.js"></script>
+<script>
+    function fallbackCopyTextToClipboard(text) {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+  
+        // Avoid scrolling to bottom
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.position = "fixed";
+
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            var successful = document.execCommand('copy');
+            var msg = successful ? 'successful' : 'unsuccessful';
+            console.log('Fallback: Copying text command was ' + msg);
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+
+        document.body.removeChild(textArea);
+    }
+    function copyTextToClipboard(text) {
+        if (!navigator.clipboard) {
+            fallbackCopyTextToClipboard(text);
+            return;
+        }
+        navigator.clipboard.writeText(text).then(function() {
+            $.successAlert({
+                message: "Copying to clipboard was successful!"
+            });
+        }, function(err) {
+            $.errorAlert({
+                title: "Error",
+                message: "Could not copy text" + err
+            });
+        });
+    }
+
+    var copyBtn = document.querySelector('.js-copy-btn');
+
+    copyBtn.addEventListener('click', function (event) {
+        var text = $('.summernote').summernote('code').replace(/<\/?[^>]+(>|$)/g, "");
+        copyTextToClipboard(text);
+    });
+   
+</script>
+<script>
+    $("#create-cr-form").submit(function(e) {
+        e.preventDefault();
+        let form = $(this);
+
+        if (!form.valid()) return;
+
+        DisableButton("#btn-create-change-request");
+
+        let formData = new FormData(form[0]);
+        $.ajax({
+            url: '@Url.Action("Create", "ChangeRequests")',
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                $.successAlert({
+                    title:"Success",
+                    message:"@Localizer["messages_createRequestSuccess"]"
+                });
+            },
+            error: function() {
+                $.errorAlert({
+                    title: "Error",
+                    message:  "@Localizer["messages_createRequestError"]"
+                });
+            },
+            complete: function (response) {
+                $("#modal").modal("hide");
+                EnableButton("#btn-create-change-reques", "Add");
+                $("#attach-file").prop("disabled", false);
+
+                GetRequestsWithStatus("@ChangeRequestStatus.Unprocessed");
+                var count = $("[id='count-unprocessed'].collapse-count");
+                count.html(parseInt(count.html()) + 1);
+            }
+        });
+    });
+
+</script>
+<script>
+    $(document).ready(function () {
+        if (@ViewBag.IsAuthenticatedOnCloud.ToString().ToLower()) {
+            $(".login-on-cloud").hide();
+        } else {
+            $("#attach-file").hide();
+        }
+    });
+</script>
+
+<script>
+    /* Summernote Validation */
+
+    var summernoteForm = $('.form-create-change-request');
+    var summernoteElement = $('.summernote');
+
+    var summernoteValidator = summernoteForm.validate({
+        errorElement: "div",
+        errorClass: 'is-invalid',
+        validClass: 'is-valid',
+        ignore: ':hidden:not(.summernote),.note-editable.card-block',
+        errorPlacement: function(error, element) {
+            // Add the `help-block` class to the error element
+            error.addClass("invalid-feedback");
+            console.log(element);
+            if (element.prop("type") === "checkbox") {
+                error.insertAfter(element.siblings("label"));
+            } else if (element.hasClass("summernote")) {
+                error.insertAfter(element.siblings(".note-editor"));
+            } else {
+                error.insertAfter(element);
+            }
+        }
+    });
+    summernoteElement.summernote({
+        dialogsInBody: true,
+        dialogsFade: false,
+        height: 100, // set editor height
+        minHeight: null, // set minimum height of editor
+        maxHeight: null, // set maximum height of editor
+        focus: true, // set focus to editable area after initializing summernote
+        popover: { //solve -> note-popover appearing in top left on page load
+            image: [],
+            link: [],
+            air: []
+        },
+        toolbar: [
+            ['fontsize', ['fontsize']],
+            ['fontname', ['fontname']],
+            ['font', ['bold', 'italic', 'underline', 'clear']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link']]
+        ],
+        callbacks: {
+            onChange: function (contents) {
+                // Note that at this point, the value of the `textarea` is not the same as the one
+                // you entered into the summernote editor, so you have to set it yourself to make
+                // the validation consistent and in sync with the value.
+                summernoteElement.val(summernoteElement.summernote('isEmpty') ? "" : contents);
+
+                if (summernoteElement.summernote('isEmpty')) {
+                    $(".note-editor.note-frame.card").attr('style', 'border-color:red !important');
+
+                } else if(!summernoteElement.summernote('isEmpty')){
+                    $(".note-editor.note-frame.card").attr('style', 'border-color:blue !important');
+                }
+
+                // You should re-validate your element after change, because the plugin will have
+                // no way to know that the value of your `textarea` has been changed if the change
+                // was done programmatically.
+                summernoteValidator.element(summernoteElement);
+            },
+            onPaste: function (e) {
+                var bufferText = ((e.originalEvent || e).clipboardData || window.clipboardData).getData('Text');
+                e.preventDefault();
+                document.execCommand('insertText', false, bufferText);
+            },
+            onFocus: function() {
+                if (!summernoteElement.summernote('isEmpty') && !$("#Description-error").text()) {
+                    $(".note-editor.note-frame.card").attr('style', 'border-color:blue !important');
+                }
+            },
+            onBlur: function() {
+                if (!$("#Description-error").text()) {
+                    $(".note-editor.note-frame.card").attr('style', 'border-color:none');
+                }
+            }
+        }
+    });
+
+
+    $("#btn-create-change-request").click(function () {
+        if (summernoteElement.summernote('isEmpty')) {
+            summernoteElement.val("");
+            $(".note-editor.note-frame.card").attr('style', 'border-color:red !important');
+        } else {
+            $(".note-editor.note-frame.card").attr('style', 'border-color:none');
+        }
+    });
+
+    $(".selectpicker").selectpicker();
+
+</script>

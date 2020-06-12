@@ -1,0 +1,230 @@
+﻿@using Bizon360.Utils
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@model Gear.ProjectManagement.Manager.Domain.ActivityCheckList.Querries.GetCheckListForActivity.CheckListViewModel
+@inject IStringLocalizer Localizer
+
+<style>
+    .drag-in-drop {
+        list-style-image: url('../../svg/drag-drop.svg');
+    }
+</style>
+
+<link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.css" rel="stylesheet" />
+
+@if (Model.CheckList.Any())
+{
+<div class="sortable-div">
+    <ul id="sortable" class="ui-sortable">
+        @foreach (var item in Model.CheckList)
+        {
+            <li class="list-unstyled form-control">
+                <div class="d-flex">
+                    <div style="margin-right: 35px;">
+                        <span class="all-scroll" id="drag-drop">
+                            <img class="pb-2" src="~/svg/drag-drop.svg" style="width: 10px;" />
+                        </span>
+                    </div>
+
+                    <div class="custom-checkbox d-flex" style="width: 100%;">
+                        <input type="checkbox" class="custom-control-input checklist-item" id="@item.Id" data-id="@item.Id" data-activity-id="@item.ActivityId" data-logged-timeId="@item.LoggedTimeId" @ActivitiesViewHelper.CheckItemCompleted(item.IsCompleted) />
+                        <label class="custom-control-label @ActivitiesViewHelper.CheckItemLabelClass(item.IsCompleted)" for="@item.Id">@item.Content</label>
+
+                        <div class="dropdown collapse-dropdown hover-invisible-toggle">
+                            <div class="more-vertical hover-lg hover-invisible" id="dropdown-1" data-toggle="dropdown"></div>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+                                {
+                                    <a href="#" class="dropdown-item checkitem-rename" data-id="@item.Id" data-name="@item.Content" data-toggle="modal" data-target="#renameModal">@Localizer["_rename"]</a>
+                                    <a href="#" class="dropdown-item checkitem-delete" data-id="@item.Id">@Localizer["_delete"]</a>
+                                    <hr />
+                                }
+                            </div>
+                        </div>
+
+                        <div class="ml-auto" style="margin-left: auto">
+                            @if (item.LoggedTime > 0)
+                            {
+                                <div class="cursor-pointer update-entity-link d-inline-block mr-2" data-toggle="modal" data-target="#modal" data-controller="LoggedTime" data-action="UpdateActivityLoggedTime" data-id="@item.LoggedTimeId" data-activity-id="@item.ActivityId">
+                                    <p class="p-xs base-link d-inline-block mb-0">
+                                        <span id="logged-time-id" logged-time-id="@item.LoggedTimeId">@($"{item.LoggedTime}h")</span>
+                                        @($"\u00B7")
+                                        <span id="tracker">@($"{item.Tracker}")</span>
+                                    </p>
+
+                                    <p id="logged-date" class="p-xs color-secondary d-inline-block ml-2 mb-0">@($"{item.DateOfWork:yyyy-MM-dd}")</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </li>
+        }
+    </ul>
+    <script src="~/lib/jqueryui/jquery-ui.js"></script>
+</div>
+}
+
+<!-- The Modal -->
+<div class="modal" id="renameModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Rename Check Item</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body">
+                <div class="form-group">
+                    @*<label for="check-item-name">Check item content</label>*@
+                    <hr />
+                    <input type="text" id="check-item-name" value="" class="form-control" />
+                    <input type="hidden" id="hidden-id" value="" />
+                </div>
+            </div>
+
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="RenameCheckItem($('#hidden-id').val(), $('#check-item-name').val())">Confirm</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('.ui-sortable').sortable({
+            handle: '#drag-drop',
+            axis: 'y',
+            update: function (event, ui) {
+                var ids = [];
+                $('ul li .checklist-item').each(function(i)
+                {
+                    ids.push($(this).attr('id'));
+                });
+                $.ajax({
+                    url: "@Url.Action("SwapChecklistItems", "Checklist")",
+                    type: "POST",
+                    data: {
+                        ids: ids
+                    },
+                    success: function(result) {
+
+                    },
+                    error: function(result) {
+                        console.log("Error!");
+                    }
+                });
+            }
+        });
+        $(".ui-sortable").disableSelection();
+    });
+</script>
+.
+<script>
+    function RenameCheckItem(id, name) {
+        $.ajax({
+            url: "@Url.Action("RenameChecklistItem", "Checklist")",
+            type: "POST",
+            data: {
+                id: id,
+                name: name
+            },
+            success: function(result) {
+                $(".confirm-check .modal-inner").html(result);
+                $("#modal-rename-check-item").modal("hide");
+                getChecklistItems();
+            },
+            error: function(result) {
+                alert("Error!");
+            }
+        });
+    }
+
+    $(".checklist-item").change(function () {
+
+        $("#hidden-checklist-item-id").val($(this).attr("id"));
+
+        $("#hidden-logged-time-id").val($(this).attr("data-logged-timeId"));
+
+        $(".confirm-check .modal-inner").html(LOADER);
+
+        if (this.checked) {
+            $("#modal-confirm-check").modal("show");
+            $.ajax({
+                url: "@Url.Action("CompleteChecklistItem", "Checklist")",
+                type: "GET",
+                data: {
+                    id: $(this).attr("id"),
+                    activityId: $(this).attr("data-activity-id"),
+                    progress: $("#input-hidden-activity-progress").val(),
+                    activityTypeId: $("#input-hidden-activity-type").val()
+                },
+                success: function(result) {
+                    $(".confirm-check .modal-inner").html(result);
+                },
+                error: function(result) {
+                    alert("Error!");
+                }
+            });
+        }
+        else {
+            var hour = $(this).parent().find("#logged-time-id").html();
+            var tracker = $(this).parent().find("#tracker").html();
+            var date = $(this).parent().find("#logged-date").html();
+
+            if (hour && tracker && date) {
+                $("#modal-delete-time").modal("show");
+
+                $(".delete-time .modal-inner").html(
+                    "<div class='modal-body'>Please confirm time log deletion.<br><b>" + date + "</b>, you logged <b>" + hour + "</b> hour(s) on activity <b>" + tracker + "</b ></div>");
+            }
+        }
+
+    })
+</script>
+<script>
+    $(".checkitem-rename").click(function () {
+        $(".modal-rename-check-item .modal-inner").html(LOADER);
+
+        $("#hidden-checklist-item-id").val($(this).attr("id"));
+
+        $("#checklist-name").val($(this).attr("data-name"));
+
+        $("#hidden-id").val($(this).attr("data-id"));
+        $("#check-item-name").val($(this).attr("data-name"));
+    });
+</script>
+<script>
+    $(".checkitem-delete").click(function () {
+
+        $.ajax({
+            url: "@Url.Action("DeleteChecklistItem", "Checklist")",
+            type: "POST",
+            data: { id: $(this).attr("data-id") },
+            success: function (result) {
+
+                $.successAlert({
+                    title:"Success",
+                    message: "Item was deleted!"
+                });
+
+                getChecklistItems();
+            }
+        });
+    });
+    $(".delete-al").click(function () {
+        $(".modal-body.delete-activity-list").html("Delete \"" + $(this).attr("data-name") + "\" list?");
+        $("#activity-list-id").val($(this).attr("data-id"));
+    })
+</script>
+
+

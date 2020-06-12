@@ -1,0 +1,356 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.Projects.Commands.SetUpProject.SetUpProjectCommand
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+    <form id="form-settings">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="ProjectId" />
+
+        <!----------------| Settings for display tabs |---------------------->
+        <!------------------------------------------------------------------->
+        <div class="tabcontent" id="tab-tabs" style="display: none">
+            <div class="row bizon-row">
+
+                <!---------- Project tabs settings --------->
+                <div class="col-xl-4 col-lg-5 mb-3 bizon-col">
+                    <div class="bg-white rounded border px-20 py-15">
+                        <h6>@Localizer["text_projectTabs"]</h6>
+                        <hr class="hr-description mb-2" />
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ProjectProjectTab" class="custom-control-input" id="check-011" />
+                            <label class="custom-control-label" for="check-011" asp-for="ProjectProjectTab"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ProjectActivitiesTab" class="custom-control-input" id="check-012" />
+                            <label class="custom-control-label" for="check-012" asp-for="ProjectActivitiesTab"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ProjectChangeRequestsTab" class="custom-control-input" id="check-013" />
+                            <label class="custom-control-label" for="check-013" asp-for="ProjectChangeRequestsTab"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ProjectLoggedTimeTab" class="custom-control-input" id="check-01" />
+                            <label class="custom-control-label" for="check-01" asp-for="ProjectLoggedTimeTab"></label>
+                        </div>
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ProjectWikiAndFilesTab" class="custom-control-input" id="check-02" />
+                            <label class="custom-control-label" for="check-02" asp-for="ProjectWikiAndFilesTab"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ProjectReportsTab" class="custom-control-input" id="check-021" />
+                            <label class="custom-control-label" for="check-021" asp-for="ProjectReportsTab"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ProjectInvoiceTab" class="custom-control-input" id="check-022" />
+                            <label class="custom-control-label" for="check-022" asp-for="ProjectInvoiceTab"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!--------- Activity tabs settings ---------->
+                <div class="col-xl-4 col-lg-5 mb-3 bizon-col">
+                    <div class="bg-white rounded border px-20 py-15">
+                        <h6>@Localizer["text_activityTabs"]</h6>
+                        <hr class="hr-description mb-2" />
+                        <div class="custom-control custom-switch">
+                            <input disabled type="checkbox" asp-for="ActivityActivityTab" class="custom-control-input" id="check-05e" />
+                            <label class="custom-control-label" for="check-05e" asp-for="ActivityActivityTab"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input disabled type="checkbox" asp-for="ActivityLinkedActivitiesTab" class="custom-control-input" id="check-05r" />
+                            <label class="custom-control-label" for="check-05r" asp-for="ActivityLinkedActivitiesTab"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityLoggedTimeTab" class="custom-control-input" id="check-05" />
+                            <label class="custom-control-label" for="check-05" asp-for="ActivityLoggedTimeTab"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityCommentsTab" class="custom-control-input" id="check-06" />
+                            <label class="custom-control-label" for="check-06" asp-for="ActivityCommentsTab"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityHistoryTab" class="custom-control-input" id="check-07" />
+                            <label class="custom-control-label" for="check-07" asp-for="ActivityHistoryTab"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!----------------| Settings for restrictions |---------------------->
+        <!------------------------------------------------------------------->
+        <div class="tabcontent" id="tab-restrictions" style="display: none">
+            <div class="row bizon-row">
+
+                <!---------- Project tabs settings --------->
+                <div class="col-xl-8 col-lg-10 mb-3 bizon-col">
+                    <div class="bg-white rounded border px-20 py-15">
+                        <h6>@Localizer["text_activityRestrictions"]</h6>
+                        <hr class="hr-description mb-2" />
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityChangeName" class="custom-control-input" id="check-0111" />
+                            <label class="custom-control-label" for="check-0111" asp-for="ActivityChangeName"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityChangeProject" class="custom-control-input" id="check-0121" />
+                            <label class="custom-control-label" for="check-0121" asp-for="ActivityChangeProject"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityChangeStatus" class="custom-control-input" id="check-0131" />
+                            <label class="custom-control-label" for="check-0131" asp-for="ActivityChangeStatus"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityChangeProirity" class="custom-control-input" id="check-0141" />
+                            <label class="custom-control-label" for="check-0141" asp-for="ActivityChangeProirity"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityChangeTeam" class="custom-control-input" id="check-0151" />
+                            <label class="custom-control-label" for="check-0151" asp-for="ActivityChangeTeam"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityChangeEstimatedTime" class="custom-control-input" id="check-0161" />
+                            <label class="custom-control-label" for="check-0161" asp-for="ActivityChangeEstimatedTime"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityChangeActivityType" class="custom-control-input" id="check-0171" />
+                            <label class="custom-control-label" for="check-0171" asp-for="ActivityChangeActivityType"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityChangeActivityList" class="custom-control-input" id="check-0181" />
+                            <label class="custom-control-label" for="check-0181" asp-for="ActivityChangeActivityList"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityChangeSprint" class="custom-control-input" id="check-0191" />
+                            <label class="custom-control-label" for="check-0191" asp-for="ActivityChangeSprint"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityChangeStartDueDate" class="custom-control-input" id="check-0201" />
+                            <label class="custom-control-label" for="check-0201" asp-for="ActivityChangeStartDueDate"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityDelete" class="custom-control-input" id="check-0221" />
+                            <label class="custom-control-label" for="check-0221" asp-for="ActivityDelete"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!--------------------| Settings for send notifications |----------------------->
+        <!------------------------------------------------------------------------------>
+        <div class="tabcontent" id="tab-notifications" style="display: none">
+            <div class="row bizon-row">
+                
+                <!--------- Project notifications ----------->
+                <div class="col-xl-8 col-lg-10 mb-3 bizon-col">
+                    <div class="bg-white rounded border px-20 py-15">
+                        <h6>@Localizer["text_projectNotifications"]</h6>
+                        <hr class="hr-description mb-2"/>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ProjectNotificationOnUpdateCompleteArchive" class="custom-control-input" id="check-11"/>
+                            <label class="custom-control-label" for="check-11" asp-for="ProjectNotificationOnUpdateCompleteArchive"></label>
+                        </div>
+
+                        <hr class="hr-description my-2"/>
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ProjectNotificationWeeklyDeadline" class="custom-control-input" id="check-12"/>
+                            <label class="custom-control-label" for="check-12" asp-for="ProjectNotificationWeeklyDeadline"></label>
+                        </div>
+
+                        <hr class="hr-description my-2"/>
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ProjectNotificationDailyDeadline" class="custom-control-input" id="check-13"/>
+                            <label class="custom-control-label" for="check-13" asp-for="ProjectNotificationDailyDeadline"></label>
+                        </div>
+
+                        <hr class="hr-description my-2"/>
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ProjectNotificationDailyOverdue" class="custom-control-input" id="check-134"/>
+                            <label class="custom-control-label" for="check-134" asp-for="ProjectNotificationDailyOverdue"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-------------- Activity notifications -------------->
+                <div class="col-xl-8 col-lg-10 mb-3 bizon-col">
+                    <div class="bg-white rounded border px-20 py-15">
+                        <h6>@Localizer["text_activityNotifications"]</h6>
+                        <hr class="hr-description mb-2"/>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityNotificationOnCreateUpdateCompleteDelete" class="custom-control-input" id="check-14"/>
+                            <label class="custom-control-label" for="check-14" asp-for="ActivityNotificationOnCreateUpdateCompleteDelete"></label>
+                        </div>
+
+                        <hr class="hr-description my-2"/>
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityNotificationWeeklyDeadline" class="custom-control-input" id="check-15"/>
+                            <label class="custom-control-label" for="check-15" asp-for="ActivityNotificationWeeklyDeadline"></label>
+                        </div>
+
+                        <hr class="hr-description my-2"/>
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityNotificationDailyDeadline" class="custom-control-input" id="check-16"/>
+                            <label class="custom-control-label" for="check-16" asp-for="ActivityNotificationDailyDeadline"></label>
+                        </div>
+
+                        <hr class="hr-description my-2"/>
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="ActivityNotificationDailyOverdue" class="custom-control-input" id="check-17"/>
+                            <label class="custom-control-label" for="check-17" asp-for="ActivityNotificationDailyOverdue"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!------------ Sprint notifications ------------>
+                <div class="col-xl-8 col-lg-10 mb-3 bizon-col">
+                    <div class="bg-white rounded border px-20 py-15">
+                        <h6>@Localizer["text_sprintNotifications"]</h6>
+                        <hr class="hr-description mb-2"/>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="SprintNotificationOnCreateUpdateCompleteDelete" class="custom-control-input" id="check-18"/>
+                            <label class="custom-control-label" for="check-18" asp-for="SprintNotificationOnCreateUpdateCompleteDelete"></label>
+                        </div>
+
+                        <hr class="hr-description my-2"/>
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="SprintNotificationWeeklyDeadline" class="custom-control-input" id="check-19"/>
+                            <label class="custom-control-label" for="check-19" asp-for="SprintNotificationWeeklyDeadline"></label>
+                        </div>
+
+                        <hr class="hr-description my-2"/>
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="SprintNotificationDailyDeadline" class="custom-control-input" id="check-20"/>
+                            <label class="custom-control-label" for="check-20" asp-for="SprintNotificationDailyDeadline"></label>
+                        </div>
+
+                        <hr class="hr-description my-2"/>
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="SprintNotificationDailyOverdue" class="custom-control-input" id="check-21"/>
+                            <label class="custom-control-label" for="check-21" asp-for="SprintNotificationDailyOverdue"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!----------- Email notifications ------------>
+                <div class="col-xl-8 col-lg-10 mb-3 bizon-col">
+                    <div class="bg-white rounded border px-20 py-15">
+                        <h6>@Localizer["text_emailReportsNotifications"]</h6>
+                        <hr class="hr-description mb-2"/>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="DailyMembersLoggedTime" class="custom-control-input" id="check-22"/>
+                            <label class="custom-control-label" for="check-22" asp-for="DailyMembersLoggedTime"></label>
+                        </div>
+
+                        <hr class="hr-description my-2"/>
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="WeeklyMembersLoggedTime" class="custom-control-input" id="check-23"/>
+                            <label class="custom-control-label" for="check-23" asp-for="WeeklyMembersLoggedTime"></label>
+                        </div>
+
+                        <hr class="hr-description my-2"/>
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="MonthlyMembersLoggedTime" class="custom-control-input" id="check-24"/>
+                            <label class="custom-control-label" for="check-24" asp-for="MonthlyMembersLoggedTime"></label>
+                        </div>
+
+                        @*<hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="DailyEmailsLoggedTimeSprint" class="custom-control-input" id="check-25" />
+                            <label class="custom-control-label" for="check-25" asp-for="DailyEmailsLoggedTimeSprint"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="WeeklyEmailsLoggedTimeSprint" class="custom-control-input" id="check-26" />
+                            <label class="custom-control-label" for="check-26" asp-for="WeeklyEmailsLoggedTimeSprint"></label>
+                        </div>
+
+                        <hr class="hr-description my-2" />
+
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" asp-for="MonthlyEmailsLoggedTimeSprint" class="custom-control-input" id="check-27" />
+                            <label class="custom-control-label" for="check-27" asp-for="MonthlyEmailsLoggedTimeSprint"></label>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </form>

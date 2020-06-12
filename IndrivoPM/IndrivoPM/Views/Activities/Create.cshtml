@@ -1,0 +1,252 @@
+﻿@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@model Gear.ProjectManagement.Manager.Domain.Activities.Commands.CreateActivity.CreateActivityCommand
+@inject IStringLocalizer Localizer
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = Localizer["shortCuts_addActivity"];
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["ThirdNode"] = ViewData["Title"];
+}
+@section Styles {
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+    <link href="~/lib/summernote/summernote-bs4.css" rel="stylesheet" />
+    <link href="~/css/summer-note.css" rel="stylesheet" />
+}
+
+<ul class="tab nav nav-tabs main-nav-tabs project-tabs px-40">
+    <li class="nav-item">
+        <a class="nav-link cursor-pointer active" href="javascript:">@Localizer["_activity"]</a>
+    </li>
+</ul>
+
+<form asp-controller="Activities" asp-action="Create" id="form-create-activity">
+    <input asp-for="ChangeRequestId" hidden />
+
+    <div class="row bizon-row">
+        <div class="col-xl-3 col-lg-6 mb-xl-0 mb-3 bizon-col">
+            <div class="bg-white rounded border px-20 py-15">
+                <h6>@Localizer["_overview"]</h6>
+                <hr class="hr-description mb-3" />
+
+                <label asp-for="Name" class="float-label"></label>
+                <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_activityName"]" autofocus="autofocus" autocomplete="off" required />
+                <span asp-validation-for="Name" class="invalid-feedback mt-1 mb-2"></span>
+                
+                <div class="row">
+                    <div class="col-sm-6 col-12">
+                        <label asp-for="EstimatedHours" class="float-label"></label>
+                        <input asp-for="EstimatedHours" class="form-control" type="number" min="0" placeholder="@Localizer["placeholders_activityEstimatedTime"]" autofocus="autofocus" autocomplete="off" required />
+                        <span asp-validation-for="EstimatedHours" class="invalid-feedback mt-1 mb-2"></span>
+                    </div>
+                    <div class="col-sm-6 col-12">
+                        <label asp-for="Priority" class="float-label-select"></label>
+                        <select asp-for="Priority" asp-items="Html.GetEnumSelectList<ActivityPriority>()" class="form-control selectpicker"></select>
+                        <span asp-validation-for="Priority" class="invalid-feedback mt-1 mb-2"></span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-6 col-12">
+                        <label asp-for="Status" class="float-label-select"></label>
+                        <select asp-for="Status" asp-items="Html.GetEnumSelectList<ActivityStatus>()" class="form-control selectpicker"></select>
+                        <span asp-validation-for="Status" class="invalid-feedback mt-1 mb-2"></span>
+                    </div>
+                    <div class="col-sm-6 col-12">
+                        <label asp-for="ActivityTypeId" class="float-label-select"></label>
+                        <select asp-for="ActivityTypeId" asp-items="@(((List<SelectListItem>) ViewBag.ActivityTypes).Prepend(new SelectListItem
+                                                                      {
+                                                                          Value = string.Empty,
+                                                                          Text = "- Select -",
+                                                                          Selected = true
+                                                                      }))"
+                                placeholder="@Localizer["messages_clickToSelect"]" class="form-control selectpicker" required data-live-search="true">
+                        </select>
+                        <span asp-validation-for="ActivityTypeId" class="invalid-feedback mt-1 mb-2"></span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <div class="position-relative">
+                            <label asp-for="Assignees" class="float-label-select"></label>
+                            <select asp-for="Assignees" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)" class="form-control selectpicker" placeholder="@Localizer["messages_clickToSelect"]"  id="members-select" required multiple data-live-search="true" data-selected-text-format="value" data-actions-box="true"></select>
+                            <span asp-validation-for="Assignees" class="invalid-feedback mt-1 mb-2"></span>
+                            <img class="selectpicker-loader d-none" src="~/img/loader.gif" data-input="#members-select" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 mb-xl-0 mb-3 bizon-col">
+            <div class="bg-white rounded border px-20 py-15">
+                <h6>@Localizer["_activityDetails"]</h6>
+                <hr class="hr-description mb-3" />
+
+                <label asp-for="ProjectId" class="float-label-select"></label>
+                <select asp-for="ProjectId" asp-items="@(((List<SelectListItem>) ViewBag.Projects).Prepend(new SelectListItem
+                                                         {
+                                                             Value = string.Empty,
+                                                             Text = "- Select -",
+                                                             Selected = true
+                                                         }))"
+                        placeholder="@Localizer["messages_clickToSelect"]" class="form-control selectpicker" id="project-select" required data-live-search="true">
+                </select>
+                <span asp-validation-for="ProjectId" class="invalid-feedback mt-1 mb-2"></span>
+
+                <div class="position-relative">
+                    <label asp-for="ActivityListId" class="float-label-select"></label>
+                    <select asp-for="ActivityListId" asp-items="@(((List<SelectListItem>) ViewBag.ActivityLists).Prepend(new SelectListItem
+                                                                  {
+                                                                      Value = string.Empty,
+                                                                      Text = "- Select -",
+                                                                      Selected = true
+                                                                  }))"
+                            placeholder="@Localizer["messages_clickToSelect"]" class="form-control selectpicker" id="activity-list-select" data-live-search="true">
+                    </select>
+                    <span asp-validation-for="ActivityListId" class="invalid-feedback mt-1 mb-2"></span>
+                    <img class="selectpicker-loader d-none" src="~/img/loader.gif" data-input="#activity-list-select" />
+                </div>
+
+                <div class="position-relative">
+                    <label asp-for="SprintId" class="float-label-select"></label>
+                    <select asp-for="SprintId" asp-items="@(((List<SelectListItem>) ViewBag.Sprints).Prepend(new SelectListItem
+                                                            {
+                                                                Value = string.Empty,
+                                                                Text = "- Select -",
+                                                                Selected = true
+                                                            }))" 
+                            placeholder="@Localizer["messages_clickToSelect"]" class="form-control selectpicker" id="sprints-select" data-live-search="true">
+                    </select>
+                    <span asp-validation-for="SprintId" class="invalid-feedback mt-1 mb-2"></span>
+                    <img class="selectpicker-loader d-none" src="~/img/loader.gif" data-input="#sprints-select" />
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-6 col-12">
+                        <label asp-for="StartDate" class="float-label"></label>
+                        <input asp-for="StartDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" id="start-date" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                        <span asp-validation-for="StartDate" class="invalid-feedback mt-1 mb-2"></span>
+                    </div>
+                    <div class="col-sm-6 col-12">
+                        <label asp-for="DueDate" class="float-label"></label>
+                        <input asp-for="DueDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" id="due-date" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                        <span asp-validation-for="DueDate" class="invalid-feedback mt-1 mb-2"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-md-12 mb-lg-0 mb-3 bizon-col">
+            <div class="bg-white rounded border px-20 py-15">
+                <h6>@Localizer["_description"]</h6>
+                <hr class="hr-description mb-3" />
+
+                <div class="position-relative mt-4">
+                    <label class="summernote-label"></label>
+                    <textarea asp-for="Description" id="summernote"></textarea>
+                    <span asp-validation-for="Description" class="invalid-feedback mt-1 mb-2"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="bulk-actions-container show">
+        <ul class="list-unstyled list-inline d-lg-inline-block d-block float-lg-right mb-0">
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                <a class="btn w-lg-auto w-100 btn-outline-secondary mr-2" asp-controller="Activities" asp-action="Index" asp-route-id="@ViewBag.ReturnId">@Localizer["_discard"]</a>
+                <button type="submit" class="btn w-lg-auto w-100 btn-success mr-lg-2" id="submit-form">@Localizer["_add"]</button>
+            </li>
+        </ul>
+    </footer>
+    <div class="bulk-hidden-space"></div>
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/lib/summernote/summernote-bs4.js"></script>
+    <script>
+        // Append project id to the parent breadcrumb node
+        $("a[href='" + "@ViewBag.LinkToReplace" + "']").attr("href", "@ViewBag.BreadcrumbLink");
+    </script>
+    <script>
+        function updateDropdown(projectId, controller, action, inputSelector) {
+            var loader = $(`[data-input='${inputSelector}'].selectpicker-loader`);
+            if (loader.hasClass("d-none")) loader.removeClass("d-none");
+            $.ajax({
+                url: "/" + controller + "/" + action,
+                type: "GET",
+                data: { projectId: projectId },
+                success: function (result) {
+                    if (!loader.hasClass("d-none")) loader.addClass("d-none");
+                    var select = $(inputSelector);
+                    select.empty();
+
+                    if (result.length <= 1) {
+                        select.append(`<option disabled selected value=''>There are no entries related to this project.</option>`);
+                        select.attr("disabled", true);
+                        select.selectpicker("refresh");
+                        return;
+                    }
+
+                    for (var i = 0; i < result.length; i++) {
+                        select.append($("<option/>",
+                            {
+                                value: result[i].value,
+                                text: result[i].text
+                            })
+                        );
+                    }
+                    select.attr("disabled", false);
+                    select.selectpicker("refresh");
+                }
+            });
+        }
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            EnableSummerNote("#summernote");
+
+
+            $(".selectpicker").selectpicker();
+
+            $(".datepicker").datepicker({
+                format: "yyyy/mm/dd",
+                maxViewMode: 3,
+                todayBtn: "linked",
+                autoclose: true,
+                clearBtn: true
+            });
+
+            $("#project-select").change(function () {
+                var id = $(this).val();
+
+                updateDropdown(id, "Activities", "GetMemberListByProject", "#members-select");
+                updateDropdown(id, "Activities", "GetActivityListsByProject", "#activity-list-select");
+                updateDropdown(id, "Activities", "GetSprintListByProject", "#sprints-select");
+            });
+
+            $("#sprints-select").change(function () {
+                $.ajax({
+                    url: "@Url.Action("GetSprintDates", "Sprints")",
+                    type: "GET",
+                    data: { id: $(this).val() },
+                    success: function (result) {
+                        $("#start-date").datepicker("update", result.startDate);
+                        $("#due-date").datepicker("update", result.dueDate);
+                    }
+                });
+            });
+
+            $('#form-create-activity').on("submit", function () {
+                var isValid = $(this).valid();
+
+                if (isValid) {
+                    DisableButton("#submit-form");
+                }
+            });
+        });
+    </script>
+}

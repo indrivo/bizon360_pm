@@ -1,0 +1,345 @@
+﻿@using Bizon360.Models
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = "Administrative";
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = ViewData["Title"];
+}
+
+<partial name="_AdmTabs" />
+
+<div class="row row-m-20 bg-white border rounded top-bar pl-20 pr-20">
+    <div class="col-12 d-md-flex p-0">
+        <div class="d-md-block d-inline-block">
+            <button class="btn btn-primary">@Localizer["_list"]</button>
+            @*<button class="btn btn-outline-primary">@Localizer["_grid"]</button>*@
+        </div>
+        <div class="ml-auto d-inline-block"></div>
+        @if (User.UserHasThisPermission(Permissions.ActivityTypeCreate))
+        {
+            <button class="btn btn-success ml-auto float-md-none float-right" id="add-activity" data-toggle="modal" data-target="#modal" data-controller="Services" data-action="CreateActivityType">@Localizer["shortCuts_addActivityType"]</button>
+            <div class="top-bar-divider d-md-block d-none"></div>
+        }
+
+        <input type="text" class="form-control search-input w-md-100-i mt-md-0 mt-2" placeholder="@Localizer["_search"]" />
+    </div>
+</div>
+
+<hr class="no-gutters" />
+
+<div id="activity-list" class="sortable-div"></div>
+
+<div class="no-results d-none">
+    <p class="mb-0">No matching records found</p>
+</div>
+
+<footer class="bulk-actions-container">
+    @if (!User.UserHasThisPermission(Permissions.ActivityTrackerUpdate) || !User.UserHasThisPermission(Permissions.ActivityTrackerDelete))
+    {
+        <div class="d-lg-inline-flex d-block">
+            <p class="d-inline">@Localizer["messages_noPermessionsEditDeleteSubtypes"]</p>
+        </div>
+    }
+    <div class="d-lg-inline-flex d-block">
+        <button type="button" class="btn d-block w-lg-auto w-100 btn-outline-secondary" id="deselect-all">@Localizer["shortCuts_deselectAll"] <span class="check-counter d-lg-none"></span></button>
+        @if (!User.UserHasThisPermission(Permissions.ActivityTrackerUpdate) && !User.UserHasThisPermission(Permissions.ActivityTrackerDelete))
+        {
+            <p class="d-lg-inline text-lg-left text-center">@Localizer["messages_noPermessionsEditDeleteSubtypes"]</p>
+        }
+        else
+        {
+            <p class="d-lg-inline d-none"><span class="check-counter"></span> @Localizer["msg_teamsSubtypes"]</p>
+        }
+    </div>
+    <ul class="list-unstyled list-inline d-lg-inline-block d-block float-lg-right mb-0">
+        @if (User.UserHasThisPermission(Permissions.ActivityTrackerUpdate))
+        {
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                <button type="button" class="bulk-move-subtype btn w-lg-auto w-100 btn-outline-primary mr-lg-2" data-toggle="modal" data-target="#modal" data-controller="Services" data-param-name="id" data-action="MoveTracker">@Localizer["_moveTo"]</button>
+            </li>
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                <button type="button" class="bulk-activate-link btn w-lg-auto w-100 btn-outline-primary mr-2" data-toggle="modal" data-target="#modal" data-controller="Services" data-param-name="id" data-action="ActivateTrackerType">@Localizer["shortCuts_activateSelected"]</button>
+                <button type="button" class="bulk-deactivate-link btn w-lg-auto w-100 btn-outline-primary mr-lg-2" data-toggle="modal" data-target="#modal" data-controller="Services" data-param-name="id" data-action="DeactivateTrackerType">@Localizer["shortCuts_deactivateSelected"]</button>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.ActivityTrackerDelete))
+        {
+            <li class="d-lg-inline-block d-none">
+                <div class="divider"></div>
+            </li>
+            <li class="d-lg-inline-block d-block mt-lg-0 mt-2">
+                <button type="button" class="bulk-delete-subtype-link btn d-block w-lg-auto w-100 btn-danger ml-lg-2" data-toggle="modal" data-target="#modal" data-controller="Services" data-param-name="id" data-action="DeleteTracker">@Localizer["shortCuts_deleteSelected"]</button>
+            </li>
+        }
+    </ul>
+</footer>
+<div class="bulk-hidden-space d-none"></div>
+
+@section Scripts
+{
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/js/dev/adm.js"></script>
+    <script src="~/js/bizon-scripts.js"></script>
+    <script src="~/lib/jqueryui/jquery-ui.js"></script>
+
+    <script>
+            $( function() {
+                $(".sortable-div").sortable({
+                    handle:"img",
+                    update: function(event, ui) {
+                        var itemIds = [];
+                        $(event.target).find(".ui-state-default").each(function () {
+
+                            var itemId = $(this).attr("id");
+
+                            itemIds.push(itemId);
+                        });
+                        $.ajax({
+                            url: "/Services/ActivityTypeUpdateOrder",
+                            data: { itemIds: itemIds },
+                            type: "POST"
+                        });
+                    }
+                });
+
+                $( ".sortable-div" ).disableSelection();
+            });
+
+        $(document).ready(function () {
+            $("#tab-services").addClass("active");
+            $("#activity-list").html(LOADER);
+            var services = new ServicesContainer();
+            services.getServices();
+
+            $.bindSearch();
+            $.confirmDelete();
+
+            // -----------------------
+            // Shortcut parent actions
+
+            @if (User.UserHasThisPermission(Permissions.ActivityTypeCreate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: "#add-activity",
+                        modalSize: "regular",
+                        modalTitle: "@Localizer["shortCuts_addActivityType"]"
+                    });
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.ActivityTypeUpdate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".edit-activity",
+                        modalSize: "regular",
+                        modalTitle: "@Localizer["shortCuts_editActivityType"]"
+                    });
+
+                    $.bindFormModal({
+                        bindTo: ".rename-activity",
+                        modalTitle: "@Localizer["shortCuts_renameActivity"]",
+                        modalSize: "regular"
+                    });
+
+                    $.bindDeleteModal({
+                        bindTo: ".deactivate-activity",
+                        bodyActionName: "Deactivate",
+                        modalTitle: "@Localizer["shortCuts_deactivateActivityType"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_activityType"]",
+                        successMessage: "@Localizer["msgSuccess_deactivateActivityType"]",
+                        errorMessage: "@Localizer["msgError_deactivateActivityType"]",
+                        eventFunction: services.getServices
+                    });
+
+                    $.bindDeleteModal({
+                        bindTo: ".activate-activity",
+                        bodyActionName: "Activate",
+                        modalTitle: "@Localizer["shortCuts_activateActivityType"]",
+                        modalSize: "regular",
+                        colorButton: "success",
+                        type: "@Localizer["types_activityType"]",
+                        successMessage: "@Localizer["msgSuccess_activateActivityType"]",
+                        errorMessage: "@Localizer["msgError_activateActivityType"]",
+                        eventFunction: services.getServices
+                    });
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.DepartmentDelete))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".delete-activity",
+                        modalTitle: "@Localizer["shortCuts_deleteActivityType"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_activityType"]",
+                        successMessage: "@Localizer["msgSuccess_deleteActivityType"]",
+                        errorMessage: "@Localizer["msgError_deleteActivityType"]",
+                        eventFunction: services.getServices
+                    });
+                </text>
+            }
+
+            // -------------------------------
+            // Items shortcut actions
+
+            @if (User.UserHasThisPermission(Permissions.ActivityTrackerCreate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".add-entity-link",
+                        modalTitle: "@Localizer["shortCuts_addSubtype"]",
+                        modalSize: "regular",
+                        data: {
+                            activityTypeId: "data-parent-id"
+                        }
+                    });
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.ActivityTrackerUpdate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".edit-subtype",
+                        modalSize: "regular",
+                        modalTitle: "@Localizer["shortCuts_renameSubtype"]",
+                    });
+
+                    $.bindFormModal({
+                        bindTo: ".move-subtype",
+                        modalTitle: "@Localizer["shortCuts_moveSubtype"]",
+                        modalSize: "regular",
+                    });
+
+                    $.bindDeleteModal({
+                        bindTo: ".deactivate-subtype",
+                        bodyActionName: "Deactivate",
+                        modalTitle: "@Localizer["shortCuts_deactivateSubtype"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_subtype"]",
+                        successMessage: "@Localizer["msgSuccess_deactivateSubtype"]",
+                        errorMessage: "@Localizer["msgError_deactivateSubtype"]",
+                        eventFunction: function(result) {
+                            services.getSubtypes(result.id);
+                        }
+                    });
+
+                    $.bindDeleteModal({
+                        bindTo: ".activate-subtype",
+                        bodyActionName: "Activate",
+                        modalTitle: "@Localizer["shortCuts_activateSubtype"]",
+                        modalSize: "regular",
+                        colorButton: "success",
+                        type: "@Localizer["types_subtype"]",
+                        successMessage: "@Localizer["msgSuccess_activateSubtype"]",
+                        errorMessage: "@Localizer["msgError_activateSubtype"]",
+                        eventFunction: function (result) {
+                            services.getSubtypes(result.id);
+                        }
+                    });
+
+
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.ActivityTrackerDelete))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".delete-subtype",
+                        modalTitle: "@Localizer["shortCuts_deleteSubtype"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_subtype"]",
+                        successMessage: "@Localizer["msgSuccess_deleteSubtype"]",
+                        errorMessage: "@Localizer["msgError_deleteSubtype"]",
+                        eventFunction: function(result) {
+                            services.getSubtypes(result.id);
+                        }
+                    });
+                </text>
+
+            }
+
+            // ----------------------------
+            // Bulk items shortcut actions
+
+            @if (User.UserHasThisPermission(Permissions.DepartmentTeamUpdate))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-activate-link",
+                        bodyActionName: "Activate",
+                        modalTitle: "@Localizer["shortCuts_activateSubtype"]",
+                        modalSize: "regular",
+                        colorButton: "success",
+                        type: "@Localizer["types_subtype"]",
+                        successMessage: "@Localizer["msgSuccess_activateSubtype"]",
+                        errorMessage: "@Localizer["msgError_activateSubtype"]",
+                        eventFunction: function(result) {
+                            services.getSubtypes();
+                            DeselectAll();
+                        }
+                    });
+
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-deactivate-link",
+                        bodyActionName: "Deactivate",
+                        modalTitle: "@Localizer["shortCuts_deactivateSubtype"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_subtype"]",
+                        successMessage: "@Localizer["msgSuccess_deactivateSubtype"]",
+                        errorMessage: "@Localizer["msgError_deactivateSubtype"]",
+                        eventFunction: function(result) {
+                            services.getSubtypes();
+                            DeselectAll();
+                        }
+                    });
+
+                    $.bindFormModal({
+                        bulk: true,
+                        bindTo: ".bulk-move-subtype",
+                        modalTitle: "@Localizer["shortCuts_moveSubtype"]",
+                        modalSize: "regular",
+                        eventFunction: function() {
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.DepartmentTeamDelete))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-delete-subtype-link",
+                        modalTitle: "@Localizer["shortCuts_deleteSubtype"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_subtype"]",
+                        successMessage: "@Localizer["msgSuccess_deleteSubtype"]",
+                        errorMessage: "@Localizer["msgError_deleteSubtype"]",
+                        eventFunction: function (result) {
+                            services.getSubtypes();
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+        });
+
+    </script>
+}

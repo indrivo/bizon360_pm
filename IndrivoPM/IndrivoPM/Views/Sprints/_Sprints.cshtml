@@ -1,0 +1,141 @@
+﻿@using Bizon360.Models
+@using Bizon360.Utils
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Newtonsoft.Json
+@model Gear.ProjectManagement.Manager.Domain.Sprints.Queries.GetSprintListQuery.SprintListViewModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@if (Model.Sprints.Any())
+{
+    <hr class="no-gutters " />
+    <div id="ongoing-sprints">
+        @foreach (var sprint in Model.Sprints.Where(s => !s.IsCompleted))
+        {
+            <div class="parent-content" id="@sprint.Id">
+                <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative cursor-pointer pb-lg-0 pb-2" data-toggle="collapse" href="#parent-@sprint.Id" data-type="@ActivityParentType.Sprint" data-id="@sprint.Id" data-loaded="false">
+                    <div class="d-lg-flex d-block w-100 px-20">
+                        <div class="d-flex pt-collapse">
+                            <a class="border collapse-switcher d-inline-block">
+                                <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                            </a>
+                            <span class="badge @ActivitiesViewHelper.GetSprintBadgeColor(sprint.DueDate, sprint.IsCompleted) collapse-badge sprint-date" data-id="@sprint.Id">@($"{sprint.DueDate:yyyy-MM-dd}")</span>
+                            <span class="collapse-title" data-id="@sprint.Id">@sprint.Name</span>
+                            <span class="collapse-count" id="count-@sprint.Id">@sprint.ActivitiesCount</span>
+                            <div class="loader-container"></div>
+                            @if (User.UserHasThisPermission(Permissions.SprintUpdate) || User.UserHasThisPermission(Permissions.SprintDelete))
+                            {
+                                <div class="dropdown collapse-dropdown">
+                                    <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        @if (User.UserHasThisPermission(Permissions.SprintUpdate))
+                                        {
+                                            <a href="javascript:" class="dropdown-item edit-parent-link" data-toggle="modal" data-target="#modal" data-controller="Sprints" data-action="Edit" data-id="@sprint.Id">@Localizer["shortCuts_edit"]</a>
+                                            <a href="javascript:" class="dropdown-item edit-parent-link" data-toggle="modal" data-target="#modal" data-controller="Sprints" data-action="Rename" data-id="@sprint.Id">@Localizer["shortCuts_rename"]</a>
+                                            <a href="javascript:" class="dropdown-item update-status-parent-link" data-toggle="modal" data-target="#modal" data-controller="Sprints" data-action="UpdateStatus" data-id="@sprint.Id">@Localizer["shortCuts_updateStatus"]</a>
+                                        }
+                                        @if (User.UserHasThisPermission(Permissions.SprintDelete))
+                                        {
+                                            <div class="dropdown-divider"></div>
+                                            <a href="javascript:" class="dropdown-item delete-parent-link" data-toggle="modal" data-target="#modal" data-controller="Sprints" data-action="Delete" data-id="@sprint.Id" data-name="@sprint.Name">@Localizer["shortCuts_delete"]</a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="d-lg-none collapse-divider"></div>
+                        @if (User.UserHasThisPermission(Permissions.ActivityCreate))
+                        {
+                            <div class="d-lg-block d-inline-block">
+                                <a asp-controller="Activities" asp-action="Create" asp-route-projectId="@ViewBag.ProjectId" asp-route-sprintId="@sprint.Id" class="btn btn-success collapse-button details hover-invisible stop-propagation hover-lg ml-lg-20 mt-lg-10">@Localizer["shortCuts_addActivity"]</a>
+                            </div>
+                        }
+                        <div class="d-lg-block d-inline-block ml-auto mr-30 collapse-details">
+                            <span class="collapse-log-details d-inline-block">@Localizer["_est."] <span class="d-lg-inline d-block color-black">@sprint.EstimatedTime h</span></span>
+                            <span class="collapse-log-details d-inline-block">@Localizer["_log."] <span class="d-lg-inline d-block color-black"><span class="parent-logged" data-parent-id="@sprint.Id">@sprint.LoggedTime</span> h</span></span>
+                            <span class="collapse-log-details mr-0 d-inline-block">Prog. <span class="d-lg-inline d-block color-black"><span class="parent-prog" data-parent-id="@sprint.Id">@sprint.CompletedActivitiesCount / @sprint.TotalActivitiesCount</span></span></span>
+                            @*<span class="collapse-log-details d-lg-none d-inline-block">@Localizer["_prog"] <span class="d-lg-inline d-block color-black">@sprint.Progress%</span></span>
+                                <div class="progress collapse-progress d-lg-inline-flex d-none" title="@sprint.Progress%">
+                                    <div class="progress-bar @ProjectsViewHelper.GetProgressBarColor(sprint.Progress)" role="progressbar" style="width: @sprint.Progress%" aria-valuenow="@sprint.Progress" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>*@
+                        </div>
+                    </div>
+                </div>
+                <div class="collapse collapse-datatable" id="parent-@sprint.Id"></div>
+                <hr class="no-gutters" />
+            </div>
+        }
+    </div>
+    if (Model.Sprints.Any(s => s.IsCompleted))
+    {
+        <div>
+            <button class="btn btn-outline-purple btn-sm" data-toggle="collapse" data-target="#completed-sprints">Show completed</button>
+        </div>
+        <div class="collapse collapse-fix" id="completed-sprints">
+            <hr class="no-gutters" />
+            @foreach (var sprint in Model.Sprints.Where(s => s.IsCompleted))
+            {
+                <div class="parent-content" id="@sprint.Id">
+                    <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative cursor-pointer pb-lg-0 pb-2" data-toggle="collapse" href="#parent-@sprint.Id" data-type="@ActivityParentType.Sprint" data-id="@sprint.Id" data-loaded="false">
+                        <div class="d-lg-flex d-block w-100 px-20">
+                            <div class="d-flex pt-collapse">
+                                <a class="border collapse-switcher d-inline-block">
+                                    <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                                </a>
+                                <span class="badge @ActivitiesViewHelper.GetSprintBadgeColor(sprint.DueDate, sprint.IsCompleted) collapse-badge">@($"{sprint.DueDate:yyyy-MM-dd}")</span>
+                                <span class="collapse-title color-secondary line-through" data-id="@sprint.Id">@sprint.Name</span>
+                                <span class="collapse-count" id="count-@sprint.Id">@sprint.ActivitiesCount</span>
+                                @if (User.UserHasThisPermission(Permissions.SprintUpdate) || User.UserHasThisPermission(Permissions.SprintDelete))
+                                {
+                                    <div class="dropdown collapse-dropdown">
+                                        <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            @if (User.UserHasThisPermission(Permissions.SprintUpdate))
+                                            {
+                                                <a href="javascript:" class="dropdown-item edit-parent-link" data-toggle="modal" data-target="#modal" data-controller="Sprints" data-action="Edit" data-id="@sprint.Id">@Localizer["shortCuts_edit"]</a>
+                                                <a href="javascript:" class="dropdown-item edit-parent-link" data-toggle="modal" data-target="#modal" data-controller="Sprints" data-action="Rename" data-id="@sprint.Id">@Localizer["shortCuts_rename"]</a>
+                                                <a href="javascript:" class="dropdown-item update-status-parent-link" data-toggle="modal" data-target="#modal" data-controller="Sprints" data-action="UpdateStatus" data-id="@sprint.Id">@Localizer["shortCuts_updateStatus"]</a>
+                                            }
+                                            @if (User.UserHasThisPermission(Permissions.SprintDelete))
+                                            {
+                                                <div class="dropdown-divider"></div>
+                                                <a href="javascript:" class="dropdown-item delete-parent-link" data-toggle="modal" data-target="#modal" data-controller="Sprints" data-action="Delete" data-id="@sprint.Id" data-name="@sprint.Name">@Localizer["shortCuts_delete"]</a>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="d-lg-none collapse-divider"></div>
+                            @if (User.UserHasThisPermission(Permissions.ActivityCreate))
+                            {
+                                <div class="d-lg-block d-inline-block">
+                                    <a asp-controller="Activities" asp-action="Create" asp-route-projectId="@ViewBag.ProjectId" asp-route-dtoJson="@(JsonConvert.SerializeObject(new ActivityDto{ProjectName = "Test"}))" class="btn btn-success collapse-button details hover-invisible hover-lg ml-lg-20 mt-lg-10">@Localizer["shortCuts_addActivity"]</a>
+                                </div>
+                            }
+                            <div class="d-lg-block d-inline-block ml-auto mr-30 collapse-details">
+                                <span class="collapse-log-details d-inline-block">@Localizer["_est."] <span class="d-lg-inline d-block color-black">@sprint.EstimatedTime h</span></span>
+                                <span class="collapse-log-details d-inline-block">@Localizer["_log."] <span class="d-lg-inline d-block color-black"><span class="parent-logged" data-parent-id="@sprint.Id">@sprint.LoggedTime</span> h</span></span>
+                                <span class="collapse-log-details mr-0 d-inline-block">Prog. <span class="d-lg-inline d-block color-black"><span class="parent-prog" data-parent-id="@sprint.Id">@sprint.CompletedActivitiesCount / @sprint.TotalActivitiesCount</span></span></span>
+                                @*<span class="collapse-log-details d-lg-none d-inline-block">@Localizer["_prog"] <span class="d-lg-inline d-block color-black">@sprint.Progress%</span></span>
+                                    <div class="progress collapse-progress d-lg-inline-flex d-none" title="@sprint.Progress%">
+                                        <div class="progress-bar @ProjectsViewHelper.GetProgressBarColor(sprint.Progress)" role="progressbar" style="width: @sprint.Progress%" aria-valuenow="@sprint.Progress" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>*@
+                            </div>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-datatable" id="parent-@sprint.Id"></div>
+                    <hr class="no-gutters" />
+                </div>
+            }
+        </div>
+    }
+}
+else
+{
+    <div id="ongoing-sprints"></div>
+    <p class="mb-0 mt-2 no-sprints">@Localizer["messages_noSprints"]</p>
+}

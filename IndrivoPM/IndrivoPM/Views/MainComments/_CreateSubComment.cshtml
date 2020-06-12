@@ -1,0 +1,44 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.SubComments.Commands.CreateSubComment.CreateSubCommentCommand
+
+<form data-action="CreateSubComment" data-controller="MainComments" id="form-create-sub-comment">
+    <div class="card-header">
+        <h6 class="card-title font-weight-600">
+            Reply to:
+        </h6>
+    </div>
+
+    <div class="card-body p-1">
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input asp-for="MainCommentId" class="form-control" hidden />
+        
+        @*
+        <select onchange="AppendUserName(event, )" class="form-control p-2" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)"></select>
+        *@
+
+        <div class="col-12 p-0">
+            <textarea rows="3" id="message" asp-for="Message" class="form-control" onkeyup="uniKeyCode(event)" style="width: 340px" autofocus> </textarea>
+            <span asp-validation-for="Message" class="text-danger"></span>
+        </div>
+
+    </div>
+
+    <div class="card-footer">
+        <div class="text-center">
+            <a onclick="ClosePopper()" class="btn btn-danger btn-sm font-weight-600 text-white col-5">Cancel</a>
+            <input type="submit" value="Reply" class="btn btn-success btn-sm font-weight-600 col-5" id="confirm-create-sub-comment" />
+        </div>
+
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script src="~/js/dev/Comments.js"></script>
+
+<script>
+    SendForm({
+        bindTo: "#confirm-create-sub-comment",
+        formId: "#form-create-sub-comment",
+        ajaxUrl: "/MainComments/CreateSubComment"
+    });
+</script>

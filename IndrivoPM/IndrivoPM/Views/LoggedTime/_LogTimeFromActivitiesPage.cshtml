@@ -1,0 +1,103 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.LoggedTimes.Commands.CreateLoggedTime.CreateLoggedTimeCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="LoggedTime" asp-action="Create" id="form-log-time-activities">
+    <div class="modal-body">
+        <input asp-for="Id" hidden />
+        <input asp-for="UserId" hidden />
+        <input asp-for="ActivityId" hidden />
+
+        <label asp-for="Time" class="float-label"></label>
+        <input asp-for="Time" class="form-control" type="number" min="0" max="12" autofocus="autofocus" autocomplete="off" required />
+        <span asp-validation-for="Time" class="invalid-feedback mt-1 mb-2"></span>
+
+        <label asp-for="DateOfWork" class="float-label"></label>
+        <input asp-for="DateOfWork" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" required readonly />
+        <span asp-validation-for="DateOfWork" class="invalid-feedback mt-1 mb-2"></span>
+
+        <label asp-for="TrackerId" class="float-label-select"></label>
+        <select asp-for="TrackerId" asp-items="@(new SelectList(ViewBag.TrackerTypes, "Id", "Name", null))" class="form-control selectpicker" id="input-tracker" required></select>
+        <span asp-validation-for="TrackerId" class="invalid-feedback mt-1 mb-2"></span>
+
+        @*<label asp-for="Progress" class="float-label-select"></label>
+        <select asp-for="Progress" class="form-control selectpicker" id="input-progress">
+            @for (int i = 0; i <= 100; i += 10)
+            {
+                <option value="@i">@i %</option>
+            }
+        </select>
+        <span asp-validation-for="Progress" class="invalid-feedback mt-1 mb-2"></span>*@
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-log-time-activities">@Localizer["shortCuts_logTime"]</button>
+    </div>
+</form>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script>
+    $(".selectpicker").selectpicker();
+    $(".datepicker").datepicker({
+        format: "yyyy/mm/dd",
+        maxViewMode: 3,
+        todayBtn: "linked",
+        autoclose: true
+    });
+</script>
+<script>
+    $.saveChanges({
+        bindTo: "#btn-log-time-activities",
+        formId: "#form-log-time-activities",
+        ajaxUrl: "@Url.Action("Create", "LoggedTime")",
+        successMessage: "@Localizer["messages_logTimeSuccess"]",
+        errorMessage: "@Localizer["messages_logTimeError"]",
+        buttonText: "@Localizer["shortCuts_logTime"]",
+        eventFunction: function (result) {
+
+            if ($(".add-logged-time").length) {
+                getLoggedTime();
+            }
+            else if ($('div').hasClass('grid')) {
+                var time = $("span[id='" + result.activityId + "'].logged-time");
+                time.html(parseFloat(time.html()) + result.time);
+
+                var progress = $("span[id='" + result.activityId + "'].t-progress");
+                progress.html(result.progress + "%");
+            }
+            else {
+                var loggedTime = $("tr[id='entity-" + result.activityId + "'] .td-logged-time");
+                loggedTime.html(parseFloat(loggedTime.html()) + result.time);
+
+                var parentLoggedTime = $("[data-parent-id='" + loggedTime.attr("data-parent-id") + "'].parent-logged");
+                parentLoggedTime.html(parseFloat(parentLoggedTime.html()) + result.time);
+
+                var progressBar = $("tr[id='entity-" + result.activityId + "'] .td-progress");
+                progressBar.find(".d-none").html(result.progress);
+                progressBar.find(".progress-bar").css("width", result.progress + "%")
+                    .attr("aria-valuenow", result.progress)
+                    .attr("class", "progress-bar " + GetProgressBarColor(result.progress));
+                progressBar.find(".pb-percentage").html(result.progress + "%");
+
+                // TODO: Refactor
+                var searchLoggedTime = $("tr[id='search-entity-" + result.activityId + "'] .td-logged-time");
+                searchLoggedTime.html(parseFloat(searchLoggedTime.html()) + result.time);
+
+                var searchParentLoggedTime = $("[data-parent-id='" + searchLoggedTime.attr("data-parent-id") + "'].parent-logged");
+                searchParentLoggedTime.html(parseFloat(searchParentLoggedTime.html()) + result.time);
+
+                var searchProgressBar = $("tr[id='search-entity-" + result.activityId + "'] .td-progress");
+                searchProgressBar.find(".d-none").html(result.progress);
+                searchProgressBar.find(".progress-bar").css("width", result.progress + "%")
+                    .attr("aria-valuenow", result.progress)
+                    .attr("class", "progress-bar " + GetProgressBarColor(result.progress));
+
+                $("tr[id='entity-" + result.activityId + "'] .log-time-link").attr("data-progress", result.progress);
+                $("tr[id='search-entity-" + result.activityId + "'] .log-time-link").attr("data-progress", result.progress);
+            }
+        }
+    });
+</script>

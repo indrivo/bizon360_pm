@@ -1,0 +1,74 @@
+﻿@model Gear.Manager.Core.EntityServices.Reports.Queries.GetActivityListByProjectReport.ActivityListByProjectReportListViewModel
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Logging
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<table class="table bizon-datatable no-parent dt-logged-time" data-order='[[ 1, "asc" ]]'>
+    <thead>
+    <tr class="hover-invisible-toggle">
+        <th class="no-sort" style="width: 30px">#</th>
+        <th class="w-25">@Localizer["_activityList"]</th>
+        @foreach (var at in Model.ActivityTypes)
+        {
+            <th class="col-date d-md-table-cell ">@at</th>
+        }
+        <th>Average</th>
+        <th class="col-date d-sm-table-cell" style="width: 100px">Planed date</th>
+        <th class="col-date d-sm-table-cell" style="width: 100px">Actual date</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var al in Model.ActivityList)
+    {
+        <tr class="hover-invisible-toggle">
+            <td></td>
+            <td>@al.ActivityListName</td>
+            @foreach (var at in al.ActivityTypes)
+            {
+                @if (at.Progress != null && at.Progress != 0)
+                 {
+                     <td>@at.Progress %</td>
+                 }
+                 else
+                 {
+                     <td>-</td>
+                 }
+            }
+            @if (al.Average != null && al.Average != 0)
+            {
+                <td>@al.Average %</td>
+            }
+            else
+            {
+                <td>-</td>
+            }
+
+            @if (al.PlannedDate != null)
+            {
+                <td>@al.PlannedDate?.ToString("yyyy-MM-dd")</td>
+            }
+            else
+            {
+                <td>-</td>
+            }
+            
+            @if (al.ActualDate != null)
+            {
+                <td>@al.ActualDate?.ToString("yyyy-MM-dd")</td>
+            }
+            else
+            {
+                <td>-</td>
+            }
+        </tr>
+    }
+
+    </tbody>
+</table>
+
+<script>
+    EnableDataTable(".bizon-datatable", null, true, 0);
+</script>

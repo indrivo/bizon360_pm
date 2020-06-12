@@ -1,0 +1,57 @@
+﻿@using Bizon360.Models
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@model Bizon360.Models.ProjectGroupViewModel
+
+<div class="parent-content" id="@Model.Id">
+    <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative cursor-pointer pb-lg-0 pb-2 collapsed" data-toggle="collapse" href="#parent-@Model.Id">
+        <div class="d-lg-flex d-block w-100 px-20">
+            <div class="d-flex pt-collapse">
+                <a class="border collapse-switcher d-inline-block">
+                    <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                </a>
+                <span class="collapse-title" data-id="@Model.Id">
+                    @Model.Name
+                </span>
+                <span class="collapse-count" id="count-@Model.Id">0</span>
+                @if (User.UserHasThisPermission(Permissions.ProjectGroupUpdate) || User.UserHasThisPermission(Permissions.ProjectGroupDelete))
+                {
+                    <div class="dropdown collapse-dropdown">
+                        <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            @if (User.UserHasThisPermission(Permissions.ProjectGroupUpdate))
+                            {
+                                <a href="javascript:" class="dropdown-item edit-parent-link" data-toggle="modal" data-target="#modal" data-controller="ProjectGroups" data-action="Edit" data-id="@Model.Id">@Localizer["shortCuts_rename"]</a>
+                            }
+                            @if (User.UserHasThisPermission(Permissions.ProjectGroupDelete))
+                            {
+                                <a href="javascript:" class="dropdown-item delete-parent-link" data-toggle="modal" data-target="#modal" data-controller="ProjectGroups" data-action="Delete" data-id="@Model.Id" data-name="@Model.Name">@Localizer["shortCuts_delete"]</a>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="d-lg-none collapse-divider"></div>
+            @if (User.UserHasThisPermission(Permissions.ProjectCreate))
+            {
+                <div class="d-lg-block d-inline-block">
+                    <button class="btn btn-success collapse-button details hover-invisible hover-lg ml-lg-20 mt-lg-10 add-entity-link" data-toggle="modal" data-target="#modal" data-controller="Projects" data-action="Create" data-parent-id="@Model.Id">@Localizer["shortCuts_addProject"]</button>
+                </div>
+            }
+            @*<div class="d-lg-block d-inline-block ml-auto mr-30 collapse-details">
+                <span class="collapse-log-details d-lg-none d-inline-block">@Localizer["_prog"] <span class="d-lg-inline d-block color-black">0%</span></span>
+                <div class="progress collapse-progress d-lg-inline-flex d-none" title="0%">
+                    <div class="progress-bar bg-danger" role="progressbar" style="width: 0"></div>
+                </div>
+            </div>*@
+        </div>
+    </div>
+    <div class="collapse collapse-datatable" id="parent-@Model.Id">
+        <p class="mb-0 mt-2">@Localizer["messages_noProjectsInGroup"]</p>
+    </div>
+    <hr class="no-gutters" />
+</div>

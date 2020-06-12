@@ -1,0 +1,35 @@
+﻿@using Bizon360.Models
+@using Bizon360.Views.Reports
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@model object
+
+    <ul class="nav nav-tabs main-nav-tabs project-tabs px-40">
+        <li class="nav-item">
+            <a class="nav-link @ReportsIndexTabs.ProjectsReportNavClass(ViewContext)" asp-controller="Reports" asp-action="ReportsIndex">@Localizer["_projects"]</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @ReportsIndexTabs.EmployeesReportNavClass(ViewContext)" asp-controller="Reports" asp-action="EmployeesReport">@Localizer["_employees"]</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @ReportsIndexTabs.ActivitiesReportNavClass(ViewContext)" asp-controller="Reports" asp-action="ActivitiesReport">@Localizer["_activities"]</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @ReportsIndexTabs.TeamsReportNavClass(ViewContext)" asp-controller="Reports" asp-action="TeamsReport">@Localizer["_teams"]</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @ReportsIndexTabs.HistoryReportNavClass(ViewContext)" asp-controller="Reports" asp-action="HistoryReport">@Localizer["_history"]</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @ReportsIndexTabs.GeneralReportNavClass(ViewContext)" asp-controller="Reports" asp-action="GeneralReport">@Localizer["_general"]</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @ReportsIndexTabs.SprintsReportNavClass(ViewContext)" asp-controller="Reports" asp-action="SprintsReport">@Localizer["_sprints"]</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @ReportsIndexTabs.SettingsNavClass(ViewContext)" asp-controller="Reports" asp-action="Settings">@Localizer["_settings"]</a>
+        </li>
+    </ul>
+

@@ -1,0 +1,187 @@
+﻿@model Gear.Manager.Core.EntityServices.DepartmentTeams.Queries.GetDepartmentTeamsList.DepartmentTeamListViewModel
+@using Bizon360.Models
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Gear.Manager.Core.EntityServices.JobPositions.Queries.GetJobPositionList
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@if (Model.DepartmentTeams.Any())
+{
+    @foreach (var tm in Model.DepartmentTeams.Where(x => x.Active))
+    {
+        <div class="parent-content" id="@tm.Id">
+            <div class="row row-m-20 bg-white border rounded collapse-container collapse-lg hover-invisible-toggle position-relative pb-lg-0 pb-3 cursor-pointer" data-toggle="collapse" href="#parent-@tm.Id">
+                <div class="d-lg-flex d-block w-100 px-20">
+                    <div class="d-flex pt-collapse">
+                        <a class="border collapse-switcher d-inline-block">
+                            <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                        </a>
+                        @if (tm.TeamLeadFullName == "Not Specified")
+                        {
+                            <a href="#" class="btn btn-outline-success user-rectangle assign-leader" data-controller="DepartmentTeams" data-action="AssignLeader" data-id="@tm.Id"> + </a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-outline-primary user-rectangle" asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@tm.DepartmentTeamLeadId">@tm.TeamLeadFullName.ToInitials()</a>
+                        }
+                        <div class="d-block collapse-title-group">
+                            <span class="collapse-title" data-id="@tm.Id">
+                                @tm.Name
+                                <span class="collapse-count" id="count-@tm.Id">@tm.JobPositions.Count</span>
+                            </span>
+                            <span class="collapse-title-description">@tm.DepartmentName</span>
+                        </div>
+
+                        @if (User.UserHasThisPermission(Permissions.DepartmentTeamDelete) || User.UserHasThisPermission(Permissions.DepartmentTeamUpdate))
+                        {
+                            <div class="dropdown collapse-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                    @if (User.UserHasThisPermission(Permissions.DepartmentTeamUpdate))
+                                    {
+                                        <a href="javascript:" class="dropdown-item update-team" data-controller="DepartmentTeams" data-action="Edit" data-id="@tm.Id">@Localizer["shortCuts_edit"]</a>
+                                        <a href="javascript:" class="dropdown-item rename-team" data-controller="DepartmentTeams" data-action="RenameTeam" data-id="@tm.Id">@Localizer["_rename"]</a>
+                                        @if (tm.TeamLeadFullName == "Not Specified")
+                                        {
+                                            <a href="#" class="dropdown-item assign-leader" data-controller="DepartmentTeams" data-action="AssignLeader" data-id="@tm.Id">@Localizer["shortCuts_assignLeader"] </a>
+                                        }
+                                        <a href="#" class="dropdown-item assign-user" data-controller="DepartmentTeams" data-action="AssignUser" data-id="@tm.Id">@Localizer["shortCuts_assignUser"] </a>
+
+                                        <a href="#" class="dropdown-item assign-job-position" data-controller="DepartmentTeams" data-action="AssignJobPosition" data-id="@tm.Id">@Localizer["shortCuts_assignJobPosition"] </a>
+                                        <a href="javascript:" class="dropdown-item move-team" data-controller="DepartmentTeams" data-action="MoveTeam" data-id="@tm.Id">@Localizer["shortCuts_moveTo"]</a>
+                                        <a href="javascript:" class="dropdown-item deactivate-team" data-controller="DepartmentTeams" data-action="DeactivateTeam" data-id="@tm.Id" data-name="@tm.Name">@Localizer["shortCuts_deactivate"]</a>
+                                    }
+                                    @if (User.UserHasThisPermission(Permissions.DepartmentTeamDelete))
+                                    {
+                                        <a href="javascript:" class="dropdown-item delete-team" data-controller="DepartmentTeams" data-action="Delete" data-id="@tm.Id" data-name="@tm.Name">@Localizer["shortCuts_delete"]</a>
+                                    }
+
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                    <div class="d-lg-none collapse-divider"></div>
+                    <div class="d-lg-block d-inline-block">
+                        <a href="#" class="btn btn-success collapse-button hover-invisible hover-lg ml-lg-20 mt-lg-15 add-entity-link" data-controller="JobPositions" data-action="Create" data-parent-id="@tm.Id">@Localizer["shortCuts_addJobPosition"]</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapse collapse-datatable" id="parent-@tm.Id">
+                @await Html.PartialAsync("AdmViews/_JobsFromTeam", new JobPositionListViewModel { JobPositions = tm.JobPositions, ParentId = tm.Id })
+            </div>
+
+            <hr class="no-gutters" />
+        </div>
+    }
+
+    @if (Model.DepartmentTeams.Count(x => !x.Active) != 0)
+    {
+        <div class="text-center my-3">
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-open="false" onclick="showInactive(this)">Show inactive</button>
+            <p class="p-xs d-inline ml-2">@Model.DepartmentTeams.Count(x => !x.Active) @Localizer["_teams"]</p>
+        </div>
+
+        <div class="d-none" id="show-inactive-teams">
+            <hr class="no-gutters" />
+
+            @foreach (var tm in Model.DepartmentTeams.Where(x => !x.Active))
+            {
+                <div class="parent-content" id="@tm.Id">
+                    <div class="row row-m-20 bg-white border rounded collapse-container collapse-lg hover-invisible-toggle position-relative pb-lg-0 pb-3 cursor-pointer" data-toggle="collapse" href="#parent-@tm.Id">
+                        <div class="d-lg-flex d-block w-100 px-20">
+                            <div class="d-flex pt-collapse">
+                                <a class="border collapse-switcher d-inline-block">
+                                    <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                                </a>
+                                <a href="javascript:" class="btn btn-outline-primary user-rectangle">@tm.TeamLeadFullName.ToInitials()</a>
+                                <div class="d-block collapse-title-group">
+                                    <span class="collapse-title" data-id="@tm.Id">
+                                        @tm.Name
+                                        <span class="collapse-count" id="count-@tm.Id">@tm.JobPositions.Count</span>
+                                    </span>
+                                    <span class="collapse-title-description">@tm.DepartmentName</span>
+                                </div>
+                                @if (User.UserHasThisPermission(Permissions.DepartmentTeamDelete) || User.UserHasThisPermission(Permissions.DepartmentTeamUpdate))
+                                {
+                                    <div class="dropdown collapse-dropdown">
+                                        <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                            @if (User.UserHasThisPermission(Permissions.DepartmentTeamUpdate))
+                                            {
+                                                <a href="javascript:" class="dropdown-item update-team" data-controller="DepartmentTeams" data-action="Edit" data-id="@tm.Id">@Localizer["shortCuts_edit"]</a>
+                                                <a href="javascript:" class="dropdown-item rename-team" data-controller="DepartmentTeams" data-action="RenameTeam" data-id="@tm.Id">@Localizer["_rename"]</a>
+                                                @if (tm.TeamLeadFullName == "Not Specified")
+                                                {
+                                                    <a href="#" class="dropdown-item assign-leader" data-controller="DepartmentTeams" data-action="AssignLeader" data-id="@tm.Id">@Localizer["shortCuts_assignLeader"] </a>
+                                                }
+                                                <a href="#" class="dropdown-item assign-job-position" data-controller="DepartmentTeams" data-action="AssignJobPosition" data-id="@tm.Id">@Localizer["shortCuts_assignJobPosition"] </a>
+                                                <a href="javascript:" class="dropdown-item move-team" data-controller="DepartmentTeams" data-action="MoveTeam" data-id="@tm.Id">@Localizer["shortCuts_moveTo"]</a>
+                                                <a href="javascript:" class="dropdown-item activate-team" data-controller="DepartmentTeams" data-action="ActivateTeam" data-id="@tm.Id" data-name="@tm.Name">@Localizer["shortCuts_activate"]</a>
+                                            }
+                                            @if (User.UserHasThisPermission(Permissions.DepartmentTeamDelete))
+                                            {
+                                                <a href="javascript:" class="dropdown-item delete-team" data-controller="DepartmentTeams" data-action="Delete" data-id="@tm.Id" data-name="@tm.Name">@Localizer["shortCuts_delete"]</a>
+                                            }
+
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="d-lg-none collapse-divider"></div>
+                            <div class="d-lg-block d-inline-block">
+                                @if (User.UserHasThisPermission(Permissions.JobPositionCreate))
+                                {
+                                    <button class="btn btn-success collapse-button hover-invisible hover-lg ml-lg-20 mt-lg-15">@Localizer["shortCuts_addJobPosition"]</button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapse collapse-datatable" id="parent-@tm.Id">
+
+                        @await Html.PartialAsync("AdmViews/_JobsFromTeam", new JobPositionListViewModel { JobPositions = tm.JobPositions.OrderBy(x => x.RowOrder).ToList(), ParentId = tm.Id })
+                    </div>
+
+                    <hr class="no-gutters" />
+                </div>
+            }
+        </div>
+
+
+    }
+}
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+<script>
+    function showInactive(item) {
+        var THIS = $(item);
+        if (THIS.attr("data-open") === "true") {
+            $("#show-inactive-teams").attr("class", "d-none");
+            THIS.attr("data-open", false);
+            THIS.removeClass("active");
+        } else {
+            $("#show-inactive-teams").attr("class", "");
+            THIS.attr("data-open", true);
+            THIS.addClass("active");
+        }
+    }
+
+    $(".datatables-check").click(function () {
+
+        var c = GetCheckedParentIds();
+        var button = $(".remove-job-link");
+
+        if (c.length > 1) {
+            button.prop('disabled', true);;
+        } else {
+            button.prop('disabled', false);;
+        }
+    });
+</script>

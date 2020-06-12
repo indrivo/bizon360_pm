@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css?family=Blinker:300,400,600,700&display=swap')
+
+*
+  box-sizing: border-box
+
+  &::-webkit-scrollbar
+    height: 5px
+    width: 5px
+
+  &::-webkit-scrollbar-track
+    background-color: transparent
+
+  &::-webkit-scrollbar-thumb
+    background-color: $color-border
+
+    &:hover
+      background-color: darken($color-border, 4%)
+
+    &:active
+      background-color: darken($color-border, 8%)
+
+body
+  background-color: $color-bg
+  font-family: "Blinker", sans-serif
+  overflow-y: overlay
+
+  &.dark-theme
+    background-color: $dark-color-bg
+    color: $color-border
+
+  &.bizon-auth-body
+    padding-top: 80px
+    overflow-x: hidden
+    background-color: #FFFFFF
+
+a
+  color: $color-black
+  transition: $transition
+
+  .dark-theme &:not(.btn)
+    color: $color-border
+
+  &:hover
+    color: $color-gray-light
+    text-decoration: none
+
+    .dark-theme &:not(.btn):not(.navbar-brand):not(.dropdown-item)
+      color: $color-gray-light
+
+  &.active
+    color: $color-blue
+
+  &.link-danger
+    color: $color-red-light
+
+    &:hover, &.active
+      color: $color-red
+
+  &.link-primary
+    color: $color-blue
+
+    &:hover, &:active
+      color: $color-blue-hover
+
+button
+  transition: $transition
+
+h1, h2, h3, h4, h5, h6
+  font-weight: 600
+  margin-bottom: 4px
+
+h1
+  font-size: 28px
+  line-height: 30px
+
+  &.headline
+    font-size: 32px
+    line-height: 38px
+    margin-bottom: 8px
+
+h2
+  font-size: 24px
+  line-height: 26px
+
+h3
+  font-size: 20px
+  line-height: 22px
+
+h4
+  font-size: 18px
+  line-height: 20px
+
+h5
+  font-size: 16px
+  line-height: 18px
+
+h6
+  font-size: 14px
+  line-height: 16px
+
+p
+  color: #808890
+  font-size: 16px
+  line-height: 22px
+
+  &.p-lg
+    font-size: 18px
+    line-height: 24px
+
+  &.p-sm
+    font-size: 14px
+    line-height: 20px
+
+  &.p-xs
+    font-size: 12px
+    line-height: 14px
+
+hr
+  border-color: $color-border
+
+  &.no-gutters
+    margin: 8px -40px
+
+  &.hr-description
+    margin: 0 -20px 5px 0
+
+  &.card-divider
+    margin-top: 16px
+    margin-bottom: 11px
+    margin-right: -20px
+
+.bizon-row hr.hr-description
+  margin: 0 -20px 5px 0
+
+footer
+
+  &.bizon-auth-footer
+    display: flex
+    margin-top: 40px
+
+    h6
+      padding-top: 10px
+      margin-right: 20px
+
+    & img
+      width: 153px
+      height: 39px
+
+input
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus,
+  &:-webkit-autofill:active
+    -webkit-box-shadow: 0 0 0 30px #FFFFFF inset !important
+
+  &[readonly="readonly"],
+  &[readonly]
+    background-color: #FFFFFF !important

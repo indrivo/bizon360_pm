@@ -1,0 +1,48 @@
+﻿@using Microsoft.Extensions.Localization
+@model Gear.ProjectManagement.Manager.Domain.LoggedTimes.Queries.GetLoggedTimeList.LoggedTimeListViewModel
+@inject IStringLocalizer Localizer
+
+@if (Model.LoggedTimes.Any())
+{
+    <div class="collapse-datatable">
+        <table class="table bizon-datatable ignore-search no-parent dt-logged-time activity-logs" data-order='[[ 5, "desc" ]]'>
+            <thead>
+            <tr>
+                <th class="no-sort">#</th>
+                <th>@Localizer["_activities"]</th>
+                <th class="col-job-position">@Localizer["_project"]</th>
+                <th class="col-users">@Localizer["_subtype"]</th>
+                <th class="col-date">@Localizer["_log.time"]</th>
+                <th class="col-date">@Localizer["_log.date"]</th>
+                <th class="col-date d-md-table-cell d-none">@Localizer["_created"]</th>
+            </tr>
+            </thead>
+            <tbody>
+            @{ var i = 1; }
+            @foreach (var log in Model.LoggedTimes.OrderByDescending(lt => lt.DateOfWork))
+            {
+                <tr>
+                    <td class="td-order">@($"{i:00}")</td>
+                    <td>
+                        <a asp-controller="Activities" asp-action="Details" asp-route-id="@log.ActivityId" class="font-weight-normal">@log.ActivityName</a>
+                    </td>
+                    <td>
+                        <a asp-controller="Activities" asp-action="Index" asp-route-id="@log.ProjectId" class="font-weight-normal">@log.ProjectName</a>
+                    </td>
+                    <td>@log.TrackerName</td>
+                    <td>@($"{log.Time}h")</td>
+                    <td>@($"{log.DateOfWork:yyyy-MM-dd}")</td>
+                    <td class="d-md-table-cell d-none">@log.CreatedTime.ToString("yyyy-MM-dd")</td>
+                </tr>
+                i++;
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <h6 class="pl-4 ml-1 mt-2">Total: <span class="total-per-month"></span></h6>
+}
+else
+{
+    <p>There are no logs.</p>
+}

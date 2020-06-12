@@ -1,0 +1,131 @@
+﻿@using System.Security.Claims
+@using Bizon360.Models
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@model IEnumerable<Gear.Sstp.Abstractions.Domain.ServiceType>
+
+@if (Model.Any())
+{
+    <table class="table bizon-datatable dt-sstp" data-order='[[ 0, "asc" ]]' id="table-services">
+        <thead>
+            <tr class="hover-invisible-toggle">
+                <th hidden="">RowOrder</th>
+                <th class="no-sort">@Localizer["_serviceTypes"]</th>
+                <th class="no-sort col-date d-md-table-cell d-none">@Localizer["_status"]</th>
+                <th class="no-sort col-date d-sm-table-cell d-none"> @Localizer["_created"]</th>
+                <th class="no-sort col-date d-sm-table-cell d-none">@Localizer["_modified"]</th>
+                <th class="no-sort">
+                    <div class="dropdown datatables-th-dropdown">
+                        <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                        <div class="dropdown-menu dropdown-menu-right">
+
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-services-status" data-table-column-id="2" checked />
+                                <label class="custom-control-label" for="dt-services-status">
+                                    @Localizer["_status"]
+                                    <span>Service status</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-services-created" data-table-column-id="3" checked />
+                                <label class="custom-control-label" for="dt-services-created">
+                                    @Localizer["_created"]
+                                    <span>Created date</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-services-modified" data-table-column-id="4" checked />
+                                <label class="custom-control-label" for="dt-services-modified">
+                                    @Localizer["_modified"]
+                                    <span>Modified date</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+            </tr>
+        </thead>
+        <tbody class="table-ordered">
+            @foreach (var item in Model)
+            {
+                <tr class="hover-invisible-toggle">
+                    <td class="order-row" data-id="@item.Id" hidden>@item.RowOrder</td>
+                    <td>
+                        <span class="datatables-dragdrop"></span>
+                        <a href="javascript:" class="datatables-title">@item.Name</a>
+                        <div class="position-relative d-lg-inline-block d-none">
+                            <a href="#" class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box rename-service" data-controller="Sstp" data-action="EditService" data-id="@item.Id">@Localizer["_rename"]</a>
+                        </div>
+                    </td>
+                    <td class="d-md-table-cell d-none td-badge sorting_1">
+                        @if (item.Active)
+                        {<span class="badge badge-outline-success">@Localizer["_active"]</span> }
+                    else
+                    { <span class="badge badge-outline-secondary">@Localizer["_inactive"]</span>}
+                    </td>
+
+                    <td class="d-sm-table-cell d-none">
+                        @item.CreatedTime.ToString("yyyy-MM-dd")
+                    </td>
+                    <td class="d-sm-table-cell d-none">
+                        @item.ModifiedTime.ToString("yyyy-MM-dd")
+                    </td>
+                    <td class="td-options">
+                        <div class="dropdown datatables-dropdown">
+                            <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                <a href="#" class="dropdown-item rename-service" data-controller="Sstp" data-action="EditService" data-id="@item.Id">@Localizer["_rename"]</a>
+                                @if (item.Active)
+                                {
+                                    <a href="#" class="dropdown-item deactivate-service" data-controller="Sstp" data-action="DeactivateService" data-id="@item.Id" data-name="@item.Name">@Localizer["shortCuts_deactivate"]</a>
+                                }
+                                else
+                                {
+                                    <a href="#" class="dropdown-item activate-service" data-controller="Sstp" data-action="ActivateService" data-id="@item.Id" data-name="@item.Name">@Localizer["shortCuts_activate"]</a>
+                                }
+                                <div class="dropdown-divider"></div>
+                                <a href="#" class="dropdown-item delete-service" data-controller="Sstp" data-action="DeleteService" data-id="@item.Id" data-name="@item.Name">@Localizer["shortCuts_delete"]</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div>
+        <p class="ml-3">@Localizer["msg_noServices"]</p>
+    </div>
+}
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script src="~/lib/jqueryui/jquery-ui.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        RefreshCount("services");
+        EnableDataTable("#table-services", "ServicesColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)");
+        $.bindColumnToggle({ cookieKey: "ServicesColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)" });
+
+        @if (User.UserHasThisPermission(Permissions.SSTPUpdate))
+         {
+            <text>
+                OrderTableRows({
+                    tBody: ".table-ordered",
+                    tRow: ".order-row",
+                    actionUrl: "/Sstp/UpdateServiceOrder/"
+                });
+            </text>
+         }
+
+    });
+
+
+</script>

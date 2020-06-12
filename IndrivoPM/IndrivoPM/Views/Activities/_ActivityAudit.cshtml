@@ -1,0 +1,32 @@
+﻿@using Microsoft.Extensions.Localization
+@model Gear.ProjectManagement.Manager.Domain.Activities.Queries.GetActivityAudit.ActivityAuditListView
+@inject IStringLocalizer Localizer
+
+@if (Model.Audits != null)
+{
+    foreach (var change in Model.Audits)
+    {
+        @if (change.Data.Changes != null && change.Data.Changes.Any())
+        {
+            <div class="row no-gutters">
+                <div class="col-fixed-220">
+                    <p class="p-sm mb-0">Modified at @change.ModificationTime.ToShortDateString()</p>
+                </div>
+                <div class="d-block mb-sm-0 mb-1">
+                    @*<p class="p-sm mb-0 color-black"><span id="status">@change.Data.Action action on @change.Data.Entity.Name by <a href="@Url.Action("Details", "ApplicationUsers")">@change.EmployeeName</a></span></p>*@
+                    <p class="p-sm mb-0 color-black">
+
+                        @foreach (var entryChange in change.Data.Changes)
+                        {
+                            <span id="status">
+                                @change.Data.Action action on @entryChange.ColumnName From @entryChange.OriginalValue to @entryChange.NewValue by
+                                <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@change.EmployeeId">@change.EmployeeName</a>
+                            </span>
+                        }
+                    </p>
+                </div>
+            </div>
+        }
+
+    }
+}

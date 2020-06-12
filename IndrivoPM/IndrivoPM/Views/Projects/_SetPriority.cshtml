@@ -1,0 +1,39 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Options
+@using Microsoft.Extensions.Localization
+@model Gear.ProjectManagement.Manager.Domain.Projects.Commands.ShortcutActions.SetProjectPriority.SetProjectPriorityCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-action="SetPriority" asp-controller="Projects" id="form-set-priority">
+    <div class="modal-body">
+        <input asp-for="Id" class="form-control" hidden />
+
+        <label asp-for="Priority" class="float-label-select"></label>
+        <select asp-for="Priority" asp-items="Html.GetEnumSelectList<ActivityPriority>()" class="form-control selectpicker"></select>
+        <span asp-validation-for="Priority" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-set-priority">@Localizer["shortCuts_update"]</button>
+    </div>
+</form>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script>
+    $(".selectpicker").selectpicker();
+
+    $.saveChanges({
+        bindTo: "#btn-set-priority",
+        formId: "#form-set-priority",
+        ajaxUrl: "@Url.Action("SetPriority", "Projects")",
+        successMessage: "@Localizer["messages_editProjectSuccess"]",
+        errorMessage: "@Localizer["messages_editProjectError"]",
+        buttonText: "@Localizer["shortCuts_update"]",
+        eventFunction: function (result) {
+            $("tr[id='entity-" + result.id + "'] .badge").attr("class", "badge " + GetPriorityBadgeColor(result.priority)).html(result.priority);
+            $("[data-id='" + result.id + "'].set-entity-priority-link").attr("data-priority", result.priority);
+        }
+    });
+</script>

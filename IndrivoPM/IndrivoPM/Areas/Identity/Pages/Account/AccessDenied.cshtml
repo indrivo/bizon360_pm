@@ -1,0 +1,14 @@
+﻿@page
+@model AccessDeniedModel
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = "Restricted access";
+}
+
+<div class="mt-4">
+    <h6 class="font-size-16">You do not have the permission to access.</h6>
+    <h6 class="text-secondary">Contact <a href="mailto:admin@indrivo.com">admin@indrivo.com</a> for more information.</h6>
+
+    <a class="btn btn-outline-primary mt-3 font-weight-600" asp-controller="Projects" asp-action="Index">Back to dashboard</a>
+</div>
+

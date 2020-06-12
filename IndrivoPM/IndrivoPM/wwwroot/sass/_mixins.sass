@@ -1,0 +1,30 @@
+@mixin tab-border-bottom
+  border-bottom: 1px solid $color-border
+
+  & li a.active
+    color: $color-blue !important
+
+    .dark-theme &
+      color: $color-border !important
+
+  & li:last-of-type a
+    padding-right: 40px
+
+@mixin bootstrap-outline-button($color, $bg-color, $hover-bg-color)
+  color: $color
+  background-color: $bg-color
+  border: 1px solid rgba(0, 0, 0, 0)
+
+  &:hover
+    color: #FFFFFF
+    background-color: $hover-bg-color
+    border-color: rgba(0, 0, 0, 0)
+
+  &:active
+    color: #FFFFFF
+    background-color: $hover-bg-color
+    border-color: rgba(0, 0, 0, 0.1) !important
+
+  &:focus
+    box-shadow: none !important
+    border-color: rgba(0, 0, 0, 0.1) !important

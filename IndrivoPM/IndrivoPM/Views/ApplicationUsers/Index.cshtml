@@ -1,0 +1,214 @@
+﻿@using Bizon360.Models
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@model Gear.Manager.Core.EntityServices.ApplicationUsers.Querries.GetApplicationUserList.ApplicationUserListViewModel
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = "Administrative";
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = ViewData["Title"];
+}
+
+<partial name="_AdmTabs" />
+
+<div class="row row-m-20 bg-white border rounded top-bar pl-20 pr-20">
+    <div class="col-12 d-md-flex p-0">
+        <div class="d-md-block d-inline-block">
+            <button class="btn btn-primary">@Localizer["_list"]</button>
+            @*<button class="btn btn-outline-primary">@Localizer["_grid"]</button>*@
+        </div>
+        <div class="ml-auto d-inline-block"></div>
+        @if (User.UserHasThisPermission(Permissions.EmployeeCreate))
+        {
+            <a class="btn btn-success ml-auto float-md-none float-right" asp-controller="ApplicationUsers" asp-action="Create">@Localizer["shortCuts_addEmployee"]</a>
+            <div class="top-bar-divider d-md-block d-none"></div>
+        }
+        <input type="text" class="form-control search-input w-md-100-i mt-md-0 mt-2" placeholder="@Localizer["_search"]" />
+    </div>
+</div>
+
+<hr class="no-gutters" />
+
+<div id="user-list"></div>
+
+<div class="no-results d-none">
+    <p class="mb-0">No matching records found</p>
+</div>
+
+<footer class="bulk-actions-container">
+    <div class="d-lg-inline-flex d-block">
+        <button type="button" class="btn d-block w-lg-auto w-100 btn-outline-secondary" id="deselect-all">@Localizer["shortCuts_deselectAll"] <span class="check-counter d-lg-none"></span></button>
+        @if (!User.UserHasThisPermission(Permissions.EmployeeUpdate) && !User.UserHasThisPermission(Permissions.EmployeeDelete))
+        {
+            <p class="d-lg-inline text-lg-left text-center">@Localizer["msg_noPermissionsUsers"]</p>
+        }
+        else
+        {
+            <p class="d-lg-inline d-none"><span class="check-counter"></span> @Localizer["msg_usersSelected"]</p>
+        }
+    </div>
+    <ul class="list-unstyled list-inline d-lg-inline-block d-block float-lg-right mb-0">
+        @if (User.UserHasThisPermission(Permissions.EmployeeUpdate))
+        {
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                <button type="button" class="bulk-activate-link btn w-lg-auto w-100 btn-outline-primary mr-2" data-toggle="modal" data-target="#modal" data-controller="ApplicationUsers" data-param-name="id" data-action="ActivateApplicationUser">@Localizer["shortCuts_activateSelected"]</button>
+                <button type="button" class="bulk-deactivate-link btn w-lg-auto w-100 btn-outline-primary mr-lg-2" data-toggle="modal" data-target="#modal" data-controller="ApplicationUsers" data-param-name="id" data-action="DeactivateApplicationUser">@Localizer["shortCuts_deactivateSelected"]</button>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.EmployeeDelete))
+        {
+            <li class="d-lg-inline-block d-none">
+                <div class="divider"></div>
+            </li>
+            <li class="d-lg-inline-block d-block mt-lg-0 mt-2">
+                <button type="button" class="bulk-delete-link btn d-block w-lg-auto w-100 btn-danger ml-lg-2" data-toggle="modal" data-target="#modal" data-controller="ApplicationUsers" data-action="DeleteEmployees">@Localizer["shortCuts_deleteSelected"]</button>
+            </li>
+        }
+    </ul>
+</footer>
+<div class="bulk-hidden-space d-none"></div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/js/dev/adm.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var us = new UserContainer();
+            $("#user-list").html(LOADER);
+
+
+            $("#tab-users").addClass("active");
+            us.getUsers();
+            $.confirmDelete();
+            $(".search-input").keyup(function () {
+                $(".bizon-datatable").DataTable().search($(this).val()).draw();
+            });
+
+            // ---------------------
+            // Quick actions
+
+            @if (User.UserHasThisPermission(Permissions.EmployeeUpdate))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".deactivate-user",
+                        bodyActionName: "Deactivate",
+                        modalTitle: "@Localizer["shortCuts_deactivateUser"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_user"]",
+                        successMessage: "@Localizer["msgSuccess_deactivateUser"]",
+                        errorMessage: "@Localizer["msgError_deactivateUser"]",
+                        eventFunction: us.getUsers
+                    });
+
+                    $.bindDeleteModal({
+                        bindTo: ".activate-user",
+                        bodyActionName: "Activate",
+                        colorButton: "success",
+                        modalTitle: "@Localizer["shortCuts_activateUser"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_user"]",
+                        successMessage: "@Localizer["msgSuccess_activateUser"]",
+                        errorMessage: "@Localizer["msgError_activateUser"]",
+                        eventFunction: us.getUsers
+                    });
+
+                    $.bindFormModal({
+                        bindTo: ".add-to-role",
+                        modalSize: "regular",
+                        modalTitle: "@Localizer["shortCuts_roleManagement"]"
+                    });
+
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-activate-link",
+                        bodyActionName: "Activate",
+                        modalTitle: "@Localizer["shortCuts_activateUser"]",
+                        modalSize: "regular",
+                        colorButton: "success",
+                        type: "@Localizer["types_user"]",
+                        successMessage: "@Localizer["msgSuccess_activateUser"]",
+                        errorMessage: "@Localizer["msgError_activateUser"]",
+                        eventFunction: function(result) {
+                            us.getUsers();
+                            DeselectAll();
+                        }
+                    });
+
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-deactivate-link",
+                        bodyActionName: "Deactivate",
+                        modalTitle: "@Localizer["shortCuts_deactivateUser"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_user"]",
+                        successMessage: "@Localizer["msgSuccess_deactivateUser"]",
+                        errorMessage: "@Localizer["msgError_deactivateUser"]",
+                        eventFunction: function(result) {
+                            us.getUsers();
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+
+            // #region Bind bulk actions
+            @if (User.UserHasThisPermission(Permissions.EmployeeDelete))
+            {
+                <text>
+                    // Bulk delete
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-delete-link",
+                        modalTitle: "@Localizer["bulk_deleteEmployees"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_employees"]",
+                        successMessage: "@Localizer["messages_bulkDeleteEmployeesSuccess"]",
+                        errorMessage: "@Localizer["messages_bulkDeleteEmployeesError"]",
+                        eventFunction: function (result) {
+                            $.each(result.deletedRows,
+                                function(key, value) {
+                                    DeleteRowCompleted(value,
+                                        "@Localizer["messages_noEmployees"]",
+                                        "@Localizer["messages_noOngoingEmployees"]");
+                                });
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.EmployeeDelete))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bulk: true,
+                        singleDelete: true,
+                        bindTo: ".delete-entity-link",
+                        modalTitle: "@Localizer["bulk_deleteEmployees"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_employees"]",
+                        successMessage: "@Localizer["messages_bulkDeleteEmployeesSuccess"]",
+                        errorMessage: "@Localizer["messages_bulkDeleteEmployeesError"]",
+                        eventFunction: function (result) {
+                            $.each(result.deletedRows,
+                                function(key, value) {
+                                    DeleteRowCompleted(value,
+                                        "@Localizer["messages_noEmployees"]",
+                                        "@Localizer["messages_noOngoingEmployees"]");
+                                });
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+        })
+    </script>
+}

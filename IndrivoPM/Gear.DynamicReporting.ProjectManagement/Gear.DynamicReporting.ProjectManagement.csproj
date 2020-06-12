@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gear.DynamicReporting\Gear.DynamicReporting.Abstractions.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Application\Gear.Manager.Core.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Domain\Gear.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Linq.Expressions" Version="4.3.0" />
+  </ItemGroup>
+
+</Project>

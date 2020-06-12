@@ -1,0 +1,189 @@
+﻿@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@model Gear.ProjectManagement.Manager.Domain.Activities.Queries.GetActivitiesForGrid.ActivitiesForGrid
+@inject IStringLocalizer Localizer
+
+@{
+    var activities = Model.Activities?.ToList();
+    if (activities != null && activities.Any())
+    {
+        <hr class="no-gutters mb-0"/>
+
+        <div class="row bizon-row grid">
+            <div class="col-xl-3 col-md-6 border-right new">
+                <div class="d-flex px-20">
+                    <div class="d-block mt-2 pt-1">
+                        <h5 class="mb-0">@Localizer["_new"]</h5>
+                        <p class="p-xs mb-0"><span id="counter-new">@activities.Count(a => a.Status == ActivityStatus.New)</span> @Localizer["types_activities"]</p>
+                    </div>
+                    <a class="btn btn-outline-success user-rectangle assign-users add-activity ml-auto" id="new"
+                       data-toggle="modal"
+                       data-target="#modal"
+                       data-controller="Activities"
+                       data-action="CreateByStatus"
+                       data-project-id="@activities.Select(a => a.ProjectId).FirstOrDefault()"
+                       href="javascript:">+</a>
+                </div>
+                <hr class="no-gutters mb-3"/>
+                <ul class="sortable-list list-unstyled ui-sortable sortable" data-status="@ActivityStatus.New">
+                    <partial name="_ActivitiesByStatus" model="@activities.Where(a => a.Status == ActivityStatus.New).OrderBy(a => a.RowOrder)"/>
+                </ul>
+            </div>
+
+            <div class="col-xl-3 col-md-6 border-right in-progress">
+                <div class="d-flex px-20">
+                    <div class="d-block mt-2 pt-1">
+                        <h5 class="mb-0">@Localizer["_inProgress"]</h5>
+                        <p class="p-xs mb-0"><span id="counter-in-progress">@activities.Count(a => a.Status == ActivityStatus.InProgress)</span> @Localizer["types_activities"]</p>
+                    </div>
+                    <a class="btn btn-outline-success user-rectangle assign-users add-activity ml-auto" id="in-progress"
+                       data-toggle="modal"
+                       data-target="#modal"
+                       data-controller="Activities"
+                       data-action="CreateByStatus"
+                       data-project-id="@activities.Select(a => a.ProjectId).FirstOrDefault()"
+                       href="javascript:">+</a>
+                </div>
+                <hr class="no-gutters mb-3"/>
+                <ul class="sortable-list list-unstyled ui-sortable sortable" data-status="@ActivityStatus.InProgress">
+                    <partial name="_ActivitiesByStatus" model="@activities.Where(a => a.Status == ActivityStatus.InProgress).OrderBy(a => a.RowOrder)"/>
+                </ul>
+            </div>
+
+            <div class="col-xl-3 col-md-6 border-right developed">
+                <div class="d-flex px-20">
+                    <div class="d-block mt-2 pt-1">
+                        <h5 class="mb-0">@Localizer["_developed"]</h5>
+                        <p class="p-xs mb-0"><span id="counter-developed">@activities.Count(a => a.Status == ActivityStatus.Developed)</span> @Localizer["types_activities"]</p>
+                    </div>
+                    <a class="btn btn-outline-success user-rectangle assign-users add-activity ml-auto" id="developed"
+                       data-toggle="modal"
+                       data-target="#modal"
+                       data-controller="Activities"
+                       data-action="CreateByStatus"
+                       data-project-id="@activities.Select(a => a.ProjectId).FirstOrDefault()"
+                       href="javascript:">+</a>
+                </div>
+                <hr class="no-gutters mb-3"/>
+                <ul class="sortable-list list-unstyled ui-sortable sortable" data-status="@ActivityStatus.Developed">
+                    <partial name="_ActivitiesByStatus" model="@activities.Where(a => a.Status == ActivityStatus.Developed).OrderBy(a => a.RowOrder)"/>
+                </ul>
+            </div>
+
+            <div class="col-xl-3 col-md-6 border-right tested">
+                <div class="d-flex px-20">
+                    <div class="d-block mt-2 pt-1">
+                        <h5 class="mb-0">@Localizer["_tested"]</h5>
+                        <p class="p-xs mb-0"><span id="counter-tested">@activities.Count(a => a.Status == ActivityStatus.Tested)</span> @Localizer["types_activities"]</p>
+                    </div>
+                    <a class="btn btn-outline-success user-rectangle assign-users add-activity ml-auto" id="tested"
+                       data-toggle="modal"
+                       data-target="#modal"
+                       data-controller="Activities"
+                       data-action="CreateByStatus"
+                       data-project-id="@activities.Select(a => a.ProjectId).FirstOrDefault()"
+                       href="javascript:">+</a>
+                </div>
+                <hr class="no-gutters mb-3"/>
+                <ul class="sortable-list list-unstyled ui-sortable sortable" data-status="@ActivityStatus.Tested">
+                    <partial name="_ActivitiesByStatus" model="@activities.Where(a => a.Status == ActivityStatus.Tested).OrderBy(a => a.RowOrder)"/>
+                </ul>
+            </div>
+        </div>
+    }
+    else
+    {
+        <p class="mb-0 mt-2 no-parent-entities">@Localizer["messages_noActivities"]</p>
+    }
+}
+
+<script>
+    $(document).ready(function () {
+
+        $("#new").attr("data-status", $("div.new").children(".sortable").data("status"));
+        $("#in-progress").attr("data-status", $("div.in-progress").children(".sortable").data("status"));
+        $("#developed").attr("data-status", $("div.developed").children(".sortable").data("status"));
+        $("#tested").attr("data-status", $("div.tested").children(".sortable").data("status"));
+
+        $(".sortable").sortable({
+            connectWith: ".sortable",
+            cancel: ".ignore-sortable",
+            placeholder: "ui-state-highlight",
+            update: function (event, ui) {
+                var parentStatus = $(ui.item).parent(".sortable").data("status");
+                var childStatus = $(ui.item).data("status");
+
+                if (childStatus === parentStatus) {
+                    OrderItems(ui);
+                }
+            },
+            receive: function (event, ui) {
+                var command = {
+                    Id: $(ui.item).data("activity-id"),
+                    Status: $(ui.item).parent(".sortable").data("status")
+                };
+
+                CountActivities();
+
+                $.ajax({
+                    url: "@Url.Action("UpdateActivityStatus", "Activities")",
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(command),
+                    type: "POST",
+                    success: function (response) {
+                        OrderItems(ui);
+                    }
+                });
+
+            }
+        }).disableSelection();
+    });
+
+</script>
+<script>
+    function CountActivities() {
+        $("#counter-new").html($("ul[data-status='@ActivityStatus.New']").children().length);
+        $("#counter-in-progress").html($("ul[data-status='@ActivityStatus.InProgress']").children().length);
+        $("#counter-developed").html($("ul[data-status='@ActivityStatus.Developed']").children().length);
+        $("#counter-tested").html($("ul[data-status='@ActivityStatus.Tested']").children().length);
+    }
+
+    function OrderItems(ui) {
+
+        var itemIds = [];
+        $(ui.item).parent(".sortable").children('li').each(function () {
+            var itemId = $(this).data("activity-id");
+            itemIds.push(itemId);
+        });
+
+        $.ajax({
+            url: "/Activities/ActivitiesUpdateOrder",
+            data: { itemIds: itemIds },
+            type: "POST"
+        });
+    }
+</script>
+<script>
+    function GetActivities() {
+        $.ajax({
+            url: "/Activities/GetActivities",
+            type: "GET",
+            data: {
+                projectId: "@Model.Activities.Select(x=>x.ProjectId).FirstOrDefault()"
+            },
+            success: function (result) {
+                $("#parent-entities").html(result);
+                StopCollapseButtonPropagation();
+                feather.replace();
+            },
+            error: function() {
+                $.errorAlert({
+                    title: "@Localizer["_error"]",
+                    message: "@Localizer["error_loadData"]"
+                });
+            }
+        });
+    }
+</script>
+

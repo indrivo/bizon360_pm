@@ -1,0 +1,209 @@
+﻿@using System.Security.Claims
+@using Bizon360.Models
+@using Bizon360.Utils
+@using Gear.Common.Extensions.EnumExtensions
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Activities.Queries.GetActivityListFromParentEntity.ActivityListViewModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@if (Model.Activities.Any())
+{
+    <div class="table-wrapper" data-parent-id="@ViewBag.ParentId">
+        <table class="table bizon-datatable dt-activities" data-order='[[ 1, "desc" ]]' id="table-@ViewBag.ParentId">
+            <thead>
+                <tr class="hover-invisible-toggle">
+                    <th class="no-sort">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-@ViewBag.ParentId" />
+                            <label class="custom-control-label" for="bulk-@ViewBag.ParentId"></label>
+                        </div>
+                    </th>
+                    <th class="col-priority">@Localizer["_priority"]</th>
+                    <th class="col-priority d-sm-table-cell d-none">ID</th>
+                    <th>@Localizer["_activity"]</th>
+                    @if (ViewBag.ParentType == ActivityParentType.UserActivities)
+                    {
+                        <th style="width:270px">@Localizer["_project"]</th>
+                    }
+                    <th class="col-est-log d-md-table-cell d-none">@Localizer["_est."]</th>
+                    <th class="col-est-log d-md-table-cell d-none">@Localizer["_log."]</th>
+                    <th class="col-progress d-md-table-cell d-none">@Localizer["_progress"]</th>
+                    <th class="col-status d-md-table-cell d-none">@Localizer["_status"]</th>
+                    <th class="col-users no-sort d-xl-table-cell d-none">@Localizer["_assignees"]</th>
+                    <th class="col-date d-sm-table-cell d-none">@Localizer["_due"]</th>
+                    <th class="no-sort">
+                        <div class="dropdown datatables-th-dropdown">
+                            <div class="more-vertical hover-invisible hover-lg" id="projects-th-dropdown" data-toggle="dropdown"></div>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="projects-th-dropdown">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-activities-estimated-@ViewBag.ParentId" data-table-column-id="4" checked />
+                                    <label class="custom-control-label" for="dt-activities-estimated-@ViewBag.ParentId">
+                                        @Localizer["_est."]
+                                        <span>@Localizer["_estimatedTime"]</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-activities-logged-@ViewBag.ParentId" data-table-column-id="5" checked />
+                                    <label class="custom-control-label" for="dt-activities-logged-@ViewBag.ParentId">
+                                        @Localizer["_log."]
+                                        <span>@Localizer["_loggedTime"]</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-activities-progress-@ViewBag.ParentId" data-table-column-id="6" checked />
+                                    <label class="custom-control-label" for="dt-activities-progress-@ViewBag.ParentId">
+                                        @Localizer["_progress"]
+                                        <span>@Localizer["_activityProgress"]</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-activities-status-@ViewBag.ParentId" data-table-column-id="7" checked />
+                                    <label class="custom-control-label" for="dt-activities-status-@ViewBag.ParentId">
+                                        @Localizer["_status"]
+                                        <span>@Localizer["_activityStatus"]</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-activities-assignees-@ViewBag.ParentId" data-table-column-id="8" checked />
+                                    <label class="custom-control-label" for="dt-activities-assignees-@ViewBag.ParentId">
+                                        @Localizer["_assignees"]
+                                        <span>@Localizer["_activityAssignees"]</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-activities-due-@ViewBag.ParentId" data-table-column-id="9" checked />
+                                    <label class="custom-control-label" for="dt-activities-due-@ViewBag.ParentId">
+                                        @Localizer["_due"]
+                                        <span>@Localizer["_deadline"]</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="tbody-@ViewBag.ParentId">
+                @foreach (var activity in Model.Activities)
+                {
+                    <tr class="hover-invisible-toggle" id="entity-@activity.Id">
+                        <td>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-check" id="@activity.Id" data-parent-id="@ViewBag.ParentId" />
+                                <label class="custom-control-label" for="@activity.Id"></label>
+                            </div>
+                        </td>
+                        <td class="td-badge">
+                            <span class="d-none">@Convert.ToInt32(activity.Priority)</span>
+                            <span class="badge @ProjectsViewHelper.GetPriorityBadgeColor(activity.Priority)">@activity.Priority</span>
+                        </td>
+                        <td class="d-sm-table-cell d-none">
+                            @($"A{activity.Number:00000}")
+                        </td>
+                        <td>
+                            <a asp-controller="Activities" asp-action="Details" asp-route-id="@activity.Id" class="datatables-title entity-title @ActivitiesViewHelper.ActivityTitleClass(activity.Status)">@activity.Name</a>
+                            <span class="badge @activity.ActivityTypeColor.ToString().BadgeColorConvert() no-bg font-weight-bold top-webkit-inline-box d-lg-inline d-none ml-10">@activity.ActivityType</span>
+                            @if (activity.Assignees.Any(a => a.Id == Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)))
+                            {
+                                <div class="position-relative d-lg-inline-block d-none">
+                                    <button class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box log-time-link" data-controller="LoggedTime" data-action="LogTimeFromActivitiesPage" data-activity-id="@activity.Id" data-progress="@activity.Progress">@Localizer["shortCuts_logTime"]</button>
+                                </div>
+                            }
+                        </td>
+                        
+                           @if (ViewBag.ParentType == ActivityParentType.UserActivities)
+                           {
+                               <td>
+                                   <a asp-controller="Projects" asp-action="Details" asp-route-id="@activity.ProjectId" class="datatables-title entity-title">@activity.ProjectName</a>
+                               </td>
+                           }
+                        
+                        <td class="d-md-table-cell d-none">@($"{activity.EstimatedTime}h")</td>
+                        <td class="d-md-table-cell d-none"><span class="td-logged-time" data-parent-id="@ViewBag.ParentId">@activity.LoggedTime</span>h</td>
+                        <td class="td-progress d-md-table-cell d-none">
+                            <span class="d-none">@activity.Progress</span>
+                            <div class="d-flex">
+                                <div class="progress mb-1" title="@activity.Progress%">
+                                    <div class="progress-bar @ProjectsViewHelper.GetProgressBarColor(activity.Progress)" role="progressbar" style="width: @activity.Progress%" aria-valuenow="@activity.Progress" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <span class="pb-percentage">@activity.Progress%</span>
+                            </div>
+                        </td>
+                        <td class="d-md-table-cell d-none">
+                            <div class="d-none">@Convert.ToInt32(activity.Status)</div>
+                            @activity.Status
+                        </td>
+                        <td class="td-users d-xl-table-cell d-none activity-assignees" data-id="@activity.Id">
+                            <partial name="_Assignees" model="activity" />
+                        </td>
+                        <td class="d-sm-table-cell d-none">
+                            @if (activity.DueDate != null)
+                            {
+                                if (activity.SprintId != null)
+                                {
+                                    <span class="sprint-badge @ActivitiesViewHelper.GetSprintDotBadgeColor(activity.SprintDueDate.Value, activity.SprintIsCompleted)" title="@activity.Sprint"></span>
+                                }
+                                <span class="entity-date">@($"{activity.DueDate:yyyy-MM-dd}")</span>
+                            }
+                            else
+                            {
+                                <span class="datatables-none top-webkit-inline-box">-</span>
+                            }
+                        </td>
+                        <td class="td-options">
+                            <div class="dropdown datatables-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <a asp-controller="Activities" asp-action="Details" asp-route-id="@activity.Id" class="dropdown-item">@Localizer["shortCuts_open"]</a>
+                                    @if (activity.Assignees.Any(a => a.Id == Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)) || User.UserHasThisPermission(Permissions.ActivityUpdateOtherUsersEntry))
+                                    {
+                                        <a asp-controller="Activities" asp-action="Edit" asp-route-id="@activity.Id" class="dropdown-item">@Localizer["shortCuts_edit"]</a>
+                                        <a href="javascript:" class="dropdown-item rename-entity-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="Rename" data-id="@activity.Id" data-name="@activity.Name">@Localizer["shortCuts_rename"]</a>
+                                        <a href="javascript:" class="dropdown-item log-time-link" data-controller="LoggedTime" data-action="LogTimeFromActivitiesPage" data-activity-id="@activity.Id" data-progress="@activity.Progress">@Localizer["shortCuts_logTime"]</a>
+                                        <a href="javascript:" class="dropdown-item set-entity-priority-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="EditPriority" data-id="@activity.Id" data-priority="@activity.Priority">@Localizer["shortCuts_setPriority"]</a>
+                                        <a href="javascript:" class="dropdown-item edit-entity-status-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="EditStatus" data-id="@activity.Id" data-status="@activity.Status">@Localizer["shortCuts_updateStatus"]</a>
+                                        <a href="javascript:" class="dropdown-item move-to-list-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="MoveToList" data-id="@activity.Id" data-list-id="@activity.ActivityListId" data-project-id="@activity.ProjectId">@Localizer["shortCuts_moveToList"]</a>
+                                        <a href="javascript:" class="dropdown-item assign-to-sprint-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="AssignToSprint" data-id="@activity.Id" data-sprint-id="@activity.SprintId" data-project-id="@activity.ProjectId">@Localizer["shortCuts_assignToSprint"]</a>
+                                    }
+                                    @if (activity.Assignees.Any(a => a.Id == Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)) || User.UserHasThisPermission(Permissions.ActivityDeleteOtherUsersEntry))
+                                    {
+                                        <div class="dropdown-divider"></div>
+                                        <a href="javascript:" class="dropdown-item delete-entity-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="Delete" data-id="@activity.Id" data-name="@activity.Name">@Localizer["shortCuts_delete"]</a>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        EnableDataTable("#table-" + "@ViewBag.ParentId", "ActivitiesHiddenColumns");
+
+        $.bindColumnToggle({
+            cookieKey: "ActivitiesHiddenColumns"
+        });
+    </script>
+}
+else
+{
+    <p class="mb-0 mt-2">@ActivitiesViewHelper.NoActivitiesMessage(ViewBag.ParentType, Localizer)</p>
+}
+<div class="mt-2">
+    @*@if (Model.HasCompletedActivities)
+    {
+        <button class="btn btn-outline-purple btn-sm show-completed" data-toggle="collapse" data-target="#completed-@ViewBag.ParentId" data-parent-type="@ViewBag.ParentType" data-parent-id="@ViewBag.ParentId" data-completed="true" data-loaded="false">Show completed</button>
+    }*@
+    <button class="btn btn-outline-primary btn-sm load-more" data-parent-type="@ViewBag.ParentType" data-parent-id="@ViewBag.ParentId" data-skip="@Model.Activities.Count">Load more</button>
+    @*@if (Model.Activities.Any())
+        {
+            <p class="p-xs d-inline ml-2 mb-0 @ActivitiesViewHelper.EntityCounterContainerClass(ViewBag.Ongoing)"><span class="@ActivitiesViewHelper.EntityCounterClass(ViewBag.Ongoing)" data-parent-id="@ViewBag.ParentId">@Model.Activities.Count</span> activities</p>
+        }*@
+</div>

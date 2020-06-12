@@ -1,0 +1,278 @@
+[
+  {
+    "RoleName": "PM Owner",
+    "Description": "Default status for the first registered account on PM platform.",
+    "PlatformName": "PM",
+    "Permissions": [
+
+      "ProjectGroupCreate",
+      "ProjectGroupUpdate",
+      "ProjectGroupDelete",
+      "ProjectGroupRead",
+      "ProjectCreate",
+      "ProjectUpdate",
+      "ProjectDelete",
+      "ProjectRead",
+      "ProjectSetUp",
+
+      "ActivityListCreate",
+      "ActivityListUpdate",
+      "ActivityListDelete",
+      "ActivityListRead",
+      "SprintCreate",
+      "SprintUpdate",
+      "SprintDelete",
+      "SprintRead",
+
+      "ActivityCreate",
+      "ActivityUpdate",
+      "ActivityDelete",
+      "ActivityRead",
+      "ActivityUpdateOtherUsersEntry",
+      "ActivityDeleteOtherUsersEntry",
+      "ChangeRequestCreate",
+      "ChangeRequestUpdate",
+      "ChangeRequestDelete",
+      "ChangeRequestRead",
+      "ChangeRequestApprove",
+      "ChangeRequestReject",
+
+      "ActivityTypeCreate",
+      "ActivityTypeUpdate",
+      "ActivityTypeDelete",
+      "ActivityTypeRead",
+      "ActivityTrackerCreate",
+      "ActivityTrackerUpdate",
+      "ActivityTrackerDelete",
+      "ActivityTrackerRead",
+
+      "LogTimeCreate",
+      "LogTimeUpdate",
+      "LogTimeDelete",
+      "LogTimeRead",
+      "LogTimeDeleteOtherUsersEntry",
+      "ActivityCheckListItemCreate",
+      "ActivityCheckListItemUpdate",
+      "ActivityCheckListItemDelete",
+      "ActivityCheckListItemRead",
+
+      "WikiCreate",
+      "WikiRead",
+      "WikiUpdate",
+      "WikiDelete",
+
+      "SSTPCreate",
+      "SSTPUpdate",
+      "SSTPDelete",
+      "SSTPRead",
+
+      "BusinessUnitCreate",
+      "BusinessUnitUpdate",
+      "BusinessUnitDelete",
+      "BusinessUnitRead",
+      "DepartmentCreate",
+      "DepartmentUpdate",
+      "DepartmentDelete",
+      "DepartmentRead",
+
+      "DepartmentTeamCreate",
+      "DepartmentTeamUpdate",
+      "DepartmentTeamDelete",
+      "DepartmentTeamRead",
+      "EmployeeCreate",
+      "EmployeeUpdate",
+      "EmployeeDelete",
+      "EmployeeRead",
+      "JobPositionCreate",
+      "JobPositionUpdate",
+      "JobPositionDelete",
+      "JobPositionRead",
+
+      "NotificationProfileCreate",
+      "NotificationProfileUpdate",
+      "NotificationProfileDelete",
+      "NotificationProfileRead",
+
+      "RoleCreate",
+      "RoleUpdate",
+      "RoleDelete",
+      "RoleRead",
+      "RoleAssign"
+    ]
+  },
+  {
+    "RoleName": "PM Admin",
+    "Description": "To be used for employees that manage administration settings and customizations.",
+    "PlatformName": "PM",
+    "Permissions": [
+
+      "ActivityTypeCreate",
+      "ActivityTypeUpdate",
+      "ActivityTypeDelete",
+      "ActivityTypeRead",
+      "ActivityTrackerCreate",
+      "ActivityTrackerUpdate",
+      "ActivityTrackerDelete",
+      "ActivityTrackerRead",
+
+      "SSTPCreate",
+      "SSTPUpdate",
+      "SSTPDelete",
+      "SSTPRead",
+
+      "BusinessUnitCreate",
+      "BusinessUnitUpdate",
+      "BusinessUnitDelete",
+      "BusinessUnitRead",
+      "DepartmentCreate",
+      "DepartmentUpdate",
+      "DepartmentDelete",
+      "DepartmentRead",
+
+      "DepartmentTeamCreate",
+      "DepartmentTeamUpdate",
+      "DepartmentTeamDelete",
+      "DepartmentTeamRead",
+      "EmployeeCreate",
+      "EmployeeUpdate",
+      "EmployeeDelete",
+      "EmployeeRead",
+      "JobPositionCreate",
+      "JobPositionUpdate",
+      "JobPositionDelete",
+      "JobPositionRead",
+
+      "NotificationProfileCreate",
+      "NotificationProfileUpdate",
+      "NotificationProfileDelete",
+      "NotificationProfileRead",
+
+      "RoleCreate",
+      "RoleUpdate",
+      "RoleDelete",
+      "RoleRead",
+      "RoleAssign"
+    ]
+  },
+  {
+    "RoleName": "PM Editor",
+    "Description": "To be used for employees that manage PM projects, activities, change requests and other types of data.",
+    "PlatformName": "PM",
+    "Permissions": [
+
+      "ProjectGroupCreate",
+      "ProjectGroupUpdate",
+      "ProjectGroupDelete",
+      "ProjectGroupRead",
+      "ProjectCreate",
+      "ProjectUpdate",
+      "ProjectDelete",
+      "ProjectRead",
+      "ProjectSetUp",
+
+      "WikiCreate",
+      "WikiRead",
+      "WikiUpdate",
+      "WikiDelete",
+
+      "ActivityListCreate",
+      "ActivityListUpdate",
+      "ActivityListDelete",
+      "ActivityListRead",
+      "SprintCreate",
+      "SprintUpdate",
+      "SprintDelete",
+      "SprintRead",
+
+      "ActivityCreate",
+      "ActivityUpdate",
+      "ActivityDelete",
+      "ActivityRead",
+      "ActivityUpdateOtherUsersEntry",
+      "ActivityDeleteOtherUsersEntry",
+      "ChangeRequestCreate",
+      "ChangeRequestUpdate",
+      "ChangeRequestDelete",
+      "ChangeRequestRead",
+      "ChangeRequestApprove",
+      "ChangeRequestReject",
+
+      "LogTimeCreate",
+      "LogTimeUpdate",
+      "LogTimeDelete",
+      "LogTimeRead",
+      "LogTimeDeleteOtherUsersEntry",
+      "ActivityCheckListItemCreate",
+      "ActivityCheckListItemUpdate",
+      "ActivityCheckListItemDelete",
+      "ActivityCheckListItemRead"
+
+    ]
+  },
+  {
+    "RoleName": "PM Contributor",
+    "Description": "To be used for employees that only add PM projects, activities, change requests and other types of data.",
+    "PlatformName": "PM",
+    "Permissions": [
+
+      "ProjectGroupRead",
+      "ProjectRead",
+
+      "WikiCreate",
+      "WikiRead",
+      "WikiUpdate",
+      "WikiDelete",
+
+      "ActivityListCreate",
+      "ActivityListUpdate",
+      "ActivityListDelete",
+      "ActivityListRead",
+      "SprintCreate",
+      "SprintUpdate",
+      "SprintDelete",
+      "SprintRead",
+
+      "ActivityCreate",
+      "ActivityUpdate",
+      "ActivityDelete",
+      "ActivityRead",
+      "ChangeRequestCreate",
+      "ChangeRequestUpdate",
+      "ChangeRequestDelete",
+      "ChangeRequestRead",
+
+      "LogTimeCreate",
+      "LogTimeUpdate",
+      "LogTimeDelete",
+      "LogTimeRead",
+      "ActivityCheckListItemCreate",
+      "ActivityCheckListItemUpdate",
+      "ActivityCheckListItemDelete",
+      "ActivityCheckListItemRead"
+
+    ]
+  },
+  {
+    "RoleName": "PM Viewer",
+    "Description": "To be used for employees that only view PM projects, activities, change requests and other types of data.",
+    "PlatformName": "PM",
+    "Permissions": [
+
+      "ProjectGroupRead",
+      "ProjectRead",
+
+      "ActivityListRead",
+      "SprintRead",
+
+      "ActivityRead",
+      "ChangeRequestCreate",
+      "ChangeRequestUpdate",
+      "ChangeRequestDelete",
+      "ChangeRequestRead",
+
+      "LogTimeRead",
+      "ActivityCheckListItemRead"
+
+    ]
+  }
+]

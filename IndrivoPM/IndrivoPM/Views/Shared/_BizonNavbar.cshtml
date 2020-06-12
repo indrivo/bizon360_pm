@@ -1,0 +1,97 @@
+﻿@using Bizon360.Utils
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Domain.AppEntities
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.AspNetCore.Identity
+@using Platform = Bizon360.Models.Platform
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+}
+
+<header>
+    <nav class="navbar navbar-light bg-white border-bottom py-0 px-40 main-nav">
+        <button type="button" class="hamburger hamburger--collapse">
+            <span class="hamburger-box">
+                <span class="hamburger-inner"></span>
+            </span>
+        </button>
+        <a class="navbar-brand ml-40 d-md-inline-block d-none" asp-controller="Home" asp-action="Index">Bizon<span>360&deg;</span></a>
+        <a href="javascript:" class="dark-mode-switcher ml-md-0 ml-3 mr-md-3 mr-0"></a>
+        <ul class="list-unstyled d-flex m-0 mr-auto ml-md-0 ml-3">
+            <li class="nav-item">
+                <a asp-controller="Projects" asp-action="Index" class="main-nav-link @NavigationHelper.PmNavClass(ViewContext)">PM</a>
+            </li>
+            @*<li class="nav-item">
+                <a href="javascript:" class="main-nav-link @NavigationHelper.CrmNavClass(ViewContext)">CRM</a>
+            </li>
+            <li class="nav-item">
+                <a href="javascript:" class="main-nav-link @NavigationHelper.HrmNavClass(ViewContext)">HRM</a>
+            </li>*@
+            @if (User.UserHasThisPermission(Permissions.BusinessUnitRead))
+            {
+                <li class="nav-item">
+                    <a asp-controller="BusinessUnits" asp-action="Index" class="main-nav-link @NavigationHelper.AdmNavClass(ViewContext)">ADM</a>
+                </li>
+            }
+        </ul>
+        <div class="d-sm-flex d-none">
+            <input type="text" class="form-control" id="global-search" placeholder="Global search" />
+            <div class="navbar-divider"></div>
+        </div>
+        <div class="d-flex  nav-user-button cursor-pointer" onclick="GetNotifications('@User.Identity.Name')">
+            <div class="d-md-block d-none mr-3">
+                <h6 class="mb-0">@($"{currentUser.FirstName} {currentUser.LastName}")</h6>
+                <p class="font-size-12 mb-0">Job position</p>
+            </div>
+            <ul class="list-unstyled d-flex m-0">
+                <li class="nav-item m-0">
+                    <button type="button" class="btn btn-outline-primary nav-user-button user-rectangle position-relative" data-toggle="dropdown">
+                        @User.Identity.Name.GetInitialsFromEmail()
+                        <span class="has-notifications" style="display: none"></span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+    </nav>
+    <nav class="navbar navbar-light py-0 px-40 main-nav-slide border-bottom @NavigationHelper.PlatformNavClass(ViewContext)">
+        <ul class="list-unstyled d-flex m-0">
+            @switch (ViewData["Platform"])
+            {
+                case Platform.Pm:
+                    @*<li class="nav-item">
+                    <a href="javascript:" class="main-nav-link">Dashboard</a>
+                </li>*@
+                    <li class="nav-item">
+                        <a asp-controller="Projects" asp-action="Index" class="main-nav-link">Projects</a>
+                    </li>
+                    @if (User.UserHasThisPermission(Permissions.ReportsManagement))
+                     {
+                         <li class="nav-item">
+                             <a asp-controller="Reports" asp-action="ReportsIndex" class="main-nav-link">Reports</a>
+                         </li>
+                     }
+
+                    @*<li class="nav-item">
+                    <a href="javascript:" class="main-nav-link">Resource planning</a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:" class="main-nav-link">Settings</a>
+                </li>*@
+                    break;
+                case Platform.Adm:
+                    <li class="nav-item">
+                        <a asp-controller="BusinessUnits" asp-action="Index" class="main-nav-link">Administration</a>
+                    </li>
+                    break;
+                default:
+                    break;
+            }
+
+        </ul>
+    </nav>
+</header>

@@ -1,0 +1,372 @@
+﻿@using Bizon360.Models
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = "Administrative";
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = ViewData["Title"];
+}
+
+<partial name="_AdmTabs" />
+
+<div class="row row-m-20 bg-white border rounded top-bar pl-20 pr-20">
+    <div class="col-12 d-md-flex p-0">
+        <div class="d-md-block d-inline-block">
+            <button class="btn btn-primary">@Localizer["_list"]</button>
+            @*<button class="btn btn-outline-primary">@Localizer["_grid"]</button>*@
+        </div>
+        <div class="ml-auto d-inline-block"></div>
+        <input type="text" class="form-control search-input w-md-100-i mt-md-0 mt-2" placeholder="@Localizer["_search"]" />
+    </div>
+</div>
+
+<!----------- Product list ------------->
+<hr class="no-gutters" />
+<div class="parent-content" id="products">
+    <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative pb-lg-0 pb-3 cursor-pointer" data-toggle="collapse" href="#parent-products">
+        <div class="d-lg-flex d-block w-100 px-20">
+            <div class="d-flex pt-collapse">
+                <a class="border collapse-switcher d-inline-block">
+                    <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                </a>
+                <span class="collapse-title">
+                    @Localizer["_productType"]
+                    <span class="collapse-count" id="count-products">@ViewBag.ProductCount</span>
+                </span>
+            </div>
+            <div class="d-lg-none collapse-divider"></div>
+            <div class="d-flex">
+                <div class="d-lg-block d-inline-block">
+                    <a href="#" class="btn btn-success collapse-button hover-invisible hover-lg ml-lg-20 mt-lg-10 create-product" data-controller="Sstp" data-action="CreateProduct" data-toggle="modal" data-target="#modal">@Localizer["shortCuts_addProductType"]</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="collapse collapse-datatable" id="parent-products"></div>
+</div>
+
+<!------------ Service list ----------->
+<hr class="no-gutters" />
+<div class="parent-content" id="services">
+    <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative pb-lg-0 pb-3 cursor-pointer" data-toggle="collapse" href="#parent-services">
+        <div class="d-lg-flex d-block w-100 px-20">
+            <div class="d-flex pt-collapse">
+                <a class="border collapse-switcher d-inline-block">
+                    <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                </a>
+                <span class="collapse-title">
+                    @Localizer["_serviceType"]
+                    <span class="collapse-count" id="count-services">@ViewBag.ServiceCount</span>
+                </span>
+            </div>
+            <div class="d-lg-none collapse-divider"></div>
+            <div class="d-flex">
+                <div class="d-lg-block d-inline-block">
+                    <a href="#" class="btn btn-success collapse-button hover-invisible hover-lg ml-lg-20 mt-lg-10 create-service" data-controller="Sstp" data-action="CreateService" data-toggle="modal" data-target="#modal">@Localizer["shortCuts_addServiceType"]</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="collapse collapse-datatable" id="parent-services"></div>
+</div>
+
+<!------------ technology list ----------->
+<hr class="no-gutters" />
+<div class="parent-content" id="technologies">
+    <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative pb-lg-0 pb-3 cursor-pointer" data-toggle="collapse" href="#parent-technologies">
+        <div class="d-lg-flex d-block w-100 px-20">
+            <div class="d-flex pt-collapse">
+                <a class="border collapse-switcher d-inline-block">
+                    <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                </a>
+                <span class="collapse-title">
+                    @Localizer["_technologyType"]
+                    <span class="collapse-count" id="count-technologies">@ViewBag.TechnologyCount</span>
+                </span>
+            </div>
+            <div class="d-lg-none collapse-divider"></div>
+            <div class="d-flex">
+                <div class="d-lg-block d-inline-block">
+                    <a href="#" class="btn btn-success collapse-button hover-invisible hover-lg ml-lg-20 mt-lg-10 create-technology" data-controller="Sstp" data-action="CreateTechnology" data-toggle="modal" data-target="#modal">@Localizer["shortCuts_addTechnologyType"]</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="collapse collapse-datatable" id="parent-technologies"></div>
+</div>
+
+<!------------ Solution list ----------->
+<hr class="no-gutters" />
+<div class="parent-content" id="solutions">
+    <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative pb-lg-0 pb-3 cursor-pointer" data-toggle="collapse" href="#parent-solutions">
+        <div class="d-lg-flex d-block w-100 px-20">
+            <div class="d-flex pt-collapse">
+                <a class="border collapse-switcher d-inline-block">
+                    <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                </a>
+                <span class="collapse-title">
+                    @Localizer["_solutionType"]
+                    <span class="collapse-count" id="count-solutions">@ViewBag.SolutionCount</span>
+                </span>
+            </div>
+            <div class="d-lg-none collapse-divider"></div>
+            <div class="d-flex">
+                <div class="d-lg-block d-inline-block">
+                    <a href="#" class="btn btn-success collapse-button hover-invisible hover-lg ml-lg-20 mt-lg-10 create-solution" data-controller="Sstp" data-action="CreateSolution" data-toggle="modal" data-target="#modal">@Localizer["shortCuts_addSolutionType"]</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="collapse collapse-datatable" id="parent-solutions"></div>
+</div>
+
+@section Scripts
+{
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/js/dev/adm.js"></script>
+
+    <script>
+
+        $("#tab-sstp").addClass("active");
+
+        var sstp = new SstpContainer();
+        sstp.getSstp();
+        $.bindSearch();
+        $.confirmDelete();
+
+        @if (User.UserHasThisPermission(Permissions.SSTPCreate))
+        {
+            <text>
+                // ------------------
+                // Create product
+                $.bindFormModal({
+                    modalSize:"regular",
+                    bindTo: ".create-product",
+                    modalTitle: "@Localizer["shortCuts_addProductType"]"
+                });
+
+                // ------------------
+                // Create service
+                $.bindFormModal({
+                    modalSize:"regular",
+                    bindTo: ".create-service",
+                    modalTitle: "@Localizer["shortCuts_addServiceType"]"
+                });
+
+                // ------------------
+                // Create technology
+               $.bindFormModal({
+                    modalSize:"regular",
+                    bindTo: ".create-technology",
+                    modalTitle: "@Localizer["shortCuts_addTechnologyType"]"
+               });
+
+                // ------------------
+                // Create solution
+               $.bindFormModal({
+                    modalSize:"regular",
+                    bindTo: ".create-solution",
+                    modalTitle: "@Localizer["shortCuts_addSolutionType"]"
+                });
+            </text>
+        }
+
+        @if (User.UserHasThisPermission(Permissions.SSTPUpdate))
+         {
+            <text>
+                // -----------------------
+                // Product quick actions
+                $.bindFormModal({
+                    modalSize:"regular",
+                    bindTo: ".rename-product",
+                    modalTitle: "@Localizer["shortCuts_renameProdcutType"]"
+                });
+
+                 $.bindDeleteModal({
+                     bindTo: ".deactivate-prodcut",
+                     bodyActionName: "Deactivate",
+                     modalTitle: "@Localizer["shortCuts_deactivateProdcutType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_product"]",
+                     successMessage: "@Localizer["msgSuccess_deactivateProdcutType"]",
+                     errorMessage: "@Localizer["msgError_deactivateProdcutType"]",
+                     eventFunction: sstp.getProducts
+                 });
+
+                 $.bindDeleteModal({
+                     bindTo: ".activate-prodcut",
+                     bodyActionName: "Activate",
+                     colorButton: "Success",
+                     modalTitle: "@Localizer["shortCuts_activateProdcutType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_product"]",
+                     successMessage: "@Localizer["msgSuccess_activateProdcutType"]",
+                     errorMessage: "@Localizer["msgError_activateProdcutType"]",
+                     eventFunction: sstp.getProducts
+                 });
+
+                // -----------------------
+                // Service quick actions
+                 $.bindFormModal({
+                    modalSize:"regular",
+                    bindTo: ".rename-service",
+                    modalTitle: "@Localizer["shortCuts_renameService"]"
+                });
+
+                 $.bindDeleteModal({
+                     bindTo: ".deactivate-service",
+                     bodyActionName: "Deactivate",
+                     modalTitle: "@Localizer["shortCuts_deactivateServiceType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_service"]",
+                     successMessage: "@Localizer["msgSuccess_deactivateServiceType"]",
+                     errorMessage: "@Localizer["msgError_deactivateServiceType"]",
+                     eventFunction: sstp.getServices
+                 });
+
+                 $.bindDeleteModal({
+                     bindTo: ".activate-service",
+                     bodyActionName: "Activate",
+                     colorButton: "Success",
+                     modalTitle: "@Localizer["shortCuts_activateServiceType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_service"]",
+                     successMessage: "@Localizer["msgSuccess_activateServiceType"]",
+                     errorMessage: "@Localizer["msgError_activateServiceType"]",
+                     eventFunction: sstp.getServices
+                 });
+
+                // -----------------------
+                // Technology quick actions
+                 $.bindFormModal({
+                    modalSize:"regular",
+                    bindTo: ".rename-technology",
+                    modalTitle: "@Localizer["shortCuts_renameTechnology"]"
+                });
+
+                 $.bindDeleteModal({
+                     bindTo: ".deactivate-technology",
+                     bodyActionName: "Deactivate",
+                     modalTitle: "@Localizer["shortCuts_deactivateTechnologyType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_technology"]",
+                     successMessage: "@Localizer["msgSuccess_deactivateTechnologyType"]",
+                     errorMessage: "@Localizer["msgError_deactivateTechnologyType"]",
+                     eventFunction: sstp.getTechnologies
+                 });
+
+                 $.bindDeleteModal({
+                     bindTo: ".activate-technology",
+                     bodyActionName: "Activate",
+                     colorButton: "Success",
+                     modalTitle: "@Localizer["shortCuts_activateTechnologyType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_technology"]",
+                     successMessage: "@Localizer["msgSuccess_activateTechnologyType"]",
+                     errorMessage: "@Localizer["msgError_activateTechnologyType"]",
+                     eventFunction: sstp.getTechnologies
+                 });
+
+                // -----------------------
+                // Solution quick actions
+                 $.bindFormModal({
+                    modalSize:"regular",
+                    bindTo: ".rename-solution",
+                    modalTitle: "@Localizer["shortCuts_renameSolution"]"
+                });
+
+                 $.bindDeleteModal({
+                     bindTo: ".deactivate-solution",
+                     bodyActionName: "Deactivate",
+                     modalTitle: "@Localizer["shortCuts_deactivateSolutionType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_solution"]",
+                     successMessage: "@Localizer["msgSuccess_deactivateSolutionType"]",
+                     errorMessage: "@Localizer["msgError_deactivateSolutionType"]",
+                     eventFunction: sstp.getSolutions
+                 });
+
+                 $.bindDeleteModal({
+                     bindTo: ".activate-solution",
+                     bodyActionName: "Activate",
+                     colorButton: "Success",
+                     modalTitle: "@Localizer["shortCuts_activateSolutionType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_solution"]",
+                     successMessage: "@Localizer["msgSuccess_activateSolutionType"]",
+                     errorMessage: "@Localizer["msgError_activateSolutionType"]",
+                     eventFunction: sstp.getSolutions
+                 });
+            </text>
+         }
+
+        @if (User.UserHasThisPermission(Permissions.SSTPDelete))
+         {
+             <text>
+                // ------------------
+                // Delete product
+                 $.bindDeleteModal({
+                     bindTo: ".delete-prodcut",
+                     modalTitle: "@Localizer["shortCuts_deleteProdcutType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_product"]",
+                     successMessage: "@Localizer["msgSuccess_deleteProdcutType"]",
+                     errorMessage: "@Localizer["msgError_deleteProdcutType"]",
+                     eventFunction: sstp.getProducts
+                 });
+
+                // ------------------
+                // Delete service
+                 $.bindDeleteModal({
+                     bindTo: ".delete-service",
+                     modalTitle: "@Localizer["shortCuts_deleteServiceType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_service"]",
+                     successMessage: "@Localizer["msgSuccess_deleteServiceType"]",
+                     errorMessage: "@Localizer["msgError_deleteServiceType"]",
+                     eventFunction: sstp.getServices
+                 });
+
+                // ------------------
+                // Delete technology
+                $.bindDeleteModal({
+                     bindTo: ".delete-technology",
+                     modalTitle: "@Localizer["shortCuts_deleteTechnologyType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_technology"]",
+                     successMessage: "@Localizer["msgSuccess_deleteTechnologyType"]",
+                     errorMessage: "@Localizer["msgError_deleteTechnologyType"]",
+                     eventFunction: sstp.getTechnologies
+                });
+
+                // ------------------
+                // Delete solution
+                $.bindDeleteModal({
+                     bindTo: ".delete-solution",
+                     modalTitle: "@Localizer["shortCuts_deleteSolutionType"]",
+                     modalSize: "regular",
+                     type: "@Localizer["types_solution"]",
+                     successMessage: "@Localizer["msgSuccess_deleteSolutionType"]",
+                     errorMessage: "@Localizer["msgError_deleteSolutionType"]",
+                     eventFunction: sstp.getSolutions
+                 });
+            </text>
+         }
+
+    </script>
+    }
+
+
+
+

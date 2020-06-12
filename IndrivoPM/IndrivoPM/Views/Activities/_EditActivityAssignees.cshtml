@@ -1,0 +1,50 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Assignees.Commands.EditActivityAssignees.EditActivityAssigneesCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="Activities" asp-action="EditActivityAssignees" id="form-edit-activity-assignees">
+    <div class="modal-body">
+        <input asp-for="Id" class="form-control" hidden />
+
+        <label asp-for="Users" class="float-label-select"></label>
+        <select asp-for="Users" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)" class="form-control selectpicker" multiple data-live-search="true" data-selected-text-format="value" data-actions-box="true"></select>
+        <span asp-validation-for="Users" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-edit-activity-assignees">@Localizer["shortCuts_update"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    $(".selectpicker").selectpicker();
+
+    $.saveChanges({
+        bindTo: "#btn-edit-activity-assignees",
+        formId: "#form-edit-activity-assignees",
+        ajaxUrl: "@Url.Action("EditActivityAssignees", "Activities")",
+        successMessage: "@Localizer["messages_editActivitySuccess"]",
+        errorMessage: "@Localizer["messages_editActivityError"]",
+        buttonText: "@Localizer["shortCuts_update"]",
+        eventFunction: function (result) {
+            debugger;
+            if (typeof GetCurrentView === 'undefined') {
+                $("td[data-id='" + result.id + "'].activity-assignees").html(result.view);
+            } else {
+                if (GetCurrentView() != "@ActivitiesView.Grid") {
+                    $("td[data-id='" + result.id + "'].activity-assignees").html(result.view);
+                } else {
+                    $("div[id='" + result.id + "'].activity-assignees").html(result.view);
+                    if ($("td[data-id='" + result.id + "'].activity-assignees").length)
+                    {
+                        $("td[data-id='" + result.id + "'].activity-assignees").html(result.view);
+                    }
+                }
+            }
+        }
+    });
+</script>

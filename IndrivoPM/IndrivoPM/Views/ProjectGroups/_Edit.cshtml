@@ -1,0 +1,41 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.ProjectGroups.Commands.UpdateProjectGroup.UpdateProjectGroupCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+<form asp-action="Edit" asp-controller="ProjectGroups" id="form-edit-project-group">
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-12">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input asp-for="Id" class="form-control" hidden />
+
+                <label asp-for="Name" class="float-label"></label>
+                <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_projectGroupName"]" autocomplete="off" required />
+                <span asp-validation-for="Name" class="invalid-feedback"></span>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-edit-project-group">@Localizer["_rename"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    $.saveChanges({
+        bindTo: "#btn-edit-project-group",
+        formId: "#form-edit-project-group",
+        ajaxUrl: "@Url.Action("Edit", "ProjectGroups")",
+        successMessage: "@Localizer["messages_editProjectGroupSuccess"]",
+        errorMessage: "@Localizer["messages_editProjectGroupError"]",
+        buttonText: "@Localizer["shortCuts_rename"]",
+        eventFunction: function (result) {
+            $("[data-id='" + result.id + "'].collapse-title:not(.collapse-count)").html(result.name);
+            $("[data-id='" + result.id + "'].delete-parent-link").attr("data-name", result.name);
+        }
+    });
+</script>

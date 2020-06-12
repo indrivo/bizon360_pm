@@ -1,0 +1,99 @@
+﻿@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = Localizer["_reports"];
+    ViewData["ActivePage"] = "EmployeesReport";
+    // Breadcrumb data
+    ViewData["FirstNode"] = ViewData["Title"];
+}
+
+@section Styles {
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+}
+
+@{ await Html.RenderPartialAsync("_ReportsIndexTabs"); }
+
+<div class="tab-content">
+    <div role="tabpanel" class="tab-pane in active" id="employees-report">
+
+        <h6>@Localizer["text_generateReport"]</h6>
+        <hr class="hr-description" />
+
+        <div class="row mt-3">
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label-select">@Localizer["_chooseEmployee"]</label>
+                <select name="userIds" id="select-employee" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)"
+                        class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["validation_notEmptyEmployeeList"]</span></span>
+            </div>
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label-select">@Localizer["_chooseProject"]</label>
+                <select name="projectIds" id="select-project" asp-items="@((List<SelectListItem>) ViewBag.Projects)" class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["validation_notEmptyEmployeeList"]</span></span>
+            </div>
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label">@Localizer["_chooseStartDate"]</label>
+                <input name="startDate" id="emp-start-date" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker start-date" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none">@Localizer["validation_notEmptyStartDate"]</span></span>
+            </div>
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label">@Localizer["_chooseDueDate"]</label>
+                <input id="emp-due-date" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none">@Localizer["validation_notEmptyDueDate"]</span></span>
+            </div>
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label-select">@Localizer["_chooseReportColumns"]</label>
+                <select name="tableHeaders" id="select-headers" class="form-control selectpicker" asp-items="@(ViewBag.Headers)" multiple data-live-search="true" data-actions-box="true" hidden="hidden"></select>
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["_chooseReportColumns"]</span></span>
+            </div>
+            <div class="col text-right mt-lg-2">
+                <button onclick="downloadUserReport(this, '/Reports/GetEmployeesLoggedTimeByPeriodXml', 'Employee-logged-time.xlsx')" data-original-text="XLSX" type="button" class="btn btn-outline-primary">XLSX</button>
+                <button onclick="downloadUserReport(this, '/Reports/GetEmployeesLoggedTimeByPeriodCsv','Employee-logged-time.csv')" data-original-text="CSV" type="button" class="btn btn-outline-primary mx-1">CSV</button>
+                <button type="button" onclick="generateUserReport(this, '/Reports/GetEmployeesLoggedTimeOnUi')" class="btn btn-success">
+                    @Localizer["_generate"]
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<hr class="no-gutters" />
+<div id="report-employee"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/js/dev/reports.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Validation on change.
+            $("#select-employee").change(function () {
+                debugger;
+                validationDropdown($(this));
+            });
+        });
+    </script>
+    
+    <script>
+        function checkHeaders(element) {
+            var values = [];
+            $('#select-headers option').each(function () {
+                values.push($("#select-headers").attr('value'));
+            });
+
+            var table = $(element).DataTable();
+            for (var i = 0; i < values.length; i++) {
+                var column = table.column(i);
+                var isSelected = $(`#select-headers option:nth(${i})`).is(':selected');
+                column.visible(isSelected);
+            }
+        }
+    </script>
+}
+

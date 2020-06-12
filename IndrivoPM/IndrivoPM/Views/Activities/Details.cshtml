@@ -1,0 +1,782 @@
+﻿@using System.Security.Claims
+@using Bizon360.Models
+@using Bizon360.Utils
+@using Gear.Common.Extensions.IntegerExtensions
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@model Gear.ProjectManagement.Manager.Domain.Activities.Queries.GetActivityDetails.ActivityDetailModel
+@inject IStringLocalizer Localizer
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = Model.Name;
+    ViewData["ActivePage"] = "Activity";
+    ViewData["EntityId"] = $"A{Model.Number:00000}";
+
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["SecondNode"] = Model.ProjectName;
+    ViewData["PriorityBadge"] = Model.Priority;
+    ViewData["PriorityBadgeClass"] = ProjectsViewHelper.GetPriorityBadgeColor(Model.Priority);
+
+}
+
+@section Styles {
+    <link href="~/css/summer-note.css" rel="stylesheet" />
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+
+    <style rel="stylesheet">
+        #myProgress {
+            width: 20%;
+            background-color: grey;
+            opacity: 0;
+            display: none;
+        }
+
+        #myBar {
+            width: 1%;
+            height: 30px;
+            background-color: green;
+            opacity: 0;
+            display: none;
+        }
+    </style>
+}
+
+@{ await Html.RenderPartialAsync("~/Views/Shared/Components/ActivityTabs/_ActivityTabs.cshtml", @Model.Id); }
+
+<div class="row mx-n-20 ">
+    <div class="col-lg-8 bg-white border rounded py-15 px-20 details">
+        <h6>@Localizer["_overview"]</h6>
+        <hr class="hr-description" />
+
+        <div class="row no-gutters">
+            <div class="col-fixed-220">
+                <p class="p-sm mb-0">@Localizer["_estimatedTime"]</p>
+            </div>
+            <div class="d-block mb-sm-0 mb-1">
+                <p class="p-sm mb-0 color-black">@(Model.EstimatedHours ?? 0) @Localizer["_hours"]</p>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-fixed-220">
+                <p class="p-sm mb-0">@Localizer["_loggedTime"]</p>
+            </div>
+            <div class="d-block mb-sm-0 mb-1">
+                <p class="p-sm mb-0 color-black"><span id="logged-time">@Model.LoggedTime</span> @Localizer["_hours"]</p>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-fixed-220">
+                <p class="p-sm mb-0">@Localizer["_activityStatus"]</p>
+            </div>
+            <div class="d-block mb-sm-0 mb-1">
+                <p class="p-sm mb-0 color-black"><span id="status">@Model.Status</span></p>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-fixed-220">
+                <p class="p-sm mb-0">@Localizer["_progress"]</p>
+            </div>
+            <div class="d-block mb-sm-0 mb-1">
+                <p class="p-sm mb-0 color-black"><span id="progress">@Model.Progress</span>%</p>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-fixed-220">
+                <p class="p-sm mb-0">@Localizer["_startDate"]</p>
+            </div>
+            <div class="d-block mb-sm-0 mb-1">
+                <p class="p-sm mb-0 color-black">
+                    @if (Model.StartDate != null)
+                    {
+                        @($"{Model.StartDate:yyyy-MM-dd}")
+                    }
+                    else
+                    {
+                        @("-")
+                    }
+                </p>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-fixed-220">
+                <p class="p-sm mb-0">@Localizer["_dueDate"]</p>
+            </div>
+            <div class="d-block">
+                <p class="p-sm mb-0 color-black">
+                    @if (Model.DueDate != null)
+                    {
+                        @($"{Model.DueDate:yyyy-MM-dd}")
+                        if (Model.Status != ActivityStatus.Completed)
+                        {
+                            @($" \u00B7 ")
+                            @Model.DueDate.GetRemainingTime()
+                        }
+                    }
+                    else
+                    {
+                        @("-")
+                    }
+                </p>
+            </div>
+        </div>
+
+        <h6 class="mt-3">@Localizer["_activityDetails"]</h6>
+        <hr class="hr-description" />
+
+        <div class="row no-gutters">
+            <div class="col-fixed-220">
+                <p class="p-sm mb-0">@Localizer["_project"]</p>
+            </div>
+            <div class="d-block mb-sm-0 mb-1">
+                <a class="font-size-14 d-block" asp-action="Details" asp-controller="Projects" asp-route-id="@Model.ProjectId">
+                    @Model.ProjectName
+                </a>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-fixed-220">
+                <p class="p-sm mb-0">@Localizer["_activityList"]</p>
+            </div>
+            <div class="d-block mb-sm-0 mb-1">
+                @if (Model.ActivityListId != null)
+                {
+                    <a class="font-size-14 d-block" asp-controller="Activities" asp-action="Index" asp-route-id="@Model.ProjectId" asp-route-view="@ActivitiesView.List"> @Model.ActivityListName</a>
+                }
+                else
+                {
+                    <span>-</span>
+                }
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-fixed-220">
+                <p class="p-sm mb-0">@Localizer["_activitySprint"]</p>
+            </div>
+            <div class="d-block mb-sm-0 mb-1">
+                @if (Model.SprintId != null)
+                {
+                    <a class="font-size-14 d-block" asp-controller="Activities" asp-action="Index" asp-route-id="@Model.ProjectId" asp-route-view="@ActivitiesView.Sprint">@Model.SprintName</a>
+                }
+                else
+                {
+                    <span>-</span>
+                }
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-fixed-220">
+                <p class="p-sm mb-0">@Localizer["_activityType"]</p>
+            </div>
+            <div class="d-block mb-sm-0 mb-1">
+                <p class="p-sm mb-0 color-black">@Model.ActivityTypeName</p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <h6 class="mt-3">@Localizer["_description"]</h6>
+            <hr class="hr-description" />
+
+            <div class="row no-gutters">
+                <div class="d-block mb-sm-0 mb-1 ">
+                    <p class="p-sm mb-0 color-black s-note-text-black">@Html.Raw(Model.Description)</p>
+                </div>
+            </div>
+        }
+
+        <h6 class="mt-3">@Localizer["_history"]</h6>
+        <hr class="hr-description mb-1" />
+        <button type="button" class="btn btn-success" id="load-audit">
+            Load
+        </button>
+        <div class="audit"></div>
+
+        <h6 class="mt-3">@Localizer["_checklist"]</h6>
+        <hr class="hr-description mb-1" />
+
+        <div class="row no-gutters">
+            <div class="col-12">
+                <div class="checklist-items"></div>
+                <div class="checklist-form"></div>
+            </div>
+        </div>
+
+    </div>
+    <div class="col-lg-4">
+        <h6 class="mt-3">@Localizer["_author"]</h6>
+        <hr class="hr-description" />
+
+        <div class="d-flex">
+            <div class="d-block mr-2">
+                <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@Model.Author.Id" class="btn btn-outline-primary user-rectangle">@string.Format($"{Model.Author.FirstName[0]}{Model.Author.LastName[0]}")</a>
+            </div>
+            <div class="d-block">
+                <h6 class="mb-0">
+                    <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@Model.Author.Id">@Model.Author.FirstName @Model.Author.LastName</a>
+                </h6>
+                <span class="font-size-12 color-secondary d-block">@Model.Author.JobPosition</span>
+            </div>
+        </div>
+
+        <h6 class="mt-3">@Localizer["_assignees"]</h6>
+        <hr class="hr-description" />
+
+        @foreach (var member in Model.Assignees)
+        {
+            <div class="d-flex mb-2">
+
+                <div class="d-block mr-2">
+                    <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@member.Id" class="btn btn-outline-primary user-rectangle">@member.FullName.ToInitials()</a>
+                </div>
+                <div class="d-block">
+                    <h6 class="mb-0">
+                        <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@member.Id">@member.FullName</a>
+                    </h6>
+                    <span class="font-size-12 color-secondary d-block">@member.JobPosition</span>
+                </div>
+
+            </div>
+        }
+
+
+        <h6 class="mt-3">@Localizer["_uploadFiles"]</h6>
+        <hr class="hr-description" />
+
+        <div class="files"></div>
+        @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+        {
+            @if (ViewBag.IsAuthenticatedOnCloud)
+            {
+                <div class="d-block mt-2">
+                    <button type="button" class="btn btn-success d-inline-block" id="upload-files" data-toggle="modal" data-target="#modal-add-file">
+                        Upload file
+                    </button>
+                    <p class="p-sm d-inline-block ml-2 mb-0">Max file size:</p>
+                    <span>25.0 Mb</span>
+                    <br />
+                    <div id="myProgress">
+                        <div id="myBar"></div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="d-block mt-2">
+                    <form method="post" asp-controller="Home" asp-action="LogInMicrosoft" class="d-inline-block">
+                        <button type="submit" class="btn btn-success">
+                            CloudAuth
+                        </button>
+                    </form>
+                </div>
+            }
+
+        }
+
+    </div>
+
+</div>
+
+@if (User.UserHasThisPermission(Permissions.ActivityUpdate) || User.UserHasThisPermission(Permissions.ActivityDelete))
+{
+    <footer class="bulk-actions-container show">
+        <ul class="list-unstyled list-inline d-lg-inline-block d-block float-lg-right mb-0">
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                @if (User.UserHasThisPermission(Permissions.ActivityDelete))
+                {
+                    <button type="button" class="btn w-lg-auto w-100 btn-outline-secondary mr-2 delete-entity-link" data-toggle="model" data-target="#modal" data-controller="Activities" data-action="Delete" data-id="@Model.Id" data-name="@Model.Name">@Localizer["shortCuts_delete"]</button>
+                }
+                @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+                {
+                    <a class="btn w-lg-auto w-100 btn-success mr-lg-2" asp-controller="Activities" asp-action="Edit" asp-route-id="@Model.Id" asp-route-projectId="@Model.ProjectId" asp-route-projectName="@Model.ProjectName">@Localizer["shortCuts_editActivity"]</a>
+                }
+            </li>
+        </ul>
+    </footer>
+}
+<div class="bulk-hidden-space"></div>
+
+<input type="hidden" id="input-hidden-activity-type" value="@Model.ActivityTypeId" />
+
+<!-- MODAL: Upload file -->
+<div class="modal fade" id="modal-add-file" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Upload File</h6>
+                <i data-feather="x" class="modal-close-icon" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="OneDriveUploadFile">
+                    <label class="custom-file-label" for="customFile">Choose file</label>
+                </div>
+                <span class="color-danger" id="error"></span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal" id="OneDriveUploadFileAction">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Confirm check -->
+<div class="modal fade" id="modal-confirm-check" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content confirm-check">
+            <div class="modal-header">
+                <h6 class="modal-title mb-0">Confirm Check</h6>
+                <i data-feather="x" class="modal-close-icon" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-inner"></div>
+            <input type="hidden" id="hidden-checklist-item-id" value="" />
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="input-hidden-activity-progress" value="@Model.Progress" />
+
+<!-- MODAL: Confirm Logged Time will be deleted -->
+<div class="modal fade" id="modal-delete-time" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content delete-time">
+            <div class="modal-header">
+                <h6 class="modal-title mb-0" id="modal-label">Delete logged time</h6>
+                <i data-feather="x" class="modal-close-icon" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-inner"></div>
+            <div class="modal-bulk-delete-content">
+                <div class="modal-body-logged"></div>
+                <div class="modal-footer">
+                    <form method="post" id="modal-delete-time-form">
+                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger" id="btn-delete-time">Delete</button>
+                    </form>
+                </div>
+            </div>
+            <input type="hidden" id="hidden-checklist-item-id" value="" />
+            <input type="hidden" id="hidden-logged-time-id" value="" />
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $(".datepicker").datepicker('enable');
+        $(".datepicker").datepicker({
+            format: "yyyy/mm/dd",
+            maxViewMode: 3,
+            todayBtn: "linked",
+            autoclose: true
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+
+            // Add the following code if you want the name of the file appear on select
+            $(".custom-file-input").on("change",
+                function() {
+                    var fileName = $(this).val().split("\\").pop();
+                    $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+
+                    var file = $("#OneDriveUploadFile")[0];
+                    const size = (file.files[0].size / 1024 / 1024).toFixed(2);
+
+                    if (size > 25) {
+                        $("#OneDriveUploadFileAction").attr('disabled', true);
+                        $("#error").html('File to big, please select a file less than  25 MB!');
+
+
+                    } else {
+                        $("#OneDriveUploadFileAction").attr('disabled', false);
+                        $("#error").html('');
+                    }
+
+                });
+
+            if (@ViewBag.IsAuthenticatedOnCloud.ToString().ToLower()) {
+                getFiles();
+            }
+
+
+            // #region Bind update time log action
+            @if (Model.Assignee.FirstOrDefault() == Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value) || User.UserHasThisPermission(Permissions.LogTimeDeleteOtherUsersEntry))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".update-entity-link",
+                        modalTitle: "@Localizer["shortCuts_editLoggedTime"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            activityId: "data-activity-id"
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+
+            $.bindDeleteModal({
+                bindTo: ".delete-entity-link",
+                modalTitle: "@Localizer["shortCuts_deleteActivity"]",
+                modalSize: "regular",
+                type: "@Localizer["types_activity"]",
+                successMessage: "@Localizer["messages_deleteActivitySuccess"]",
+                errorMessage: "@Localizer["messages_deleteActivityError"]",
+                eventFunction: function() {
+                    window.location.href = '@Url.Action("Index", "Activities", new {id = Model.ProjectId})';
+                }
+            });
+
+            $.confirmDelete();
+        });
+
+    </script>
+
+    <script>
+        @if (User.UserHasThisPermission(Permissions.ActivityRead))
+            {
+                <text>
+                    $("#load-audit").click(function() {
+
+                        $("#load-audit").attr("disabled", true);
+                        $("#load-audit").hide();
+                        $(".audit").html(BUTTON_LOADER);
+
+                        $.ajax({
+                            url: `@Url.Action("GetAudit", "Activities")`,
+                            type: "GET",
+                            data: {
+                                id: `@Model.Id`
+                            },
+                            success: function(result) {
+                                $(".audit").html(result);
+                            },
+                            error: function () {
+                                $("#load-audit").attr("disabled", false);
+                                $("#load-audit").show();
+                                $(".audit").html("Could not load data.");
+                            }
+                        });
+                    });
+                </text>
+            }
+    </script>
+
+    <script>
+        $("#btn-rename-item").click(function(e) {
+            debugger;
+            $(this).prop("disabled", true).html(BUTTON_LOADER);
+            var id = $("#hidden-checklist-item-id").val();
+            var name = $("#checklist-name").val();
+
+            $.ajax({
+                url: "@Url.Action("RenameChecklistItem", "Checklist")",
+                type: "POST",
+                data: {
+                    id: id,
+                    name: name
+                },
+                success: function(result) {
+                    getChecklistItems();
+
+                    $.successAlert({
+                        title: "Success",
+                        message: "Check item has been eliminated!"
+                    });
+                },
+                error: function(result) {
+                    $.errorAlert({
+                        title: "Error",
+                        message: "Could not delete entry."
+                    });
+                },
+                complete: function() {
+                    $("#modal-rename-check-item").modal("hide");
+                    $("#btn-rename-item").prop("disabled", false).html("Delete");
+                }
+            });
+            e.preventDefault();
+        })
+    </script>
+
+    <script>
+        $("#btn-delete-time").click(function(e) {
+            debugger;
+            $(this).prop("disabled", true).html(BUTTON_LOADER);
+            var id = $("#hidden-logged-time-id").val();
+
+            $.ajax({
+                url: "@Url.Action("Delete", "LoggedTime")",
+                type: "POST",
+                data: { id: id },
+                success: function(result) {
+                    getChecklistItems();
+
+                    $.successAlert({
+                        title: "Success",
+                        message: "Logged time deleted!"
+                    });
+                },
+                error: function(result) {
+                    $.errorAlert({
+                        title: "Error",
+                        message: "Could not delete entry."
+                    });
+                },
+                complete: function() {
+                    $("#modal-delete-time").modal("hide");
+                    $("#btn-delete-time").prop("disabled", false).html("Delete");
+                }
+            });
+            e.preventDefault();
+        })
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            getChecklistItems();
+
+            @if (User.UserHasThisPermission(Permissions.ActivityCheckListItemCreate))
+            {
+                <text>
+                    $.get("@Url.Action("Create", "Checklist", new {activityId = Model.Id})",
+                        function(result) {
+                            $(".checklist-form").html(result);
+                        });
+                </text>
+            }
+        });
+    </script>
+    <script>
+        function getLoggedTime() {
+            $.ajax({
+                url: `@Url.Action("GetLoggedTime", "LoggedTime")`,
+                type: "GET",
+                data: {
+                    id: `@Model.Id`
+                },
+                success: function(result) {
+                    $("#logged-time-list").html(result);
+                    feather.replace();
+
+                    EnableDataTable(".bizon-datatable", "");
+                },
+                error: function() {
+                    $.errorAlert({
+                        title: "Error",
+                        message: "Could not load Logged Time. Please try again later."
+                    });
+
+                    $("#logged-time-list")
+                        .html(
+                            "<div class=\"text-center\"><i data-feather=\"frown\"></i></div><h5 class=\"text-center mt-2\">Something went wrong</h5>");
+                    feather.replace();
+                }
+            });
+        }
+    </script>
+    <script>
+
+        function getOverview() {
+            $.ajax({
+                url: "@Url.Action("GetOverview", "Activities")",
+                type: "GET",
+                data: {
+                    activityId: "@Model.Id"
+                },
+                success: function(result) {
+                    $("#logged-time").html(result.loggedTime);
+                    $("#status").html(result.status);
+                    $("#progress").html(result.progress);
+                    feather.replace();
+                },
+                error: function(result) {
+                    $("#logged-time")
+                        .html(
+                            "<div class=\"text-center\"><i data-feather=\"frown\"></i></div><h5 class=\"text-center mt-2\">Something went wrong</h5>");
+                    feather.replace();
+                }
+            });
+        }
+
+        function getChecklistItems() {
+            $.ajax({
+                url: "@Url.Action("GetChecklistItems", "Checklist")",
+                type: "GET",
+                data: {
+                    activityId: "@Model.Id"
+                },
+                success: function(result) {
+                    $(".checklist-items").html(result);
+                    feather.replace();
+                },
+                error: function(result) {
+                    $(".checklist-items")
+                        .html(
+                            "<div class=\"text-center\"><i data-feather=\"frown\"></i></div><h5 class=\"text-center mt-2\">Something went wrong</h5>");
+                    feather.replace();
+                }
+            });
+            getOverview();
+        }
+    </script>
+    <script>
+        $("#modal-confirm-check").on("hide.bs.modal",
+            function (e) {
+                $("#" + $("#hidden-checklist-item-id").val()).prop("checked", false);
+            });
+
+        $("#modal-delete-time").on("hide.bs.modal",
+            function (e) {
+                $("#" + $("#hidden-checklist-item-id").val()).prop("checked", true);
+            });
+    </script>
+
+    <script>
+        // Append project id to the parent breadcrumb node
+        $("a[href='" + "@ViewBag.LinkToReplace" + "']").attr("href", "@ViewBag.BreadcrumbLink");
+    </script>
+
+    @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+    {
+        <text>
+            <script>
+                //Move to a generic function
+                $("#OneDriveUploadFileAction").click(function() {
+                    if (!$("#OneDriveUploadFile").val()) {
+                        $.errorAlert({
+                            title: "Error",
+                            message: "Upload File missing"
+                        });
+                    } else {
+                        var file = $("#OneDriveUploadFile")[0];
+                        const size = (file.files[0].size / 1024 / 1024).toFixed(2);
+
+                        if (size > 25) {
+                            $.errorAlert({
+                                title: "Error",
+                                message: "File to big, please select a file less than  25 MB!"
+                            });
+                        } else {
+                            DisableButton("#upload-files");
+                            var formData = new FormData();
+                            formData.append("activityNumber", `@Model.Number`);
+                            formData.append("projectNumber", `@Model.ProjectNumber`);
+                            formData.append("file", file.files[0]);
+                            $.ajax({
+                                url: '@Url.Action("UploadFile", "Activities")',
+                                type: 'POST',
+                                processData: false,
+                                contentType: false,
+                                data: formData,
+                                xhr: function() {
+                                    var bgBar = $("#myProgress");
+                                    bgBar.css("opacity", 1);
+                                    var elem = $("#myBar");
+                                    elem.css("opacity", 1);
+                                    var xhr = $.ajaxSettings.xhr();
+                                    xhr.upload.onprogress = function(e) {
+                                        var progress = Math.floor(e.loaded / e.total * 100);
+                                        elem.css("width", progress + '%');
+
+                                        console.log(progress + '%');
+
+                                        if (progress == 100) {
+                                            bgBar.css("opacity", 0);
+                                            elem.css("opacity", 0);
+
+                                            DisableButton("#upload-files");
+                                            $.successAlert({
+                                                title: "Informative",
+                                                message: "Trying to connect with service!"
+                                            });
+                                        }
+                                    };
+                                    return xhr;
+                                },
+                                success: function(result) {
+
+                                    $.successAlert({
+                                        title: "Success",
+                                        message: "File send to service!"
+                                    });
+
+                                    getFiles();
+
+                                    var bgBar = $("#myProgress");
+                                    bgBar.css("opacity", 0);
+                                    var elem = $("#myBar");
+                                    elem.css("opacity", 0);
+                                },
+                                error: function() {
+                                    $.errorAlert({
+                                        title: "Error",
+                                        message: "Could not Upload. Please try again later!"
+                                    });
+
+                                    $(".project-list")
+                                        .html(
+                                            "<div class=\"text-center\"><i data-feather=\"frown\"></i></div><h5 class=\"text-center mt-2\">Something went wrong</h5>");
+                                    feather.replace();
+
+                                    var bgBar = $("#myProgress");
+                                    bgBar.css("opacity", 0);
+                                    var elem = $("#myBar");
+                                    elem.css("opacity", 0);
+                                }
+                            });
+                        }
+
+                    }
+                });
+
+                function getFiles() {
+                    DisableButton("#upload-files");
+
+                    $.ajax({
+                        url: '@Url.Action("GetFiles", "Activities")',
+                        type: "GET",
+                        data: {
+                            projectName: `@Model.ProjectName`,
+                            projectId: `@Model.ProjectId`,
+                            activityName: `@Model.Name`,
+                            activityId: `@Model.Id`,
+                            changeRequestId: `@Model.ChangeRequestId`,
+                            projectNumber: `@Model.ProjectNumber`,
+                            activityNumber: `@Model.Number`
+                        },
+                        success: function(result) {
+                            $(".files").html(result);
+                            feather.replace();
+                        },
+                        error: function() {
+                            $(".files").html(ERROR_MESSAGE);
+                            feather.replace();
+                        },
+                        complete: function() {
+                            EnableButton("#upload-files", "Upload file");
+                        }
+                    });
+                }
+
+            </script>
+        </text>
+    }
+
+}

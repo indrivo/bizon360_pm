@@ -1,0 +1,19 @@
+﻿using System;
+using System.ComponentModel;
+using MediatR;
+
+namespace Gear.ProjectManagement.Manager.Domain.TrackerTypes.Commands.UpdateTrackerType
+{
+    public class UpdateTrackerTypeCommand: IRequest
+    {
+        public Guid Id { get; set; }
+
+        public string Name { get; set; }
+
+        [DisplayName("Activity Type")]
+        public Guid ActivityTypeId { get; set; }
+
+        [DisplayName("Status")]
+        public bool Active { get; set; }
+    }
+}

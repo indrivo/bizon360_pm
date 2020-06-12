@@ -1,0 +1,191 @@
+﻿@model Gear.Manager.Core.EntityServices.Departments.Queries.GetDepartmentsByParent.DepartmentByParentModel
+@using System.Security.Claims
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+
+@if (Model.Departments.Any())
+{
+    <table class="table bizon-datatable dt-departments" data-order='[[ 2, "asc" ]]' id="table-@Model.BusinessUnitId">
+        <thead>
+            <tr class="hover-invisible-toggle">
+                <th class="no-sort">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-@Model.BusinessUnitId" />
+                        <label class="custom-control-label" for="bulk-@Model.BusinessUnitId"></label>
+                    </div>
+                </th>
+                <th class="no-sort">@Localizer["_departments"]</th>
+                <th hidden>order</th>
+                <th class="no-sort col-abbr d-md-table-cell d-none">@Localizer["_abbr."]</th>
+                <th class="col-department-teams no-sort d-xl-table-cell d-none">@Localizer["_teams"]</th>
+                <th class="col-date no-sort d-xl-table-cell d-none">@Localizer["_status"]</th>
+                <th class="no-sort col-date d-sm-table-cell d-none">@Localizer["_created"]</th>
+                <th class="no-sort col-date d-sm-table-cell d-none">@Localizer["_modified"]</th>
+
+                <th class="no-sort">
+                    <div class="dropdown datatables-th-dropdown">
+                        <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-abbr-@Model.BusinessUnitId" data-table-column-id="3" checked />
+                                <label class="custom-control-label" for="dt-abbr-@Model.BusinessUnitId">
+                                    @Localizer["_abbr."]
+                                    <span>Abbreviation</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-teams-@Model.BusinessUnitId" data-table-column-id="4" checked />
+                                <label class="custom-control-label" for="dt-teams-@Model.BusinessUnitId">
+                                    @Localizer["_teams"]
+                                    <span>Department teams</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-status-@Model.BusinessUnitId" data-table-column-id="5" checked />
+                                <label class="custom-control-label" for="dt-status-@Model.BusinessUnitId">
+                                    @Localizer["_status"]
+                                    <span>Department status</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-created-@Model.BusinessUnitId" data-table-column-id="6" checked />
+                                <label class="custom-control-label" for="dt-created-@Model.BusinessUnitId">
+                                    @Localizer["_created"]
+                                    <span>Created date</span>
+                                </label>
+                            </div>
+
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-modified-@Model.BusinessUnitId" data-table-column-id="7" checked />
+                                <label class="custom-control-label" for="dt-modified-@Model.BusinessUnitId">
+                                    @Localizer["_modified"]
+                                    <span>Modified date</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+            </tr>
+        </thead>
+        <tbody class="table-ordered">
+            @foreach (var dep in Model.Departments)
+            {
+                <tr class="hover-invisible-toggle" id="entity-@dep.Id">
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input datatables-check" id="@dep.Id" data-parent-id="@Model.BusinessUnitId" />
+                            <label class="custom-control-label" for="@dep.Id"></label>
+                        </div>
+                    </td>
+                    <td class="order-row" data-id="@dep.Id">
+                        <span class="datatables-dragdrop"></span>
+                        <a href="javascript:" class="datatables-title">@dep.Name</a>
+                        <a href="javascript:">
+                            <span class="badge badge-outline-primary top-webkit-inline-box d-lg-inline d-none ml-10">@dep.DepartmentLeadFullName</span>
+                        </a>
+                        <div class="position-relative d-lg-inline-block d-none">
+                            <button class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box edit-entity-link" data-controller="Departments" data-action="Edit" data-id="@dep.Id">@Localizer["shortCuts_edit"]</button>
+                        </div>
+                    </td>
+                    <td hidden>@dep.RowOrder</td>
+                    <td class="d-md-table-cell d-none">@dep.Abbreviation</td>
+                    <td class="d-xl-table-cell d-none">
+                        @foreach (var teams in dep.DepartmentTeams.Take(3))
+                        {
+                            <a href="javascript:">
+                                <span class="badge badge-outline-purple">@teams.Value</span>
+                            </a>
+                        }
+                        @if (dep.DepartmentTeams.Count - 3 > 0)
+                        {
+                            <a href="javascript:">
+                                <span class="badge badge-outline-purple">@($"+{dep.DepartmentTeams.Count - 3}")</span>
+                            </a>
+                        }
+                    </td>
+                    @if (dep.Active)
+                    {
+                        <td class="td-badge d-xl-table-cell d-none sorting_1">
+                            <span class="badge badge-outline-success">@Localizer["_active"]</span>
+                        </td>
+                    }
+                    else
+                    {
+                        <td class="td-badge d-xl-table-cell d-none sorting_1">
+                            <span class="badge badge-outline-secondary">@Localizer["_inactive"]</span>
+                        </td>
+                    }
+                    <td class="d-sm-table-cell d-none">
+                        @dep.CreatedTime.ToString("yyy-MM-dd")
+                    </td>
+                    <td class="d-sm-table-cell d-none">
+                        @dep.ModifiedTime.ToString("yyy-MM-dd")
+                    </td>
+                    <td class="td-options">
+                        <div class="dropdown datatables-dropdown">
+                            <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                @if (User.UserHasThisPermission(Permissions.DepartmentUpdate))
+                                {
+                                    <a href="javascript:" class="dropdown-item edit-entity-link" data-controller="Departments" data-action="Edit" data-id="@dep.Id" data-parent-id="@Model.BusinessUnitId">@Localizer["shortCuts_edit"]</a>
+                                    <a href="javascript:" class="dropdown-item rename-department" data-controller="Departments" data-action="Rename" data-id="@dep.Id">@Localizer["_rename"]</a>
+                                    @if (dep.DepartmentLeadFullName == "Not Specified")
+                                    {
+                                        <a href="#" class="dropdown-item assign-dep-leader" data-controller="Departments" data-action="AssignLeader" data-id="@dep.Id">@Localizer["shortCuts_assignLeader"] </a>
+                                    }
+                                    <a href="javascript:" class="dropdown-item assign-team" data-controller="Departments" data-action="AddTeamsToDepartment" data-id="@dep.Id">@Localizer["shortCuts_assignTeam"] </a>
+                                    <a href="javascript:" class="dropdown-item move-department" data-controller="Departments" data-action="MoveDepartment" data-id="@dep.Id">@Localizer["shortCuts_moveTo"]</a>
+                                    @if (dep.Active)
+                                    {
+                                        <a href="javascript:" class="dropdown-item deactivate-department" data-controller="Departments" data-action="DeactivateDepartment" data-id="@dep.Id" data-name="@dep.Name" data-parent-id="@Model.BusinessUnitId">@Localizer["shortCuts_deactivate"]</a>
+                                    }
+                                    else
+                                    {
+                                        <a href="javascript:" class="dropdown-item activate-department" data-controller="Departments" data-action="ActivateDepartment" data-id="@dep.Id" data-name="@dep.Name" data-parent-id="@Model.BusinessUnitId">@Localizer["shortCuts_activate"]</a>
+
+                                    }
+                                    <a href="javascript:" class="dropdown-item remove-department" data-controller="BusinessUnits" data-action="RemoveDepartment" data-id="@dep.Id" data-name="@dep.Name" data-parent-id="@Model.BusinessUnitId">@Localizer["_remove"]</a>
+                                }
+                                <div class="dropdown-divider"></div>
+                                <a href="javascript:" class="dropdown-item delete-department" data-controller="Departments" data-action="Delete" data-id="@dep.Id" data-name="@dep.Name" data-parent-id="@Model.BusinessUnitId">@Localizer["_delete"]</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+            }
+        </tbody>
+    </table>
+
+}
+else
+{
+    <p class="mb-0 mt-2">@Localizer["msgError_noDepartmentsInUnit"]</p>
+}
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script src="~/lib/jqueryui/jquery-ui.js"></script>
+<script src="~/js/dev/adm.js"></script>
+
+<script>
+    $(document).ready(function() {
+        RefreshCount("@Model.BusinessUnitId");
+        EnableDataTable("#table-@Model.BusinessUnitId", "BusinessUnitsColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)");
+        $.bindColumnToggle({ cookieKey: "BusinessUnitsColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)" });
+    });
+
+    @if (User.UserHasThisPermission(Permissions.DepartmentUpdate))
+    {
+        <text>
+            OrderTableRows({
+                tBody: ".table-ordered",
+                tRow: ".order-row",
+                actionUrl: "/Departments/UpdateOrder/"
+            });
+        </text>
+    }
+</script>

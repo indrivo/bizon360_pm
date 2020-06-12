@@ -1,0 +1,29 @@
+﻿@using Microsoft.Extensions.Localization
+@model Gear.Manager.Core.EntityServices.ApplicationUsers.Querries.GetUsers.UsersDto
+@inject IStringLocalizer Localizer
+
+@if (Model.Users.Any())
+{
+    foreach (var user in Model.Users)
+    {
+        <h1>@($"{user.FirstName} {user.LastName}")</h1>
+        <div class="row">
+            @foreach (var project in user.Projects)
+            {
+                <div class="col-md-3">Name:</div>
+                <div class="col-md-9">@project.Name</div>
+
+                <div class="col-md-3">Estimated:</div>
+                <div class="col-md-9">@project.EstimatedTotal</div>
+
+                <div class="col-md-3">Logged:</div>
+                <div class="col-md-9">@project.LoggedTime</div>
+            }
+            <hr />
+        </div>
+    }
+}
+else
+{
+    <p>Something went wrong.</p>
+}

@@ -1,0 +1,51 @@
+﻿@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+        <div class="row mt-3">
+            <hr class="hr-description" />
+
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label-select">@Localizer["_chooseProject"]</label>
+                <select name="projectIds" id="select-project-overdue" asp-items="@((List<SelectListItem>) ViewBag.SelectedProjectsOverdue)" class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["validation_notEmptyEmployeeList"]</span></span>
+            </div>
+
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label-select">@Localizer["_chooseEmployee"]</label>
+                <select name="userIds" id="select-employee-overdue" asp-items="@((List<SelectListItem>) ViewBag.SelectedEmployeesOverdue)"
+                        class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["validation_notEmptyEmployeeList"]</span></span>
+            </div>
+
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label">@Localizer["_chooseStartDate"]</label>
+                <input name="startDate" id="overdue-start-date" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker start-date" placeholder="@Localizer["messages_clickToSelect"]" value="@ViewBag.StartDateOverdue.Date.Date" autocomplete="off" readonly />
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none">@Localizer["validation_notEmptyStartDate"]</span></span>
+            </div>
+
+            <div class="col-xl-2 col-lg-3">
+                <label class="float-label-select">@Localizer["_chooseHeaders"]</label>
+                <select name="overdueHeaders" id="overdue-select-headers" asp-items="@((List<SelectListItem>) ViewBag.OverdueHeaders)"
+                        class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["validation_notEmptyActivityStatusList"]</span></span>
+            </div>
+
+        </div>
+
+<script>
+    $('.selectpicker').selectpicker('render');
+
+    @*$(document).ready(function() {
+        $('#overdue-start-date').datepicker({ dateFormat: 'yy-mm-dd' });
+        $('#overdue-start-date').datepicker('setDate', @ViewBag.StartDateOverdue.Date.Date);
+    });*@
+</script>
+
+<script>
+    $(".datepicker").datepicker();
+</script>
+
+

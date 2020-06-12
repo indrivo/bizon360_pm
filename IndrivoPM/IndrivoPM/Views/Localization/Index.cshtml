@@ -1,0 +1,49 @@
+﻿@model IEnumerable<Gear.Localizer.Models.LanguageCreateViewModel>
+@{
+    ViewData["Title"] = "Index";
+}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <strong>List of languages</strong>
+            </div>
+            <div class="card-body card-block">
+                <div class="table-responsive">
+
+                </div>
+                <table class="table table-borderless table-striped">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Identifier</th>
+                        <th>Is disabled</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@item.Identifier</td>
+                            <td>@item.IsDisabled</td>
+                            <td>
+                                <div class="btn-group" role="group" aria-label="Basic example">
+                                    <a asp-controller="Localization" asp-action="Translation" asp-route-lang="@item.Identifier" class="btn btn-outline-info">Edit</a>
+                                    @*<button type="button" class="btn btn-outline-danger">Disable</button>*@
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial"/>
+}

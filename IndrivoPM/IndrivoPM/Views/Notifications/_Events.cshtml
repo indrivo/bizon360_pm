@@ -1,0 +1,154 @@
+﻿@using Bizon360.Models
+@using Gear.Common.Extensions.StringExtensions
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@model IEnumerable<Gear.Notifications.Abstractions.Infrastructure.Resources.Dtos.EventDto>
+
+
+@if (Model.Any())
+{
+    <div class="row bizon-row">
+        <div class="col-lg-9 col-md-12 mb-lg-0 mb-3 bizon-col">
+        
+        @if (Model.Any(x => x.EventGroupName.Contains("Project")))
+            {
+                <div class="bg-white rounded border px-20 py-15">
+                    <h6>@Localizer["text_projectNotifications"]</h6>
+                    <hr class="hr-description mb-2" />
+                    
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "ProjectGroup").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "Project").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+                    
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "ChangeRequest").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "Members").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "ProjectReport").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+                </div>
+            }
+
+            @if (Model.Any(x => x.EventGroupName.Contains("Activity")))
+            {
+                <div class="bg-white rounded border px-20 py-15 mt-2">
+                    <h6>@Localizer["text_activityNotifications"]</h6>
+                    <hr class="hr-description mb-2" />
+
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "ActivityList").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+                    
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "Activity").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+                    
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "ActivityReport").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+
+
+                </div>
+            }
+
+            @if (Model.Any(x => x.EventGroupName.Contains("Sprint")))
+            {
+                <div class="bg-white rounded border px-20 py-15 mt-2">
+                    <h6>@Localizer["text_sprintNotifications"]</h6>
+                    <hr class="hr-description mb-2" />
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "Sprint").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+                    
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "SprintReport").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+                </div>
+            }
+
+
+            @if (Model.Any(x => x.EventGroupName.Contains("Administration")))
+            {
+                <div class="bg-white rounded border px-20 py-15 mt-2">
+                    <h6>@Localizer["text_administrationNotifications"]</h6>
+                    <hr class="hr-description mb-2" />
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "Department").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+                    
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "Team").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+                    
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "JobPosition").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+                    
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "ActivityType").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+                    
+                    @foreach (var ev in Model.Where(x => x.EventGroupName == "Subtype").OrderBy(x => x.EventDescription))
+                    {
+                        await Html.RenderPartialAsync("_IndexBlockEvents", ev);
+                    }
+
+                </div>
+            }
+
+        </div>
+    </div>
+
+}
+else
+{
+    <p>There are no events imported.</p>
+}
+
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+<script>
+    $(document).ready(function() {
+        
+        $(".propagation-type").change(function() {
+            var id = $(this).data("id");
+            var type = $(this).data("type");
+
+            $.get("/Notifications/ChangePropagationType/?id=" + id + "&type=" + type)
+                .done(function() {
+                    $.successAlert({
+                        title: "Success",
+                        message: "Changes saved."
+                    });
+                });
+
+        });
+    });
+</script>

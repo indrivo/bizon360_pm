@@ -1,0 +1,28 @@
+﻿@using Bizon360.Models
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Assignees.Queries.GetActivityAssignees.ActivityAssigneesDto
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@if (Model.Assignees.Any())
+{
+    <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@Model.Assignees.First().Id" title="@Model.Assignees.First().FullName" class="btn btn-outline-primary user-rectangle">@Model.Assignees.First().FullName.ToInitials()</a>
+
+    if (Model.Assignees.Count > 1)
+    {
+        <a href="javascript:" class="btn btn-outline-primary user-rectangle" title="@string.Join(", ", Model.Assignees.Skip(1).Select(a => a.FullName))">+@(Model.Assignees.Count - 1)</a>
+    }
+
+}
+@if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+{
+    <a href="javascript:" class="btn btn-outline-success user-rectangle edit-entity-assignees-link" title="@Localizer["shortCuts_editActivityAssignees"]" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="EditActivityAssignees" data-id="@ViewBag.ActivityId">+</a>
+}
+else
+{
+    <span class="datatables-none">-</span>
+}

@@ -1,0 +1,76 @@
+﻿@using System.Security.Claims
+@using Bizon360.Models
+@using Bizon360.Utils
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.LoggedTimes.Queries.GetLoggedTimeList.LoggedTimeListViewModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@if (Model.LoggedTimes.Any())
+{
+    @foreach (var day in Model.LoggedTimes.Select(lt => lt.DateOfWork).Distinct())
+    {
+        <div class="collapse-datatable" id="parent-@day">
+            <div class="parent-content" id="@day">
+                <table class="table bizon-datatable no-parent dt-logged-time" data-sort="false">
+                    <thead>
+                        <tr>
+                            <th class="col-order no-sort">#</th>
+                            <th class="col-lt-name no-sort">@($"{day:yyyy-MM-dd}")</th>
+                            <th class="no-sort"></th>
+                            <th class="col-date no-sort"></th>
+                            <th class="no-sort"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ var i = 1; }
+                        @foreach (var log in Model.LoggedTimes.Where(lt => lt.DateOfWork == day).OrderBy(lt => lt.DateOfWork))
+                        {
+                            <tr class="hover-invisible-toggle" id="entity-@log.Id" data-parent-id="@day" data-count="@log.Time">
+                                <td class="td-order">@($"{i:00}")</td>
+                                <td>
+                                    <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@log.ApplicationUserId" class="font-weight-normal">@log.ApplicationUserFullName</a>
+                                </td>
+                                <td class="td-text-sm">
+                                    @ProjectsViewHelper.GetLoggedTimeAction(log.Name)
+                                    <a asp-controller="Activities" asp-action="Details" asp-route-id="@log.ActivityId" class="font-weight-normal color-black mx-1 @ProjectsViewHelper.GetLoggedTimeCssClass(log.Name)">@log.ActivityName</a>
+                                    logged
+                                    <span class="color-black mx-1">@($"{log.Time}h \u00B7 {log.TrackerName}")</span>
+                                </td>
+                                <td class="td-text-sm">@($"{log.DateOfWork:yyyy-MM-dd}")</td>
+                                <td class="td-options">
+                                    @if (log.ApplicationUserId == Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value) || User.UserHasThisPermission(Permissions.LogTimeDeleteOtherUsersEntry))
+                                    {
+                                        <div class="dropdown datatables-dropdown">
+                                            <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                @if (User.UserHasThisPermission(Permissions.LogTimeUpdate))
+                                                {
+                                                    <a href="javascript:" class="dropdown-item update-entity-link" data-toggle="modal" data-target="#modal" data-controller="LoggedTime" data-action="Update" data-id="@log.Id" data-project-id="@ViewBag.ProjectId">@Localizer["shortCuts_edit"]</a>
+                                                }
+                                                <div class="dropdown-divider"></div>
+                                                @if (User.UserHasThisPermission(Permissions.LogTimeDelete))
+                                                {
+                                                    <a href="javascript:" class="dropdown-item delete-entity-link" data-toggle="modal" data-target="#modal" data-controller="LoggedTime" data-action="Delete" data-id="@log.Id" data-date="@($"{log.DateOfWork:yyyy-MM-dd}")" data-time="@log.Time" data-activity="@log.ActivityName">@Localizer["shortCuts_delete"]</a>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    </tbody>
+                </table>
+                <h6 class="mt-1 mb-5 ml-30">Total: <span class="time-log-count" id="@day">@Model.LoggedTimes.Where(lt => lt.DateOfWork == day).Sum(lt => lt.Time)</span> h</h6>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <p class="mb-0">@Localizer["messages_noLogsInProject"]</p>
+}

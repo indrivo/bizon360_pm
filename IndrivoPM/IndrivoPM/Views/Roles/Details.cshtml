@@ -1,0 +1,113 @@
+﻿@using Gear.Common.Extensions.StringExtensions
+@model Gear.Identity.Manager.Domain.Roles.Queries.GetRoleDetails.RoleDetailModel
+
+
+@{
+    ViewData["Title"] = Model.Name;
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = "Roles";
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+<div class="row">
+    <div class="col-12">
+        <h4 class="d-inline-block font-weight-bold ls-sm pl-4 mb-4">@ViewData["Title"]</h4>
+        <breadcrumb></breadcrumb>
+    </div>
+</div>
+
+<div class="card br-8 mb-3 col-lg-6 col-md-8 col-xl-12">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6 border-right">
+                <h5 class="card-title font-weight-bold ls-md"> Details</h5>
+
+                <div class="row">
+                    <span class="col-6 text-secondary font-weight-600 ls-sm">Platform:</span>
+                    <span class="col-6 font-weight-600 ls-sm">@Model.Platform</span>
+                </div>
+
+                <div class="row">
+                    <span class="col-6 text-secondary font-weight-600 ls-sm">Description:</span>
+                    <span class="col-6 font-weight-600 ls-sm">@Model.Description</span>
+                </div>
+
+                <div class="row">
+                    <span class="col-6 text-secondary font-weight-600 ls-sm">Status:</span>
+                    <span class="col-6 font-weight-600 ls-sm">@Model.Active</span>
+                </div>
+                
+            </div>
+
+            <div class="col-md-6 border-right">
+                <h5 class="card-title font-weight-bold ls-md"> Permissions</h5>
+                @foreach (var item in Model.Permissions)
+                {
+                    <p class="font-weight-600 py-0 my-0">@item</p>
+                }
+            </div>
+            @*
+            <div class="col-md-6 px-4">
+                <h5 class="card-title font-weight-bold ls-md"> Users</h5>
+                @foreach (var item in Model.UserList)
+                {
+                    <div class="d-flex pb-2">
+                        <a class="d-block btn btn-primary font-weight-bold user-button text-white">
+                            @item.FullName.ToInitials()
+                        </a>
+                        <div class="d-block ml-2">
+                            <div class="color-primary font-weight-600 lh-20">
+                                <a class="text-blue" asp-action="Details" asp-controller="ApplicationUsers" asp-route-id="@item.Id">
+                                    @item.FullName
+                                </a>
+                            </div>
+                            $1$
+                            <div class="font-weight-600 fs-14">
+
+                                @if (item.JobPosition == null)
+                                {
+                                    <p>None</p>
+                                }
+                                else
+                                {
+                                    <p>@item.JobPosition</p>
+                                }
+
+                            </div>
+                        #1#
+                        </div>
+                    </div>
+                }
+
+            </div>
+        *@
+        </div>
+
+    </div>
+    <div class="card-footer bg-white mx-4 py-3 px-0">
+        <div class="float-right">
+            <span><a href="javascript:" class="btn btn-danger font-weight-600 delete-role" data-controller="Roles" data-action="Delete" data-id="@Model.Name" data-name="@Model.Name" data-toggle="modal" data-target="#modal-generic">Delete</a></span>
+            <a class="btn btn-success font-weight-600 mr-0" asp-action="Edit" asp-controller="Roles" asp-route-roleName="@Model.Name">Edit</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+    <script src="~/js/crud-modals.js" asp-append-version="true"></script>
+
+    <script>
+        LoadModalDelete({ type: "role", bindTo: ".delete-role" });
+
+        function RedirectToIndex() { window.location.href = "/Roles/Index"; }
+
+        ConfirmDelete({
+            successMessage: "Role has been removed",
+            errorMessage: "Could not remove role",
+            eventFunction: RedirectToIndex
+        });
+    </script>
+}

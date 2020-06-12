@@ -1,0 +1,62 @@
+﻿@using Bizon360.Models
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Newtonsoft.Json
+@model Gear.ProjectManagement.Manager.Domain.Projects.Queries.GetProjectMembers.ApplicationUserListViewModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<hr class="no-gutters" />
+
+@if (Model.Users.Any())
+{
+    foreach (var user in Model.Users)
+    {
+        <div class="parent-content" id="@user.Id">
+            <div class="row row-m-20 bg-white border rounded collapse-container collapse-lg hover-invisible-toggle position-relative cursor-pointer pb-lg-0 pb-2" data-toggle="collapse" href="#parent-@user.Id" data-type="@ActivityParentType.Employee" data-id="@user.Id" data-loaded="false">
+                <div class="d-lg-flex d-block w-100 px-20">
+                    <div class="d-flex pt-collapse">
+                        <a class="border collapse-switcher d-inline-block">
+                            <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                        </a>
+                        <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@user.Id" class="btn btn-outline-primary user-rectangle stop-propagation">@user.FullName.ToInitials()</a>
+                        <div class="d-block collapse-title-group">
+                            <span class="collapse-title">
+                                @user.FullName
+                                <span class="collapse-count" data-id="@user.Id">@user.ActivitiesCount</span>
+                            </span>
+                            <span class="collapse-title-description">@user.JobPosition</span>
+                        </div>
+                        <div class="loader-container"></div>
+                    </div>
+                    <div class="d-lg-none collapse-divider collapse-group"></div>
+                    @if (User.UserHasThisPermission(Permissions.ActivityCreate))
+                    {
+                        <div class="d-lg-block d-inline-block">
+                            <a asp-controller="Activities" asp-action="Create" asp-route-projectId="@ViewBag.ProjectId" asp-route-assignee="@user.Id" class="btn btn-success collapse-button details hover-invisible stop-propagation hover-lg ml-lg-20 mt-lg-15">@Localizer["shortCuts_addActivity"]</a>
+                        </div>
+                    }
+                    <div class="d-lg-block d-inline-block ml-auto mr-30 collapse-details">
+                        <span class="collapse-log-details d-inline-block">Est. <span class="d-lg-inline d-block color-black">@user.EstimatedTime h</span></span>
+                        <span class="collapse-log-details d-inline-block">Log. <span class="d-lg-inline d-block color-black"><span class="parent-logged" data-parent-id="@user.Id">@user.LoggedTime</span> h</span></span>
+                        <span class="collapse-log-details mr-0 d-inline-block">Prog. <span class="d-lg-inline d-block color-black"><span class="parent-prog" data-parent-id="@user.Id">@user.CompletedActivitiesCount / @user.TotalActivitiesCount</span></span></span>
+                        @*<span class="collapse-log-details d-lg-none d-inline-block">@Localizer["_prog"] <span class="d-lg-inline d-block color-black">@user.Progress%</span></span>
+                        <div class="progress collapse-progress d-lg-inline-flex d-none" title="@user.Progress%">
+                            <div class="progress-bar @ProjectsViewHelper.GetProgressBarColor(user.Progress)" role="progressbar" style="width: @user.Progress%" aria-valuenow="@user.Progress" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>*@
+                    </div>
+                </div>
+            </div>
+            <div class="collapse collapse-datatable" id="parent-@user.Id"></div>
+            <hr class="no-gutters" />
+        </div>
+    }
+}
+else
+{
+    <p class="mb-0 mt-2">@Localizer["messages_noMembersInProject"]</p>
+}

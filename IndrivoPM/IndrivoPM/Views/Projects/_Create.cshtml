@@ -1,0 +1,93 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@model Gear.ProjectManagement.Manager.Domain.Projects.Commands.CreateProject.CreateProjectCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+<form  id="form-create-project">
+    <div class="modal-body">
+        <input asp-for="Id" class="form-control" hidden />
+        @Html.AntiForgeryToken()
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <label asp-for="Name" class="float-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_projectName"]" autofocus="autofocus" autocomplete="off" required />
+                    <span asp-validation-for="Name" class="invalid-feedback"></span>
+                </div>
+                <div class="mb-2">
+                    <label asp-for="ProjectGroupId" class="float-label-select"></label>
+                    <select asp-for="ProjectGroupId" asp-items="@((List<SelectListItem>) ViewBag.ProjectGroups)" class="form-control selectpicker" required data-live-search="true"></select>
+                    <span asp-validation-for="ProjectGroupId" class="invalid-feedback"></span>
+                </div>
+                <div class="mb-2">
+                    <label asp-for="Status" class="float-label-select"></label>
+                    <select asp-for="Status" asp-items="Html.GetEnumSelectList<ProjectStatus>()" class="form-control selectpicker"></select>
+                    <span asp-validation-for="Status" class="invalid-feedback"></span>
+                </div>
+                <div class="mb-2">
+                    <label asp-for="Priority" class="float-label-select"></label>
+                    <select asp-for="Priority" asp-items="Html.GetEnumSelectList<ActivityPriority>()" class="form-control selectpicker"></select>
+                    <span asp-validation-for="Priority" class="invalid-feedback"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <label asp-for="StartDate" class="float-label"></label>
+                    <input asp-for="StartDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                    <span asp-validation-for="StartDate" class="invalid-feedback"></span>
+                </div>
+                <div class="mb-2">
+                    <label asp-for="EndDate" class="float-label"></label>
+                    <input asp-for="EndDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                    <span asp-validation-for="EndDate" class="invalid-feedback"></span>
+                </div>
+                <div class="mb-2">
+                    <label asp-for="ProjectManagerId" class="float-label-select"></label>
+                    <select asp-for="ProjectManagerId" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)" placeholder="@Localizer["messages_clickToSelect"]" class="form-control selectpicker" required data-live-search="true"></select>
+                    <span asp-validation-for="ProjectManagerId" class="invalid-feedback"></span>
+                </div>
+                <div class="mb-2">
+                    <label asp-for="ProjectMemberIds" class="float-label-select"></label>
+                    <select asp-for="ProjectMemberIds" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)" placeholder="@Localizer["messages_clickToSelect"]" class="form-control selectpicker" multiple data-live-search="true" data-selected-text-format="values" data-actions-box="true"></select>
+                    <span asp-validation-for="ProjectMemberIds" class="invalid-feedback"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-create-project">@Localizer["_add"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    $(".selectpicker").selectpicker();
+    $(".datepicker").datepicker({
+        format: "yyyy/mm/dd",
+        maxViewMode: 3,
+        todayBtn: "linked",
+        autoclose: true,
+        clearBtn: true
+    });
+
+    $.saveChanges({
+        bindTo: "#btn-create-project",
+        formId: "#form-create-project",
+        ajaxUrl: "@Url.Action("Create", "Projects")",
+        successMessage: "@Localizer["messages_createProjectSuccess"]",
+        errorMessage: "@Localizer["messages_createProjectError"]",
+        buttonText: "@Localizer["_add"]",
+        eventFunction: function (result) {
+            if (GetCurrentView() == "@ProjectsViewByStatus.Current") {
+                $("[id='parent-" + result.id + "'].collapse").html(result.view);
+                $("[id='count-" + result.id + "'].collapse-count").html(result.count);
+            } else {
+                GetProjects();
+            }
+        }
+    });
+</script>

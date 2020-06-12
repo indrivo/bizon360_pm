@@ -1,0 +1,166 @@
+﻿@using Gear.ProjectManagement.Manager.Domain.MainComments.Commands.CreateMainComment
+@using Gear.Common.Extensions.StringExtensions
+@model Gear.ProjectManagement.Manager.Domain.MainComments.Queries.GetMainCommentList.MainCommentListViewModel
+
+<div class="row mx-n-20">
+    <div class="card col-lg-5 bg-white border rounded py-15 px-20">
+        @Html.Partial("_CreateComment.cshtml", new CreateMainCommentCommand { RecordId = ViewBag.RecordId })
+    </div>
+</div>
+
+@foreach (var comment in Model.Comments)
+{
+    <div class="row mx-n-20 mt-3">
+        <div class="card comment-card col-lg-5 bg-white border rounded position-relative py-15 px-20">
+            <div class="hover-invisible-toggle">
+                @if (comment.AuthorId == ViewBag.OwnCommentId)
+                {
+                    <div class="dropdown comments-dropdown">
+                        <i class="cursor-pointer hover-invisible" data-feather="more-vertical" data-toggle="dropdown"></i>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a href="javascript:" class="dropdown-item" onclick="UpdateGet('@comment.Id', 'EditMainComment');ShowPopper(event);">Edit</a>
+                        </div>
+                    </div>
+                }
+
+                <div class="d-flex mb-2">
+                    <div class="d-block mr-2">
+                        <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@comment.AuthorId" class="btn btn-outline-primary user-rectangle">@comment.AuthorName.ToInitials()</a>
+                    </div>
+                    <div class="d-block">
+                        <h6 class="mb-0">
+                            <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@comment.AuthorId"> @comment.AuthorName</a>
+                        </h6>
+                        <span class="font-size-12 color-secondary d-block">@comment.AuthorJobPosition</span>
+                    </div>
+                </div>
+
+                <p class="p-sm color-black">
+                    @comment.Message
+                </p>
+
+                <div class="d-flex">
+                    <p class="p-xs mb-0">@($"{comment.CreatedTime:yyyy-MM-dd} \u00B7 {comment.CreatedTime:hh:mm}")</p>
+                    <div class="ml-auto d-flex">
+                        <a href="javascript:" class="link-danger font-size-12 mr-2 remove-main-comment" data-controller="MainComments" data-action="DeleteMainComment" data-name="" data-id="@comment.Id">Remove</a>
+                        <a href="javascript:" class="link-primary font-size-12" onclick="ReplayGet('@comment.Id', '@comment.AuthorId');ShowPopper(event);">Reply</a>
+                    </div>
+                </div>
+
+            </div>
+
+            @if (comment.SubComments.Any())
+            {
+                <hr class="hr-description my-3" />
+                <div class="subcomments pl-4">
+                    @foreach (var subComment in comment.SubComments.OrderBy(sc => sc.CreatedTime))
+                    {
+                        <div class="hover-invisible-toggle">
+                            @if (subComment.AuthorId == ViewBag.OwnCommentId)
+                            {
+                                <div class="dropdown comments-dropdown">
+                                    <i class="cursor-pointer hover-invisible" data-feather="more-vertical" data-toggle="dropdown"></i>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a href="javascript:" class="dropdown-item" onclick="UpdateGet('@subComment.Id', 'EditSubComment');ShowPopper(event);">Edit</a>
+                                    </div>
+                                </div>
+                            }
+                            <div class="d-flex mb-2">
+                                <div class="d-block mr-2">
+                                    <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@subComment.AuthorId" class="btn btn-outline-primary user-rectangle">@subComment.AuthorName.ToInitials()</a>
+                                </div>
+                                <div class="d-block">
+                                    <h6 class="mb-0">
+                                        <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@subComment.AuthorId"> @subComment.AuthorName</a>
+                                    </h6>
+                                    <span class="font-size-12 color-secondary d-block">@subComment.AuthorJobPosition</span>
+                                </div>
+                            </div>
+
+                            <p class="p-sm color-black">
+                                @subComment.Message
+                            </p>
+
+                            <div class="d-flex">
+                                <p class="p-xs mb-0">@($"{subComment.CreatedTime:yyyy-MM-dd} \u00B7 {subComment.CreatedTime:hh:mm}")</p>
+                                <div class="ml-auto d-flex">
+                                    <a href="javascript:" class="link-danger font-size-12 mr-2 remove-sub-comment"  data-controller="MainComments" data-action="DeleteSubComment" data-name="" data-id="@subComment.Id">Remove</a>
+                                    <a href="javascript:" class="link-primary font-size-12" onclick="ReplayGet('@comment.Id', '@comment.AuthorId');ShowPopper(event);">Reply</a>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="hr-description my-3" />
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<div id="replay-to" class="card">
+</div>
+
+<div id="select-user">
+    <select class="form-control p-2" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)"></select>
+</div>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script src="~/js/crud-modals.js"></script>
+<script src="~/js/dev/Comments.js"></script>
+
+<script>
+    var replayBox = $("#replay-to");
+
+    replayBox.hide();
+
+
+    /*
+        function ShowPopper(bindTo) {
+            bindTo.click(function() {
+                replayBox.show();
+                var thisElement = (this);
+                var pInstance = new Popper(thisElement,
+                    replayBox,
+                    {
+                        placement: "bottom"
+                    });
+            });
+        }
+    */
+
+    function ShowPopper(event) {
+        replayBox.show();
+        var pInstance = new Popper(event.target,
+            replayBox,
+            {
+                placement: "bottom"
+            });
+    }
+
+    OnUserSelected("#new-comment");
+
+</script>
+
+<script>
+    DeleteComment({ bindTo: ".remove-main-comment" });
+    DeleteComment({ bindTo: ".remove-sub-comment" });
+    LoadModalUpdate({ modalName: "Update comment", bindTo: ".update-main-comment" });
+    LoadModalUpdate({ modalName: "Update replay", bindTo: ".update-sub-comment" });
+
+    // On click delete, show modal confirmation
+    // ----------------------------------------
+    function DeleteComment(options) {
+        $(options.bindTo).click(function () {
+            var id = $(this).data('id');
+            var controller = $(this).data('controller');
+            var action = $(this).data('action');
+            var url = "/" + controller + "/" + action + "?id=" + id;
+
+            $.get(url).done(function () {
+                GetComments();
+            });
+
+        });
+    }
+</script>
+

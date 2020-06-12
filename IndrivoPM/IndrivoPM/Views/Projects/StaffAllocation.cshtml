@@ -1,0 +1,98 @@
+﻿@using Microsoft.Extensions.Localization
+@model Gear.Manager.Core.EntityServices.ApplicationUsers.Querries.GetUsers.GetUsersQuery
+@inject IStringLocalizer Localizer
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = Localizer["_staffAllocation"];
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+<div class="row bg-white rounded border mt-3 py-3">
+    <div class="col-md-3">
+        <form asp-controller="Projects" asp-action="GetStaffAllocation" id="form-staff-allocation">
+            <label asp-for="UsersIds" class="float-label-select"></label>
+            <select asp-for="UsersIds" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)" class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+            <span asp-validation-for="UsersIds" class="invalid-feedback"></span>
+
+            <button class="btn btn-success" type="submit" id="btn-submit-sa">Submit</button>
+        </form>
+    </div>
+</div>
+<div class="graph-container">
+    <canvas id="staff-canvas"></canvas>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/lib/Chart.js/Chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            $(".selectpicker").selectpicker();
+
+            var users = [];
+            var projects = [];
+
+            var canvas = document.getElementById('staff-canvas').getContext('2d');
+            var chart = new Chart(canvas, {});
+
+            $.saveChanges({
+                bindTo: "#btn-submit-sa",
+                formId: "#form-staff-allocation",
+                ajaxUrl: "@Url.Action("GetStaffAllocation", "Projects")",
+                hideSuccessAlert: true,
+                errorMessage: "Something went wrong.",
+                buttonText: "Submit",
+                eventFunction: (result) => {
+                    $(result.users).each(function(userKey, user) {
+                        users.push(user.fullName);
+
+                        $(user.projects).each(function(projectKey, project) {
+                            if (projects.find(x => x.label == project.name) == undefined)
+                                projects.push({
+                                    label: project.name,
+                                    data: [],
+                                    backgroundColor: '#' + Math.random().toString(16).slice(2, 8).toUpperCase()
+                                });
+                        });
+                    });
+
+                    $(projects).each(function(key, value) {
+                        value["data"] = new Array(users.length).fill(0);
+                    });
+
+                    $(result.users).each(function(userKey, user) {
+                        $(user.projects).each(function(projectKey, project) {
+                            projects.find(x => x.label == project.name).data[userKey] = project.estimatedTotal;
+                        });
+                    });
+
+                    chart.destroy();
+                    chart = new Chart(canvas,
+                        {
+                            type: "horizontalBar",
+                            data: {
+                                labels: users,
+                                datasets: projects
+                            },
+                            options: {
+                                tooltips: {
+                                    mode: "single",
+                                    position: "nearest"
+                                },
+                                scales: {
+                                    xAxes: [{ stacked: true }],
+                                    yAxes: [{ stacked: true }]
+                                },
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        });
+                }
+            });
+        });
+    </script>
+}

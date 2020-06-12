@@ -1,0 +1,156 @@
+﻿@using Gear.Common.Extensions.DateTimeExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@model Gear.ProjectManagement.Manager.Domain.Projects.ProjectTabModel
+@{
+    ViewData["Title"] = Model.Name;
+    ViewData["ActivePage"] = "Files";
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = "Projects";
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+<div class="row mb-4">
+    <div class="col-12 position-relative">
+        @if (Model.EndDate != null)
+        {
+            switch (Model.EndDate.GetPriorityByDate())
+            {
+                case PriorityByDate.Critical:
+                    <div class="badge badge-danger-custom d-inline-block project-date-badge ml-4">@($"{Model.EndDate:yyyy-MM-dd}")</div>
+                    break;
+                case PriorityByDate.High:
+                    <div class="badge badge-warning-custom d-inline-block project-date-badge ml-4">@($"{Model.EndDate:yyyy-MM-dd}")</div>
+                    break;
+                case PriorityByDate.Medium:
+                    <div class="badge badge-primary-custom d-inline-block project-date-badge ml-4">@($"{Model.EndDate:yyyy-MM-dd}")</div>
+                    break;
+                default:
+                    <div class="badge badge-info-custom d-inline-block project-date-badge ml-4">@($"{Model.EndDate:yyyy-MM-dd}")</div>
+                    break;
+            }
+            <h4 class="d-inline-block font-weight-bold ls-sm ml-2 vertical-center">@ViewData["Title"]</h4>
+        }
+        else
+        {
+            <h4 class="d-inline-block font-weight-bold ls-sm m-0 ml-4">@ViewData["Title"]</h4>
+        }
+        <breadcrumb></breadcrumb>
+    </div>
+</div>
+
+<div class="row bg-white rounded border br-8 mx-0 p-2 mt-3">
+    <div class="col-sm-6">
+        <div class="position-relative search-group">
+            <input type="text" class="form-control search-input" placeholder="Search" disabled="disabled" />
+            <i data-feather="search" class="position-absolute search-button"></i>
+        </div>
+    </div>
+    <div class="col-sm-6 mt-sm-0 mt-2">
+        <ul class="list-unstyled float-sm-right float-none d-flex m-0">
+            @if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+            {
+                <li class="ml-sm-0 ml-auto">
+                    <a href="javascript:" class="btn btn-success-custom" data-toggle="modal" data-target="#modal-add-file">
+                        <i data-feather="plus-circle"></i>
+                        <span class="font-weight-600">File</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+<hr class="mt-2 mb-1" />
+
+<div id="files"></div>
+
+<div class="modal fade" id="modal-add-file" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Files</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="file" id="OneDriveUploadFile" class="form-control dropify col-12">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="OneDriveUploadFileAction">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function GetFiles(name, id) {
+            $.ajax({
+                url: "@Url.Action("GetFiles", "Projects")",
+                type: "GET",
+                data: {
+                    name: name,
+                    id: id
+                },
+                success: function(result) {
+                    $("#files").html(result);
+                    feather.replace();
+                },
+                error: function() {
+                    $("#files").html(ERROR_MESSAGE);
+                    feather.replace();
+                }
+            });
+        }
+    </script>
+    <script>
+        $(document).ready(function() {
+            $("#files").html(LOADER);
+            GetFiles("@Model.Name", "@Model.Id");
+
+            @if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+            {
+                <text>
+                    $("#OneDriveUploadFileAction").click(function () {
+                        debugger;
+                        if (!$("#OneDriveUploadFile").val()) {
+                            swal({
+                                title: "Error",
+                                text: "Upload File missing",
+                                type: "warning"
+                            });
+                        } else {
+                            debugger;
+                            var formData = new FormData();
+                            var file = $("#OneDriveUploadFile")[0];
+                            formData.append("projectNumbder", `@Model.ProjectNumber`);
+                            //formData.append("projectName", `@Model.Name`);
+                            //formData.append("id", `@Model.Id`);
+                            formData.append("file", file.files[0]);
+                            debugger;
+                            $.ajax({
+                                url: '@Url.Action("UploadFile", "Projects")',
+                                type: 'POST',
+                                processData: false,
+                                contentType: false,
+                                data: formData,
+
+                                success: function (result) {
+                                    SuccessAlert("File uploaded successfully");
+                                    GetFiles("@Model.Name", "@Model.Id");
+                                },
+                                error: function () {
+                                    ErrorAlert("Error!", "Could not upload file. Please try again later.");
+                                    feather.replace();
+                                }
+                            });
+                        }
+                    });
+                </text>
+            }
+        });
+    </script>
+}

@@ -1,0 +1,323 @@
+.collapse-datatable
+  margin-right: -40px
+
+table.bizon-datatable
+  margin: 8px 0 0 0 !important
+  border-bottom: 1px solid $color-border
+
+  .dark-theme &
+    border-color: $dark-color-border
+    color: $color-border
+
+  &.no-parent
+    margin: -9px 0 0 0 !important
+
+  thead
+    .sorting::before, .sorting_asc::before, .sorting_desc::before, .sorting_asc_disabled::before, .sorting_desc_disabled::before
+      display: none
+
+    .sorting::after, .sorting_asc::after, .sorting_desc::after, .sorting_asc_disabled::after, .sorting_desc_disabled::after
+      position: static
+      display: inline-block
+      margin-left: 6px
+      content: " "
+      background-size: 10px 23px
+      height: 16px
+      width: 10px
+      opacity: 1
+
+    .sorting::after
+      background-image: url("/svg/sort-unsorted-02.svg")
+
+    .sorting_asc::after
+      background-image: url("/svg/sort-ascending-01.svg")
+
+      .dark-theme &
+        background-image: url("/svg/sort-ascending-02.svg")
+
+    .sorting_desc::after
+      background-image: url("/svg/sort-descending-01.svg")
+
+      .dark-theme &
+        background-image: url("/svg/sort-descending-02.svg")
+
+    .sorting_asc, .sorting_desc
+      color: $color-black
+
+      .dark-theme &
+        color: $color-border
+
+    tr
+      th
+        border-color: $color-border
+        border-bottom: none
+        font-size: 14px
+        line-height: 16px
+        font-weight: 600
+        color: $color-gray
+        padding: 0 !important
+        padding-bottom: 13px !important
+
+        .dark-theme &
+          border-color: $dark-color-border
+
+        &:first-of-type
+          padding-top: 7px !important
+          padding-bottom: 10px !important
+          width: 30px
+
+        &:last-of-type
+          width: 24px
+          padding-right: 32px !important
+  tbody
+    tr
+      background-color: $color-bg
+      border-bottom: 1px solid $color-border
+
+      .dark-theme &
+        background-color: $dark-color-bg
+        border-color: $dark-color-border
+
+      &.bg-white::after
+        content: " "
+        display: block
+        position: absolute
+        left: 0
+        background-color: #FFFFFF
+        height: 42px
+        width: 40px
+        border-left: 3px solid $color-blue
+
+        .dark-theme &
+          background-color: $dark-color-wh
+
+      &.bg-white.ui-sortable-helper::after
+        top: 0
+        left: -40px
+        height: 41px
+
+      td
+        font-size: 14px
+        line-height: 16px
+        padding: 11px 0 0 0 !important
+
+        .dark-theme &
+          border-color: $dark-color-border
+
+        &:first-of-type
+          padding-top: 6px !important
+          padding-bottom: 10px !important
+
+        .user-rectangle
+          height: 28px
+          width: 28px
+          padding-top: 4px
+
+        .progress
+          width: 100px
+
+        a
+          font-weight: 600
+
+          &.datatables-title
+            overflow: hidden
+            text-overflow: ellipsis
+            display: -webkit-inline-box
+            -webkit-box-orient: vertical
+            -webkit-line-clamp: 1
+            max-height: 16px
+            min-height: 16px
+
+            &.completed
+              text-decoration: line-through
+              color: $color-gray
+
+        .datatables-button
+          margin-left: 20px
+          position: absolute
+          top: -17px
+
+        .datatables-none
+          display: block
+          padding-top: 4px
+
+        .sprint-badge
+          height: 10px
+          width: 10px
+          display: inline-block
+          border-radius: 50%
+          box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3)
+          background-color: $color-outline-gray
+
+          &.sb-danger
+            background-color: $color-red-light
+
+        .datatables-dragdrop
+          background: url("/svg/drag-drop.svg")
+          background-size: 10px 10px
+          width: 10px
+          height: 10px
+          display: inline-block
+          margin-right: 8px
+          position: relative
+          top: -2px
+          cursor: all-scroll
+
+        &.td-badge
+          padding-top: 10px !important
+
+        &.td-progress
+          padding-top: 17px !important
+
+        &.td-users
+          padding-top: 6px !important
+
+        &.td-options
+          padding-top: 8px !important
+
+          a.dropdown-item
+            font-weight: normal
+
+          & .collapse-more
+            color: $color-gray
+
+            &:hover
+              color: $color-black
+
+        &.td-max-row
+          overflow: hidden
+          text-overflow: ellipsis
+          display: -webkit-inline-box
+          -webkit-box-orient: vertical
+          -webkit-line-clamp: 1
+          max-height: 16px
+          min-height: 16px
+
+        .top-webkit-inline-box
+          position: relative
+          top: -3px
+  tr
+    th
+      &.col-priority
+        width: 80px
+
+      &.col-status
+        width: 130px
+
+      &.col-progress
+        width: 160px
+
+      &.col-users
+        width: 180px
+
+      &.col-date
+        width: 90px
+
+      &.col-est-log
+        width: 75px
+
+      &.col-abbr
+        width: 100px
+
+      &.col-stage
+        width: 100px
+
+      &.col-email
+        width: 275px
+
+      &.col-phone
+        width: 140px
+
+      &.col-job-position
+        width: 200px
+
+      &.col-nogo-stage
+        width: 120px
+
+      &.col-department-teams
+        width: 350px
+
+      &.col-description
+        width: 700px
+
+      &.col-roles
+        width: 300px
+
+      &.col-order
+        width: 30px !important
+
+      &.col-lt-name
+        width: 200px
+
+  &.dt-activities
+    .datatables-button
+      width: 70px
+
+  .more-vertical
+    position: relative
+    right: -4px
+    top: 3px
+
+  &.dt-logged-time
+    thead
+      tr
+        th
+          color: $color-black
+          padding-bottom: 8px !important
+
+          &.sorting
+            color: $color-gray
+
+          .dark-theme &
+            color: $color-border
+
+            &.sorting
+              color: $color-gray-light
+
+          &.col-date
+            width: 65px
+
+    &.activity-logs
+      thead
+        tr
+          th
+            color: $color-gray
+
+            &.sorting_asc, &.sorting_desc
+              color: $color-black
+
+              .dark-theme &
+                color: $color-border
+
+            &.col-date
+              width: 110px
+
+    tbody
+      tr
+        td
+          padding: 8px 0 !important
+
+          &.td-order
+            font-size: 12px
+            line-height: 15px
+
+          &.td-text-sm
+            font-size: 12px
+            line-height: 15px
+            color: $color-gray
+
+          &.td-options
+            padding-top: 3px !important
+
+.datatables-th-dropdown
+  .dropdown-menu
+    padding: 15px 20px
+    width: 250px !important
+
+    .custom-control-label
+      padding-top: 5px
+
+      span
+        font-size: 12px
+        color: $color-gray
+        margin-left: 5px

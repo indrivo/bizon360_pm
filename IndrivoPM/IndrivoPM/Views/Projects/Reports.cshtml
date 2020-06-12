@@ -1,0 +1,110 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.ProjectTabModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@{
+    Layout = "_BizonLayout";
+    ViewData["ActivePage"] = "Reports";
+    ViewData["Title"] = Model.Name;
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+@section Styles {
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+}
+
+@{ await Html.RenderPartialAsync("_ProjectTabs", Model); }
+
+<div class="tab-content">
+    <div class="row mx-n-20">
+        <div class="col-12 bg-white border rounded py-15 px-20">
+            <h6>@Localizer["text_generateReport"]</h6>
+            <hr class="hr-description" />
+
+            <div class="row mt-3">
+                <div class="col-xl-2 col-lg-3">
+                    <label class="float-label-select">@Localizer["_chooseActivityList"]</label>
+                    <select id="select-activityList" data-project-id="@Model.Id"
+                            asp-items="@(new SelectList(ViewBag.ActivityList, "Id", "Name", null))"
+                            class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                    <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["validation_notEmptyActivityList"]</span></span>
+                </div>
+
+                <div class="col text-right mt-lg-2">
+                    <button type="button" class="btn btn-outline-primary download" data-original-text="XLSX"
+                            onclick="downloadActivityListReport(this, '/Reports/GetActivityListsByProjectReportXml', 'Activity-list-report.xlsx')">
+                        XLSX
+                    </button>
+                    <button type="button" class="btn btn-outline-primary mx-1" data-original-text="CSV"
+                            onclick="downloadActivityListReport(this, '/Reports/GetActivityListsByProjectReportCsv', 'Activity-list-report.csv')">
+                        CSV
+                    </button>
+                    <button id="generate" type="button" class="btn btn-success">
+                        @Localizer["_generate"]
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <hr class="no-gutters" />
+    <div id="report-project" class="collapse-datatable"></div>
+</div>
+
+@section Scripts {
+
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/js/dev/reports.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize selectpicker.
+            $(".selectpicker").selectpicker();
+
+            // ------------------------------
+            // Validation on change drop down.
+            $("#select-activityList").change(function() {
+                if (!validationDropdown($(this))) return;
+            });
+
+            // ---------------------------------
+            // Generate report and display on ui.
+            $("#generate").click(function() {
+
+                // Validation drop down.
+                if (!validationDropdown($("#select-activityList"))) return;
+
+                divResult = $("#report-project");
+                thisButton = $(this);
+
+                // Block btn and add loader.
+                divResult.html(LOADER);
+                DisableBtn(thisButton);
+
+                // Ajax call.
+                $.ajax({
+                    url: "/Reports/GenerateProjectReport",
+                    type: 'POST',
+                    data: {
+                        activityListIds: $("#select-activityList").val(),
+                        projectId: "@Model.Id"
+                    },
+                    success: function(result) {
+                        EnableBtn(thisButton);
+                        divResult.html(result);
+                    },
+                    error: function(result) {
+                        EnableBtn(thisButton);
+                        divResult.html("Could not load data.");
+                    }
+                });
+            });
+        });
+    </script>
+}
+

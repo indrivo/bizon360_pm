@@ -1,0 +1,85 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Sprints.Commands.CreateSprintCommand.CreateSprintCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="Sprints" asp-action="Create" id="form-create-sprint">
+    <div class="modal-body">
+        <input asp-for="Id" hidden />
+        <input asp-for="ProjectId" hidden />
+
+        <label asp-for="Name" class="float-label"></label>
+        <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_sprintName"]" autocomplete="off" required />
+        <span asp-validation-for="Name" class="invalid-feedback mt-1 mb-2"></span>
+
+        <label asp-for="Status" class="float-label-select"></label>
+        <select asp-for="Status" asp-items="Html.GetEnumSelectList<SprintStatus>()" class="form-control selectpicker"></select>
+        <span asp-validation-for="Status" class="invalid-feedback"></span>
+
+        <label asp-for="StartDate" class="float-label"></label>
+        <input asp-for="StartDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" id="start-date-input" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+        <span asp-validation-for="StartDate" class="invalid-feedback mt-1 mb-2"></span>
+
+        <label asp-for="EndDate" class="float-label"></label>
+        <input asp-for="EndDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" id="end-date-input" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+        <span asp-validation-for="EndDate" class="invalid-feedback mt-1 mb-2"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-create-sprint">@Localizer["_add"]</button>
+        <button type="submit" class="btn btn-success" id="btn-create-sprint-new">@Localizer["_addAndNew"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    $(".selectpicker").selectpicker();
+
+    $(".datepicker").datepicker({
+        format: "yyyy/mm/dd",
+        maxViewMode: 3,
+        todayBtn: "linked",
+        autoclose: true
+    });
+</script>
+<script>
+    $.saveChanges({
+        bindTo: "#btn-create-sprint",
+        formId: "#form-create-sprint",
+        ajaxUrl: "@Url.Action("Create", "Sprints")",
+        successMessage: "@Localizer["messages_createSprintSuccess"]",
+        errorMessage: "@Localizer["messages_createSprintError"]",
+        buttonText: "@Localizer["_add"]",
+        eventFunction: function (result) {
+            $(".no-sprints").remove();
+            $("#ongoing-sprints").append(result);
+            feather.replace();
+        }
+    });
+</script>
+<script>
+    $.saveChanges({
+        bindTo: "#btn-create-sprint-new",
+        formId: "#form-create-sprint",
+        ajaxUrl: "@Url.Action("Create", "Sprints")",
+        successMessage: "@Localizer["messages_createSprintSuccess"]",
+        errorMessage: "@Localizer["messages_createSprintError"]",
+        buttonText: "@Localizer["_addAndNew"]",
+        new: true,
+        eventFunction: function (result) {
+            $(".no-sprints").remove();
+            $("#ongoing-sprints").append(result);
+            feather.replace();
+        }
+    });
+</script>
+<script>
+    $("#start-date-input").change(function () {
+        var date = new Date($(this).val());
+        date.setDate(date.getDate() + 14);
+        $("#end-date-input").datepicker("update", date);
+    })
+</script>

@@ -1,0 +1,11 @@
+﻿@{
+    Layout = "/Views/Shared/_BizonLayout.cshtml";
+}
+
+<partial name="_ManageNav" />
+
+@RenderBody()
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}

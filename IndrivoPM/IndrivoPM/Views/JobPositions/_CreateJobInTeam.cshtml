@@ -1,0 +1,67 @@
+﻿@model Gear.Manager.Core.EntityServices.JobPositions.Commands.CreateJobPosition.CreateJobPositionCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+<form asp-action="Create" id="form-create-jp">
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-md-12">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="mb-2">
+                    <label asp-for="Name" class="float-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_jobPosition"]" autofocus="autofocus" autocomplete="off" required/>
+                    <span asp-validation-for="Name" class="invalid-feedback"></span>
+                </div>
+                
+                <div class="mb-2">
+                    <label asp-for="Abbreviation" class="float-label"></label>
+                    <input asp-for="Abbreviation" class="form-control" placeholder="@Localizer["placeholders_abbreviation"]" autocomplete="off"/>
+                    <span asp-validation-for="Abbreviation" class="invalid-feedback"></span>
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="HourlySalary" class="float-label"></label>
+                    <input asp-for="HourlySalary" class="form-control" placeholder="@Localizer["placeholders_hourlySalary"]" autocomplete="off"/>
+                    <span asp-validation-for="HourlySalary" class="invalid-feedback"></span>
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="DepartmentTeamId" class="float-label-select"></label>
+                    <select asp-for="DepartmentTeamId" asp-items="@(new SelectList(ViewBag.DepartmentTeams, "Id", "Name", null))" class="form-control selectpicker" data-live-search="true"></select>
+                    <span asp-validation-for="DepartmentTeamId" class="invalid-feedback"></span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-create-jp">@Localizer["_add"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+<script>
+    $(".selectpicker").selectpicker();
+
+    
+    var jp = new JobPositionContainer();
+
+    $.saveChanges({
+        bindTo: "#btn-create-jp",
+        formId: "#form-create-jp",
+        ajaxUrl: "@Url.Action("Create", "JobPositions")",
+        successMessage: "@Localizer["msgSuccess_createJobPosition"]",
+        errorMessage: "@Localizer["msgError_createJobPosition"]",
+        buttonText: "@Localizer["_add"]",
+        eventFunction: function (result) {
+                $("[id='parent-" + result.id + "'].collapse").html(result.view);
+                $("[id='count-" + result.id + "'].collapse-count").html(result.count);
+        }
+    });
+</script>

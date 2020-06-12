@@ -1,0 +1,218 @@
+﻿@using Gear.Common.Extensions.StringExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@model Gear.Manager.Core.EntityServices.DepartmentTeams.Queries.GetDepartmentTeamDetails.DepartmentTeamDetailModel
+
+@{
+    ViewData["Title"] = Model.Name;
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = "Teams";
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+<div class="row">
+    <div class="col-12">
+        <h4 class="d-inline-block font-weight-bold ls-sm pl-4 mb-4">@ViewData["Title"]</h4>
+        <breadcrumb></breadcrumb>
+    </div>
+</div>
+
+<div class="card br-8 mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 border-right">
+                <h5 class="card-title font-weight-bold ls-md"> Team Details</h5>
+
+                <div class="row">
+                    <span class="col-6 text-secondary font-weight-600 ls-sm">Department:</span>
+                    <span class="col-6 font-weight-600 ls-sm">@Model.DepartmentName</span>
+                </div>
+
+                <div class="row">
+                    <span class="col-6 text-secondary font-weight-600 ls-sm">Total Employes:</span>
+                    <span class="col-6 font-weight-600 ls-sm">@Model.Members.Count</span>
+                </div>
+
+                <div class="row mt-1">
+                    <span class="col-6 text-secondary font-weight-600 ls-sm">Status</span>
+                    @if (Model.Active)
+                    {
+                        <h6><span class="badge badge-primary-custom project-date-badge ml-3">Active</span></h6>
+                    }
+                    else
+                    {
+                        <h6><span class="badge badge-danger-custom project-date-badge ml-3">Inactive</span></h6>
+
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-4 border-right px-4">
+                <h5 class="card-title font-weight-bold ls-md"> Team Description</h5>
+                <p class="card-text font-weight-600 ls-sm">@Model.Description</p>
+            </div>
+
+            <div class="col-md-4 px-4">
+                <h5 class="card-title font-weight-bold ls-md"> Team Leader</h5>
+                <div class="d-flex">
+                    <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@Model.DepartmentTeamLeadId" class="d-block btn btn-primary-custom font-weight-bold user-button">@Model.TeamLeadFullName.ToInitials()</a>
+                    <div class="d-block ml-2">
+                        <div class="color-primary font-weight-600 lh-20">
+                            @if (!@Model.TeamLeadFullName.Contains("Not Specified"))
+                            {
+                                <a class="text-blue" asp-action="Details" asp-controller="ApplicationUsers" asp-route-id="@Model.DepartmentTeamLeadId">
+                                    @Model.TeamLeadFullName
+                                </a>
+                            }
+                            else
+                            {
+                                @Model.TeamLeadFullName
+
+                            }
+                        </div>
+                        <div class="font-weight-600 fs-14">@Model.TeamLeadJobPosition</div>
+                    </div>
+                </div>
+
+                <h5 class="card-title font-weight-bold ls-md mb-3 mt-4">Employees</h5>
+
+                @foreach (var item in Model.Members)
+                {
+                    <div class="d-flex mt-2">
+                        <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@item.Id" class="d-block btn btn-primary-custom font-weight-bold user-button">@item.FullName.ToInitials()</a>
+
+                        <div class="d-block ml-2">
+                            <div class="color-primary font-weight-600 lh-20">
+                                @if (!@item.FullName.Contains("Not Specified"))
+                                {
+                                    <a class="text-blue" asp-action="Details" asp-controller="ApplicationUsers" asp-route-id="@item.Id">
+                                        @item.FullName
+                                    </a>
+                                }
+                                else
+                                {
+                                    @item.FullName
+
+                                }
+                            </div>
+                            <div class="font-weight-600 fs-14">@item.JobPosition</div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </div>
+
+    </div>
+    @if (User.UserHasThisPermission(Permissions.DepartmentTeamDelete) && User.UserHasThisPermission(Permissions.DepartmentTeamUpdate))
+    {
+        <div class="card-footer bg-white mx-4 py-3 px-0">
+            <div class="float-right">
+                @if (User.UserHasThisPermission(Permissions.DepartmentTeamDelete))
+                {
+                    <span>
+                        <a href="javascript:" data-action="Delete" data-controller="DepartmentTeams" data-id="@Model.Id" data-name="@Model.Name" class="btn btn-danger font-weight-600 delete-team">Delete</a>
+                    </span>
+                }
+
+                @if (User.UserHasThisPermission(Permissions.DepartmentTeamUpdate))
+                {
+                    <a href="javascript:" class="btn btn-success update-team font-weight-600" data-controller="DepartmentTeams" data-action="Edit" data-id="@Model.Id" data-toggle="modal" data-target="#modal-generic">Edit</a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+
+@if (User.UserHasThisPermission(Permissions.JobPositionRead))
+{
+    <!-- Bar for Jobs -->
+
+    <div class="row bg-white br-8 mx-0 border p-2 mb-2">
+        <div class="col-sm-6">
+            <div class="position-relative search-group">
+                <input type="text" class="form-control search-input" placeholder="Search" oninput="SearchInJobs('@Model.Id')" />
+                <i data-feather="search" class="position-absolute search-button"></i>
+            </div>
+        </div>
+        @if (User.UserHasThisPermission(Permissions.JobPositionCreate))
+        {
+            <div class="col-sm-6 mt-sm-0 mt-2">
+                <ul class="list-unstyled float-sm-right float-none d-flex m-0">
+                    <li class="ml-sm-0 ml-auto">
+                        <a href="javascript:" class="btn btn-success create-job" data-controller="JobPositions" data-action="Create" data-toggle="modal" data-target="#modal-generic">
+                            <i data-feather="plus-circle"></i>
+                            <span class="font-weight-600">Job Position</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        }
+    </div>
+
+    <hr class="my-2 " />
+
+    <!-- Job list  -->
+    <div class="job-list"></div>
+}
+
+
+
+
+<!-- MODAL  -->
+<div class="modal fade" id="modal-generic" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modal-generic">
+            <div class="modal-header">
+                <h4 class="modal-title font-weight-bold ls-sm lh-30"></h4>
+                <button type="button" class="btn-modal-close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-inner"></div>
+            <div class="modal-footer d-none">
+                <input hidden value="" id="url-address" />
+                <button type="button" class="btn btn-danger-custom font-weight-600" data-dismiss="modal" id="cancel-delete">Cancel</button>
+                <button type="button" class="btn btn-success-custom font-weight-600" id="confirm-delete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script src="~/js/crud-modals.js"></script>
+    <script src="~/js/dev/departments-teams.js"></script>
+
+    <script>
+        function selectedValue() { $('#teamId option[value="@Model.Id"]').attr('selected', "selected"); }
+
+        LoadModalCreate({ modalName: "Add job position", bindTo: ".create-job", eventFunction: selectedValue });
+        LoadModalUpdate({ modalName: "Edit team", bindTo: ".update-team" });
+        LoadModalDelete({ type: "team", bindTo: ".delete-team" });
+    </script>
+
+    <script>
+        // Get list on load
+        // ----------------
+        $(document).ready(function () {
+            $(".teams-from.department").html(LOADER);
+            SearchInJobs('@Model.Id');
+        })
+    </script>
+
+    <script>
+        function RedirectIndex() { window.location.href = "/DepartmentTeams/Index/"; }
+        ConfirmDelete({
+            successMessage: "Team has been removed",
+            errorMessage: "Could not remove team",
+            eventFunction: RedirectIndex
+        });
+    </script>
+
+}

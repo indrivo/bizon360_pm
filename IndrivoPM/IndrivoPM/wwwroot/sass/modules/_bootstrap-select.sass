@@ -1,0 +1,167 @@
+.float-label-select
+  display: table
+  position: relative
+  z-index: 1
+  top: 19px
+  font-size: 14px
+  margin-left: 11px
+  background-color: #FFFFFF
+  margin-top: -18px
+  padding: 0 5px
+  line-height: 10px
+
+  .dark-theme &
+    background-color: $dark-color-wh
+
+.bootstrap-select
+  .dropdown-menu
+    //max-height: 280px !important
+
+  .bs-actionsbox
+    border-bottom: 1px solid $color-border
+
+    .dark-theme &
+      border-color: $dark-color-border
+
+    & button
+      margin-top: 8px
+      margin-bottom: 4px
+      background-color: $color-outline-gray
+      border: none
+      border-radius: 4px !important
+      transition: $transition
+      color: $color-gray
+
+      .dark-theme &
+        background-color: $dark-outline-gray
+
+      &:hover
+        background-color: $color-gray
+        color: #FFFFFF
+
+      &:active
+        background-color: $color-gray !important
+        border-color: rgba(0, 0, 0, 0.1) !important
+        color: #FFFFFF !important
+        box-shadow: none !important
+
+      &.bs-select-all
+        margin-right: 4px
+
+      &.bs-deselect-all
+        margin-left: 4px
+  button.btn.dropdown-toggle
+    height: 40px
+    font-weight: 400
+    padding: 8px 15px
+    background-color: #FFFFFF
+    border-radius: 4px
+    border: 1px solid $color-border
+    margin-top: 7px
+
+    .dark-theme &
+      background-color: $dark-color-wh
+      border-color: $dark-color-border
+      color: $color-border
+
+    & .badge-color
+      color: $color-black
+
+    &.is-invalid, &.is-invalid[aria-expanded="true"]
+      border: 1px solid $color-red
+      background-image: none
+      background-repeat: no-repeat
+      background-size: 16px
+      background-position-y: center
+      background-position-x: 102.5%
+      background-origin: content-box
+
+      &::after
+        display: none
+
+      &:hover
+        border-color: $color-red
+
+    &:hover
+      border-color: $color-border-hover
+
+      .dark-theme &
+        border-color: #404850
+
+    &:focus, &:focus:active
+      outline: none !important
+      box-shadow: none
+
+    &:active
+      background-color: #FFFFFF
+
+      .dark-theme &
+        background-color: $dark-color-wh
+
+    &[aria-expanded="true"]
+      border-color: $color-blue
+
+    & .filter-option-inner-inner
+      padding-top: 4px
+      padding-bottom: 2px
+
+  & .no-results
+    background: none
+    padding: 5px 10px 0px 10px
+
+  & .dropdown-menu
+    border: 1px solid $color-border
+    box-shadow: 0 0 32px 0 rgba(0, 0, 0, 0.05)
+
+    & ul li a
+      & span.badge-color
+        color: $color-black
+
+      &.active, &.selected span.badge-color
+        color: #FFFFFF
+      font-weight: 400
+      padding-left: 15px
+      height: 32px
+      padding-top: 6px
+
+      &:hover
+        background-color: $color-bg
+
+      &:active
+        background-color: $color-blue-hover !important
+
+    & ul li.selected.active a
+      background-color: $color-blue
+      color: #FFFFFF
+
+    & ul li.selected a
+      background-color: $color-blue
+      color: #FFFFFF
+
+      &:hover
+        background-color: $color-blue-hover
+
+    & .bs-searchbox
+      padding-top: 16px
+      padding-bottom: 8px
+      border-bottom: 1px solid $color-border
+
+      .dark-theme &
+        border-color: $dark-color-border
+
+  & .bs-ok-default::after
+    position: relative
+    top: 4px
+    right: 2px
+    height: .75em
+    border-width: 0 0.185em 0.185em 0
+
+.selectpicker-loader
+  height: 32px
+  position: absolute
+  top: 29px
+  right: 4px
+  background-color: #FFFFFF
+
+  .dark-theme &
+    background-color: $dark-color-wh

@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Translation";
+}
+@{
+    var langList = ViewBag.lang as List<Gear.Localizer.Models.LocalizationListView>;
+}
+
+<h1>Translation</h1>
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <strong>List of translation</strong>
+            </div>
+            <div class="card-body card-block">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @if (langList != null && langList.Any())
+                    {
+                        foreach (var item in langList)
+                        {
+                            <tr>
+                                <td>@item.Name</td>
+                                <td>@item.Value</td>
+                                <td><a class="btn btn-outline-info" asp-action="EditKey"  asp-route-key="@item.Name">Edit</a></td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,160 @@
+﻿@using Bizon360.Models
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@model Gear.Manager.Core.EntityServices.BusinessUnits.Queries.GetBusinessUnitList.BusinessUnitListViewModel
+
+
+
+    @foreach (var bu in Model.BusinessUnits)
+     {
+    <div class="parent-content">
+        <div class="row row-m-20 bg-white border rounded collapse-container collapse-lg hover-invisible-toggle position-relative pb-lg-0 pb-3" data-toggle="collapse" href="#parent-@bu.Id">
+            <div class="d-lg-flex d-block w-100 px-20">
+                <div class="d-flex pt-collapse">
+                    <a class="border collapse-switcher d-inline-block">
+                        <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                    </a>
+                    <a href="javascript:" class="btn btn-outline-primary user-rectangle">EL</a>
+                    <div class="d-block collapse-title-group">
+                        <span class="collapse-title">
+                            @bu.Name
+                            <span class="collapse-count" id="count-@bu.Id">@bu.DepartmentLookups.Count()</span>
+                        </span>
+                        <span class="collapse-title-description">str. Mihail Kogalniceanu 51</span>
+                    </div>
+                    
+                    @if (User.UserHasThisPermission(Permissions.BusinessUnitDelete) || User.UserHasThisPermission(Permissions.BusinessUnitUpdate))
+                    {
+                        <div class="dropdown collapse-dropdown">
+                            <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                @if (User.UserHasThisPermission(Permissions.BusinessUnitUpdate))
+                                {
+                                    <a href="javascript:" class="dropdown-item edit-parent-link" data-controller="BusinessUnits" data-action="Edit" data-id="@bu.Id">Edit</a>
+
+                                }
+                                @if (User.UserHasThisPermission(Permissions.BusinessUnitDelete))
+                                {
+                                    <a href="javascript:" class="dropdown-item delete-parent-link" data-controller="BusinessUnits" data-action="Delete" data-name="@bu.Name" data-id="@bu.Id">Delete</a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="d-lg-none collapse-divider"></div>
+                <div class="d-lg-block d-inline-block">
+                    <button class="btn btn-success collapse-button hover-invisible hover-lg ml-lg-20 mt-lg-15 add-entity-link" data-controller="Departments" data-action="Create" data-parent-id="@bu.Id">@Localizer["shortCuts_addDepartment"]</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapse collapse-datatable" id="parent-@bu.Id">
+            <table class="table bizon-datatable dt-departments" data-order='[[ 1, "asc" ]]'>
+                <thead>
+                    <tr class="hover-invisible-toggle">
+                        <th class="no-sort">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-@bu.Id" />
+                                <label class="custom-control-label" for="bulk-@bu.Id"></label>
+                            </div>
+                        </th>
+                        <th>Department</th>
+                        <th class="col-abbr d-md-table-cell d-none">Abbr.</th>
+                        <th class="col-department-teams no-sort d-xl-table-cell d-none">Teams</th>
+                        <th class="col-date d-sm-table-cell d-none">Created</th>
+                        <th class="no-sort">
+                            <div class="dropdown datatables-th-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-departments-abbr" data-table-column-id="3" checked />
+                                        <label class="custom-control-label" for="dt-departments-abbr">
+                                            Abbr.
+                                            <span>Abbreviation</span>
+                                        </label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-departments-teams" data-table-column-id="4" checked />
+                                        <label class="custom-control-label" for="dt-departments-teams">
+                                            Teams
+                                            <span>Department teams</span>
+                                        </label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-departments-created" data-table-column-id="5" checked />
+                                        <label class="custom-control-label" for="dt-departments-created">
+                                            Created
+                                            <span>Created date</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var dep in bu.DepartmentLookups)
+                    {
+                        <tr class="hover-invisible-toggle" id="entity-@dep.Id">
+                            <td>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-check" id="@dep.Id" data-parent-id="@bu.Id" />
+                                    <label class="custom-control-label" for="@dep.Id"></label>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="javascript:" class="datatables-title">@dep.Name</a>
+                                <a href="javascript:">
+                                    <span class="badge badge-outline-primary top-webkit-inline-box d-lg-inline d-none ml-10">@dep.DepartmentLeadFullName</span>
+                                </a>
+                                <div class="position-relative d-lg-inline-block d-none">
+                                    <button class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box edit-entity-link" data-controller="Departments" data-action="Edit" data-id="@dep.Id">@Localizer["shortCuts_edit"]</button>
+                                </div>
+                            </td>
+                            <td class="d-md-table-cell d-none">-</td>
+                            <td class="d-xl-table-cell d-none">
+                                @foreach (var teams in dep.DepartmentTeams)
+                                {
+                                    <a href="javascript:">
+                                        <span class="badge badge-outline-purple">@teams.Value</span>
+                                    </a>
+                                }
+                            </td>
+                            <td class="d-sm-table-cell d-none">
+                                2019-07-17
+                            </td>
+                            <td class="td-options">
+                                <div class="dropdown datatables-dropdown">
+                                    <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                        <a asp-controller="Departments" asp-action="Details" asp-route-id="@dep.Id" class="dropdown-item">Open</a>
+                                        <a href="javascript:" class="dropdown-item edit-entity-link" data-controller="Departments" data-action="Edit" data-id="@dep.Id">@Localizer["shortCuts_edit"]</a>
+                                        <div class="dropdown-divider"></div>
+                                        <a href="javascript:" class="dropdown-item delete-entity-link" data-controller="Departments" data-action="Delete" data-name="@dep.Name" data-id="@dep.Id">Delete</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                    }
+                </tbody>
+            </table>
+            @*
+            <div class="text-center mt-3">
+                <button class="btn btn-outline-secondary btn-sm">Show inactive</button>
+                <p class="p-xs d-inline ml-2">2 departments</p>
+            </div>
+            *@
+        </div>
+        <hr class="no-gutters" />
+    </div>
+
+     }
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+

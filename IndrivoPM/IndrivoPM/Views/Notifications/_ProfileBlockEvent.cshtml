@@ -1,0 +1,45 @@
+﻿@using Bizon360.Models
+@using Gear.Notifications.Abstractions.Domain
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@model Gear.Notifications.Abstractions.Infrastructure.Resources.Dtos.EventDto
+
+<div class="row no-gutters">
+    <div class="col-fixed-220 w-50">
+        @if (Model.EventDescription != null)
+        {
+            <p class="p-sm mb-0">@Model.EventDescription</p>
+        }
+        else
+        {
+            <p class="p-sm mb-0">@Model.EventName</p>
+        }
+    </div>
+    <div class="d-block mb-sm-0 mb-1">
+
+        <p class="p-sm mb-0 color-black">
+            @if (Model.PropagationTypes.Contains(PropagationType.Application))
+            {
+                <text>
+                    @Localizer["text_appNotifications"]
+                </text>
+            }
+
+            @if (Model.PropagationTypes.Count > 1)
+            {
+                <text>
+                    /
+                </text>
+            }
+
+            @if (Model.PropagationTypes.Contains(PropagationType.Email))
+            {
+                <text>
+                    @Localizer["text_emailNotifications"]
+                </text>
+            }
+        </p>
+    </div>
+</div>

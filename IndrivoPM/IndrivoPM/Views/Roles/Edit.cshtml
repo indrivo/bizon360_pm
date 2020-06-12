@@ -1,0 +1,73 @@
+﻿@model Gear.Identity.Manager.Domain.Roles.Commands.UpdateRole.UpdateRoleCommand
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = "Administrative";
+
+    // Breadcrumbs data
+    ViewData["FirstNode"] = "Roles";
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+<partial name="_AdmTabs" />
+
+<form method="post" asp-action="Edit">
+    <div class="row">
+        <div class="col-md-3 bg-white p-3 form-border">
+            <div class="mb-2">
+                <input hidden asp-for="RoleName"/>
+                <label asp-for="RoleName" class="float-label"></label>
+                <input disabled asp-for="RoleName" class="form-control" placeholder="@Localizer["placeholders_roleDescription"]" autofocus="autofocus" autocomplete="off" required/>
+                <span asp-validation-for="RoleName" class="invalid-feedback"></span>
+            </div>
+
+            <div class="mb-2">
+                <label asp-for="Description" class="float-label"></label>
+                <input asp-for="Description" class="form-control" placeholder="@Localizer["placeholders_roleDescription"]" autofocus="autofocus" autocomplete="off" required/>
+                <span asp-validation-for="Description" class="invalid-feedback"></span>
+            </div>
+
+        </div>
+        <div class="col-md-3 bg-white form-border p-3 ml-4">
+            @foreach (var roleGroup in Model.PermissionsList.Permissions.Where(x => x.ModuleName != "SSTP").Select(x => x.ModuleName).Distinct())
+            {
+                <div class="mb-2">
+                    <label class="float-label-select">@roleGroup</label>
+                    <select multiple class="form-control selectpicker" data-live-search="true" asp-for="Permissions" data-actions-box="true">
+                        @foreach (var permission in Model.PermissionsList.Permissions.Where(x => x.ModuleName == roleGroup))
+                        {
+                            <option value="@permission.Permission">@permission.Permission</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Permissions" class="invalid-feedback"></span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <footer class="bulk-actions-container show">
+        <ul class="list-unstyled list-inline d-md-inline-block d-block float-lg-right mt-lg-0 mt-2 mb-0">
+            <li class="list-inline-item d-md-inline-block d-block mt-md-0 mt-2">
+                <a class="btn btn-secondary" asp-controller="Roles" asp-action="Index">@Localizer["_discard"]</a>
+            </li>
+
+            <li class="list-inline-item d-md-inline-block d-block mt-md-0 mt-2">
+                <button type="submit" class="btn btn-success">@Localizer["_update"]</button>
+            </li>
+        </ul>
+    </footer>
+</form>
+
+@section Scripts{
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+    <script>
+        $(".selectpicker").selectpicker();
+        $("#tab-roles").addClass("active");
+    </script>
+}

@@ -1,0 +1,72 @@
+﻿@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+
+<ul class="nav nav-tabs main-nav-tabs adm-tabs px-40">
+    @if (User.UserHasThisPermission(Permissions.BusinessUnitRead))
+    {
+        <li class="nav-item">
+            <a id="tab-business-unit" class="nav-link" asp-controller="BusinessUnits" asp-action="Index">@Localizer["_businessUnits"]</a>
+        </li>
+    }
+
+    @if (User.UserHasThisPermission(Permissions.DepartmentRead))
+    {
+        <li class="nav-item">
+            <a id="tab-department" class="nav-link" asp-controller="Departments" asp-action="Index">@Localizer["_departments"]</a>
+        </li>
+    }
+
+    @if (User.UserHasThisPermission(Permissions.DepartmentTeamRead))
+    {
+        <li class="nav-item">
+            <a id="tab-teams" class="nav-link" asp-controller="DepartmentTeams" asp-action="Index">@Localizer["_teams"]</a>
+        </li>
+    }
+
+    @if (User.UserHasThisPermission(Permissions.JobPositionRead))
+    {
+        <li class="nav-item">
+            <a id="tab-job-position" class="nav-link" asp-controller="JobPositions" asp-action="Index">@Localizer["_jobPositions"]</a>
+        </li>
+    }
+
+    @if (User.UserHasThisPermission(Permissions.RoleRead))
+    {
+        <li class="nav-item">
+            <a id="tab-roles" class="nav-link" asp-controller="Roles" asp-action="Index">@Localizer["_rolesAndPermissions"]</a>
+        </li>
+    }
+
+    @if (User.UserHasThisPermission(Permissions.EmployeeRead))
+    {
+        <li class="nav-item">
+            <a id="tab-users" class="nav-link" asp-controller="ApplicationUsers" asp-action="Index">@Localizer["_employees"]</a>
+        </li>
+    }
+
+    @if (User.UserHasThisPermission(Permissions.SSTPRead))
+    {
+        <li class="nav-item">
+            <a id="tab-sstp" class="nav-link" asp-controller="Sstp" asp-action="Index">@Localizer["_sstp"]</a>
+        </li>
+    }
+
+    @if (User.UserHasThisPermission(Permissions.ActivityTypeRead))
+    {
+        <li class="nav-item">
+            <a id="tab-services" class="nav-link" asp-controller="Services" asp-action="Index">@Localizer["_activityServices"]</a>
+        </li>
+    }
+
+    @if (User.UserHasThisPermission(Permissions.NotificationProfileRead))
+    {
+        <li class="nav-item">
+            <a id="tab-notifications" class="nav-link" asp-controller="Notifications" asp-action="Index">@Localizer["_notifications"]</a>
+        </li>
+    }
+</ul>

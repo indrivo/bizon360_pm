@@ -1,0 +1,231 @@
+﻿@using System.Security.Claims
+@using Bizon360.Models
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@model IEnumerable<Gear.Identity.Permissions.Infrastructure.Resources.ViewModels.RolesListDto>
+
+@if (Model.Any())
+{
+    <div class="collapse-datatable" id="datatables-active-roles">
+        <table class="table bizon-datatable dt-roles no-parent" id="datatables-roles" data-order='[[ 1, "asc" ]]'>
+            <thead>
+                <tr class="hover-invisible-toggle">
+                    <th class="no-sort">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-active-role" />
+                            <label class="custom-control-label" for="bulk-active-role"></label>
+                        </div>
+                    </th>
+                    <th>@Localizer["_roles"]</th>
+                    <th class="col-description d-xl-table-cell d-none">@Localizer["_description"]</th>
+                    <th class="col-stage d-sm-table-cell d-none">@Localizer["_status"]</th>
+                    <th class="col-date d-sm-table-cell d-none">@Localizer["_modified"]</th>
+                    <th class="no-sort">
+                        <div class="dropdown datatables-th-dropdown">
+                            <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-active-role-description" data-table-column-id="2" checked />
+                                    <label class="custom-control-label" for="dt-active-role-description">
+                                        @Localizer["_description"]
+                                        <span>Role description</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-active-role-status" data-table-column-id="3" checked />
+                                    <label class="custom-control-label" for="dt-active-role-status">
+                                        @Localizer["_status"]
+                                        <span>Role status</span>
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-active-role-modified" data-table-column-id="5" checked />
+                                    <label class="custom-control-label" for="dt-active-role-modified">
+                                        @Localizer["_modified"]
+                                        <span>Modified date</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var role in Model.Where(x => x.Active))
+                {
+                    <tr class="hover-invisible-toggle" id="entity-@role.RoleName">
+                        <td>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-check" id="@role.RoleName" data-parent-id="active-role" />
+                                <label class="custom-control-label" for="@role.RoleName"></label>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="javascript:" class="datatables-title">@role.RoleName</a>
+                            <div class="position-relative d-lg-inline-block d-none">
+                                <a asp-controller="Roles" asp-action="Edit" asp-route-roleName="@role.RoleName" class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box">@Localizer["shortCuts_edit"]</a>
+                            </div>
+                        </td>
+                        <td class="td-max-row d-xl-table-cell d-none">@role.Description</td>
+
+                        @if (role.Active)
+                        {
+                            <td class="td-badge d-sm-table-cell d-none sorting_1">
+                                <span class="badge badge-outline-success">@Localizer["_active"]</span>
+                            </td>
+                        }
+                        else
+                        {
+                            <td class="td-badge d-sm-table-cell d-none sorting_1">
+                                <span class="badge badge-outline-secondary">@Localizer["_inactive"]</span>
+                            </td>
+                        }
+                        <td class="d-sm-table-cell d-none">
+                            @role.CreatedTime.ToString("yyyy-MM-d")
+                        </td>
+                        <td class="td-options">
+                            <div class="dropdown datatables-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                    @if (User.UserHasThisPermission(Permissions.RoleUpdate))
+                                    {
+                                        <a asp-controller="Roles" asp-action="Edit" asp-route-roleName="@role.RoleName" class="dropdown-item">@Localizer["shortCuts_edit"]</a>
+                                        <a href="javascript:" class="dropdown-item deactivate-role" data-controller="Roles" data-action="DeactivateRole" data-id="@role.RoleName" data-name="@role.RoleName">@Localizer["shortCuts_deactivate"]</a>
+                                    }
+                                    @if (User.UserHasThisPermission(Permissions.RoleDelete))
+                                    {
+                                        <div class="dropdown-divider"></div>
+                                        <a href="javascript:" class="dropdown-item delete-role" data-controller="Roles" data-action="Delete" data-id="@role.RoleName" data-name="@role.RoleName">@Localizer["_delete"]</a>
+                                    }
+
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Count(x => !x.Active) != 0)
+    {
+        <div class="text-center my-3">
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-open="false" onclick="showInactive(this, '#show-datatables-inactive-roles', true)">Show inactive</button>
+            <p class="p-xs d-inline ml-2">@Model.Count(x => !x.Active) @Localizer["_inactiveRoles"]</p>
+        </div>
+
+        <div class="collapse-datatable d-none" id="show-datatables-inactive-roles">
+            <table class="table bizon-datatable dt-roles" id="datatables-inactive-roles" data-order='[[ 1, "asc" ]]'>
+                <thead>
+                    <tr class="hover-invisible-toggle">
+                        <th class="no-sort">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-iactive-role" />
+                                <label class="custom-control-label" for="bulk-iactive-role"></label>
+                            </div>
+                        </th>
+                        <th>@Localizer["_roles"]</th>
+                        <th class="col-description d-xl-table-cell d-none w-50">@Localizer["_description"]</th>
+                        <th style="width: 100px">@Localizer["_status"]</th>
+                        <th class="col-date d-sm-table-cell d-none">@Localizer["_modified"]</th>
+                        <th class="no-sort">
+                            <div class="dropdown datatables-th-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-inactive-role-description" data-table-column-id="2" checked />
+                                        <label class="custom-control-label" for="dt-inactive-role-description">
+                                            Description
+                                            <span>Role description</span>
+                                        </label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-inactive-role-status" data-table-column-id="3" checked />
+                                        <label class="custom-control-label" for="dt-inactive-role-status">
+                                            Status
+                                            <span>Role status</span>
+                                        </label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-inactive-role-modified" data-table-column-id="5" checked />
+                                        <label class="custom-control-label" for="dt-inactive-role-modified">
+                                            @Localizer["_modified"]
+                                            <span>Modified date</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var role in Model.Where(x => !x.Active))
+                    {
+                        <tr class="hover-invisible-toggle" id="entity-@role.RoleName">
+                            <td>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-check" id="@role.RoleName" data-parent-id="iactive-role" />
+                                    <label class="custom-control-label" for="@role.RoleName"></label>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="javascript:" class="datatables-title">@role.RoleName</a>
+                                <div class="position-relative d-lg-inline-block d-none">
+                                    <a asp-controller="Roles" asp-action="Edit" asp-route-roleName="@role.RoleName" class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box">@Localizer["shortCuts_edit"]</a>
+                                </div>
+                            </td>
+                            <td class="td-max-row d-xl-table-cell d-none">@role.Description</td>
+
+                            <td class="td-badge sorting_1">
+                                <span class="badge badge-outline-secondary">@Localizer["_inactive"]</span>
+                            </td>
+                            <td class="d-sm-table-cell d-none">
+                                @role.CreatedTime.ToString("yyyy-MM-d")
+                            </td>
+                            <td class="td-options">
+                                <div class="dropdown datatables-dropdown">
+                                    <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                        @if (User.UserHasThisPermission(Permissions.RoleUpdate))
+                                        {
+                                            <a asp-controller="Roles" asp-action="Edit" asp-route-roleName="@role.RoleName" class="dropdown-item">@Localizer["shortCuts_edit"]</a>
+                                            <a href="javascript:" class="dropdown-item activate-role" data-controller="Roles" data-action="ActivateRole" data-id="@role.RoleName" data-name="@role.RoleName">@Localizer["shortCuts_activate"]</a>
+
+                                        }
+                                        @if (User.UserHasThisPermission(Permissions.RoleDelete))
+                                        {
+                                            <div class="dropdown-divider"></div>
+                                            <a href="javascript:" class="dropdown-item delete-role" data-controller="Roles" data-action="Delete" data-id="@role.RoleName" data-name="@role.RoleName">@Localizer["_delete"]</a>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    }
+
+}
+else
+{
+    <div>
+        <p class="pl-4">There aren't any roles</p>
+    </div>
+}
+
+<script>
+    $(document).ready(function () {
+        EnableDataTable(".bizon-datatable", "RolesHiddenColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)");
+        $.bindColumnToggle({
+            cookieKey: "RolesHiddenColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)"
+        });
+    });
+</script>

@@ -1,0 +1,47 @@
+﻿@page
+@using Bizon360.Areas.Identity.Pages.Account.Manage
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@model IndexModel
+@inject IStringLocalizer Localizer
+@{
+    ViewData["Title"] = "Account Info";
+    ViewData["FirstNode"] = ViewData["Title"];
+    ViewData["ActivePage"] = ManageNavPages.Index;
+
+    ViewData["Platform"] = Platform.Pm;
+}
+
+
+<form id="profile-form" method="post">
+    <div class="row bizon-row">
+        <div class="col-lg-3 col-md-6 mb-lg-0 mb-3 bizon-col">
+            <partial name="_StatusMessage" for="StatusMessage" />
+            <div class="bg-white rounded border px-20 py-15">
+                <h6>Manage account data</h6>
+                <hr class="hr-description mb-3" />
+
+                <label asp-for="Input.Email" class="float-label"></label>
+                <input asp-for="Input.Email" class="form-control" placeholder="Ex. john.doe@@domain.com" autofocus="autofocus" required />
+                <span asp-validation-for="Input.Email" class="invalid-feedback mt-1 mb-2"></span>
+
+                <label asp-for="Input.PhoneNumber" class="float-label"></label>
+                <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Ex. +37369543251" autofocus="autofocus" required />
+                <span asp-validation-for="Input.PhoneNumber" class="invalid-feedback mt-1 mb-2"></span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bulk-actions-container show">
+        <ul class="list-unstyled list-inline d-md-inline-block d-block float-lg-right mt-lg-0 mt-2 mb-0">
+            <li class="list-inline-item">
+                <button id="btn-save" type="submit" class="btn btn-success">@Localizer["shortCuts_update"]</button>
+            </li>
+        </ul>
+    </footer>
+    <div class="bulk-hidden-space"></div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

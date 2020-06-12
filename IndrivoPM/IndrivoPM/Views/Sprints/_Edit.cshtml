@@ -1,0 +1,84 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Sprints.Commands.UpdateSprintCommand.UpdateSprintCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="Sprints" asp-action="Edit" id="form-edit-sprint">
+    <div class="modal-body">
+        <input asp-for="Id" hidden />
+
+        <label asp-for="Name" class="float-label"></label>
+        <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_sprintName"]" autocomplete="off" required />
+        <span asp-validation-for="Name" class="invalid-feedback mt-1 mb-2"></span>
+
+        <label asp-for="Status" class="float-label-select"></label>
+        <select asp-for="Status" asp-items="Html.GetEnumSelectList<SprintStatus>()" class="form-control selectpicker"></select>
+        <span asp-validation-for="Status" class="invalid-feedback"></span>
+
+        <label asp-for="StartDate" class="float-label"></label>
+        <input asp-for="StartDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" id="start-date-input" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+        <span asp-validation-for="StartDate" class="invalid-feedback mt-1 mb-2"></span>
+
+        <label asp-for="EndDate" class="float-label"></label>
+        <input asp-for="EndDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" id="end-date-input" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+        <span asp-validation-for="EndDate" class="invalid-feedback mt-1 mb-2"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-edit-sprint">@Localizer["_update"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    $(".selectpicker").selectpicker();
+
+    $(".datepicker").datepicker({
+        format: "yyyy/mm/dd",
+        maxViewMode: 3,
+        todayBtn: "linked",
+        autoclose: true
+    });
+</script>
+<script>
+    $.saveChanges({
+        bindTo: "#btn-edit-sprint",
+        formId: "#form-edit-sprint",
+        ajaxUrl: "@Url.Action("Edit", "Sprints")",
+        successMessage: "@Localizer["messages_createSprintSuccess"]",
+        errorMessage: "@Localizer["messages_createSprintError"]",
+        buttonText: "@Localizer["_update"]",
+        eventFunction: function(result) {
+            $(`[data-id='${result.id}'].collapse-title`).html(result.name);
+            $(`[data-id='${result.id}'].delete-parent-link`).attr("data-name", result.name);
+            $(`[data-id='${result.id}'].sprint-date`).html(result.dueDate);
+
+            if (result.status == @((int)SprintStatus.Completed)) {
+
+                var sprintDom = $(`div[id='${result.id}'].parent-content`);
+                sprintDom.find(".collapse-title").addClass("line-through color-secondary");
+                sprintDom.find(".badge").attr("class", "badge badge-outline-secondary collapse-badge");
+                var sprint = sprintDom[0].outerHTML;
+                sprintDom.remove();
+                $('#completed-sprints').append(sprint);
+            } else {
+                var sprintCompletedDom = $(`div[id='${result.id}'].parent-content`);
+                sprintCompletedDom.find(".color-secondary").attr("class", "collapse-title collapse-title");
+                sprintCompletedDom.find(".badge").attr("class", "badge badge-outline-danger collapse-badge sprint-date");
+                var sprintCompleted = sprintCompletedDom[0].outerHTML;
+                sprintCompletedDom.remove();
+                $('#ongoing-sprints').append(sprintCompleted);
+            }
+        }
+    });
+</script>
+<script>
+    $("#start-date-input").change(function () {
+        var date = new Date($(this).val());
+        date.setDate(date.getDate() + 14);
+        $("#end-date-input").datepicker("update", date);
+    })
+</script>

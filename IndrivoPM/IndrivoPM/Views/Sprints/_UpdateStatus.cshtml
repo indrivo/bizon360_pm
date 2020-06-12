@@ -1,0 +1,61 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Sprints.Commands.UpdateSprintStatusCommand.UpdateSprintStatusCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="Sprints" asp-action="UpdateStatus" id="form-update-status-sprint">
+    <div class="modal-body">
+        <input asp-for="Id" hidden />
+
+        <label asp-for="Status" class="float-label-select"></label>
+        <select asp-for="Status" asp-items="Html.GetEnumSelectList<SprintStatus>()" class="form-control selectpicker"></select>
+        <span asp-validation-for="Status" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-update-status-sprint">@Localizer["shortCuts_update"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    $(".selectpicker").selectpicker();
+
+    $.saveChanges({
+        bindTo: "#btn-update-status-sprint",
+        formId: "#form-update-status-sprint",
+        ajaxUrl: "@Url.Action("UpdateStatus", "Sprints")",
+        successMessage: "@Localizer["messages_createSprintSuccess"]",
+        errorMessage: "@Localizer["messages_createSprintError"]",
+        buttonText: "@Localizer["_update"]",
+        eventFunction: function (data) {
+            if ("@((int)ViewBag.CurrentStatus)" == data.status) {
+                return;
+            }
+
+            if (data.status == @((int)SprintStatus.Completed)) {
+
+                var sprintDom = $(`div[id='${data.id}'].parent-content`);
+                sprintDom.find(".collapse-title").addClass("line-through color-secondary");
+                sprintDom.find(".badge").attr("class", "badge badge-outline-secondary collapse-badge");
+                var sprint = sprintDom[0].outerHTML;
+                sprintDom.remove();
+                $('#completed-sprints').append(sprint);
+            } else {
+                if ("@((int)ViewBag.CurrentStatus)" != @((int)SprintStatus.Completed)) {
+                    return;
+                }
+
+                var sprintCompletedDom = $(`div[id='${data.id}'].parent-content`);
+                sprintCompletedDom.find(".color-secondary").attr("class", "collapse-title collapse-title");
+                sprintCompletedDom.find(".badge").attr("class", "badge badge-outline-danger collapse-badge sprint-date");
+                var sprintCompleted = sprintCompletedDom[0].outerHTML;
+                sprintCompletedDom.remove();
+                $('#ongoing-sprints').append(sprintCompleted);
+            }
+        }
+    });
+</script>

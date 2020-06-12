@@ -1,0 +1,241 @@
+﻿@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = Localizer["_reports"];
+    ViewData["ActivePage"] = "GeneralReport";
+    // Breadcrumb data
+    ViewData["FirstNode"] = ViewData["Title"];
+}
+
+@section Styles {
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+}
+
+@{ await Html.RenderPartialAsync("_ReportsIndexTabs"); }
+
+<div class="tab-content">
+    <div role="tabpanel" class="tab-pane in active" id="general-report">
+        <div class="row mx-n-20">
+            <div class="col-12 bg-white border rounded py-15 px-20">
+                <h6>@Localizer["text_generateReport"]</h6>
+                <hr class="hr-description" />
+
+                <div class="row mt-3">
+
+                    <div class="col-xl-2 col-lg-3">
+                        <label class="float-label-select">@Localizer["_chooseProjectGroup"]</label>
+                        <select name="ProjectGroupIds" id="select-project-group" asp-items="@((List<SelectListItem>) ViewBag.ProjectGroups)"
+                                class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true">
+                        </select>
+                        <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true">
+                            <span class="d-none validation">@Localizer["validation_notEmptyProjectGroups"]</span>
+                        </span>
+                    </div>
+
+                    <div class="col-xl-2 col-lg-3 clear">
+                        <label class="float-label-select">@Localizer["_chooseProject"]</label>
+                        <select id="select-projects" asp-items="@(ViewBag.Projects)" class="form-control selectpicker" multiple data-live-search="true" data-actions-box="true"></select>
+                        <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true">
+                            <span class="d-none validation">@Localizer["validation_notEmptyProjectList"]</span>
+                        </span>
+                    </div>
+
+                    <div class="col-xl-2 col-lg-3 clear">
+                        <label class="float-label-select">@Localizer["_chooseTeam"]</label>
+                        <select id="select-teams" asp-items="@(ViewBag.Teams)" class="form-control selectpicker clear" multiple data-live-search="true" data-actions-box="true"></select>
+                        <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true">
+                            <span class="d-none validation">@Localizer["validation_notEmptyTeams"]</span>
+                        </span>
+                    </div>
+
+                    <div class="col-xl-2 col-lg-3">
+                        <label class="float-label">@Localizer["_chooseStartDate"]</label>
+                        <input id="start-date" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                        <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none">@Localizer["validation_notEmptyStartDate"]</span></span>
+                    </div>
+                    <div class="col-xl-2 col-lg-3">
+                        <label class="float-label">@Localizer["_chooseDueDate"]</label>
+                        <input id="due-date" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                        <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none">@Localizer["validation_notEmptyDueDate"]</span></span>
+                    </div>
+
+                    <div class="col-xl-2 col-lg-3">
+                        <label class="float-label-select">@Localizer["_chooseReportColumns"]</label>
+                        <select name="tableHeaders" id="select-table-headers" class="form-control selectpicker" asp-items="@(ViewBag.GeneralHeaders)" multiple data-live-search="true" data-actions-box="true" hidden="hidden"></select>
+                        <span class="invalid-feedback field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"><span class="d-none validation">@Localizer["_chooseReportColumns"]</span></span>
+                    </div>
+
+                    <div class="col text-right mt-lg-2">
+                        <button onclick="downloadGeneralReport(this, '/Reports/GetGeneralReportXml', 'General.xlsx')" data-original-text="XLSX" type="button" class="btn btn-outline-primary">XLSX</button>
+                        <button onclick="downloadGeneralReport(this, '/Reports/GetGeneralReportCsv', 'General.csv')" data-original-text="CSV" type="button" class="btn btn-outline-primary mx-1">CSV</button>
+
+                        <button type="button" onclick="generateGeneralReport(this, '/Reports/GetGeneralReport')" class="btn btn-success">
+                            @Localizer["_generate"]
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr class="no-gutters" />
+        <div id="report" class="collapse-datatable"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/js/dev/reports.js">
+    </script>
+
+    <script>
+        // Generate report and display on ui.
+        function generateGeneralReport(button, actionURL) {
+            // Variables
+            debugger;
+            var groupsIds = $("#select-project-group");
+            var projectsIds = $("#select-projects");
+            var teamsIds = $("#select-teams");
+            var startDate = $("#start-date");
+            var dueDate = $("#due-date");
+            var divResult = $("#report");
+
+            divResult.html(LOADER);
+            // Validation inputs.
+            if (!validationRangeDate(startDate, dueDate)) return;
+            if (!validationDropdown(projectsIds)) return;
+
+            button.setAttribute("disabled", "true");
+
+            $.ajax({
+                type: "POST",
+                url: actionURL,
+                traditional: true,
+                data: {
+                    groupsIds: groupsIds.val(),
+                    projectsIds: projectsIds.val(),
+                    teamsIds: teamsIds.val(),
+                    startDate: startDate.val(),
+                    dueDate: dueDate.val()
+                },
+                success: function(result) {
+                    divResult.html(result);
+                },
+                error: function() {
+                    divResult.html("Could not load data.");
+
+                },
+                complete: function() {
+                    button.removeAttribute("disabled");
+                }
+            });
+        }
+
+
+        function FillDropDown(select, result) {
+            if (result.length <= 1) {
+                select.append(`<option disabled selected value=''>There are no entries related to this project.</option>`);
+                select.attr("disabled", true);
+                select.selectpicker("refresh");
+                return;
+            }
+
+            for (var i = 0; i < result.length; i++) {
+                select.append($("<option/>",
+                        {
+                            value: result[i].value,
+                            text: result[i].text
+                        })
+                );
+            }
+            select.attr("disabled", false);
+            select.selectpicker("refresh");
+        }
+
+        $(document).ready(function() {
+            FillDropDown($("#select-projects").empty(), []);
+            FillDropDown($("#select-teams").empty(), []);
+
+            $("#select-project-group").change(function() {
+                validationDropdown($(this));
+
+                if (!validationDropdown($(this))) {
+                    FillDropDown($("#select-projects").empty(), []);
+                    FillDropDown($("#select-teams").empty(), []);
+                    return;
+                }
+
+                var projectGroupIds = $(this).val();
+
+                $.ajax({
+                    url: "@Url.Action("GetProjectsByGroup", "Reports")",
+                    data: { projectGroupIds: projectGroupIds },
+                    cache: false,
+                    traditional: true,
+                    type: "POST",
+                    success: function(result) {
+                        FillDropDown($("#select-projects").empty(), result);
+                    },
+                    error: function(reponse) {
+                        console.log("error : " + reponse);
+                    }
+                });
+
+            });
+
+            $("#select-projects").change(function() {
+                validationDropdown($(this));
+
+                if (!validationDropdown($(this))) {
+                    FillDropDown($("#select-teams").empty(), []);
+                    return;
+                }
+
+                var projectsIds = $(this).val();
+
+                $.ajax({
+                    url: "@Url.Action("GetpTeamsByProjects", "Reports")",
+                    data: { projectsIds: projectsIds },
+                    cache: false,
+                    traditional: true,
+                    type: "POST",
+                    success: function(result) {
+                        FillDropDown($("#select-teams").empty(), result);
+                    },
+                    error: function(reponse) {
+                        console.log("error : " + reponse);
+                    }
+                });
+            });
+
+
+            $("#select-teams").change(function() {
+                validationDropdown($(this));
+            });
+        });
+    </script>
+
+    <script>
+        $("#select-table-headers").on('change', checkHeaders);
+
+        function checkHeaders() {
+            var values = [];
+            $('#select-table-headers option').each(function() {
+                values.push($(this).attr('value'));
+            });
+
+            var table = $(".bizon-datatable").DataTable();
+            for (var i = 0; i < values.length; i++) {
+                var index = i;
+                var column = table.column(index);
+                var isSelected = $(`#select-table-headers option:nth(${index})`).is(':selected');
+                column.visible(isSelected);
+            }
+        }
+    </script>
+}
+

@@ -1,0 +1,46 @@
+﻿@page
+@model LoginModel
+
+@{
+    Layout = "_LayoutLogin.cshtml";
+    ViewData["Title"] = "Login";
+}
+
+<div class="bizon-auth-container">
+    <ul class="nav nav-tabs main-nav-tabs bizon-auth-tabs">
+        <li class=" ml-auto nav-item">
+            <a class="nav-link active" href="/Identity/Account/Login">Log in</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/Identity/Account/ForgotPassword">Reset password</a>
+        </li>
+    </ul>
+    <div class="nav-tab-border"></div>
+    <div asp-validation-summary="All" class="color-danger auth-validation"></div>
+    <form id="account" method="post">
+        <label asp-for="Input.Email" class="float-label">Your email</label>
+        <input asp-for="Input.Email" type="email" class="form-control" placeholder="Ex. john.doe@@domain.com" required />
+        <span asp-validation-for="Input.Email" class="invalid-feedback mt-1 mb-2"></span>
+        
+        <div class="position-relative">
+            <label asp-for="Input.Password" class="float-label">Password</label>
+            <input asp-for="Input.Password" type="password" class="form-control" placeholder="Ex. Hsd2-45sG-98Yj-23Ba" id="password-input" required />
+            <div class="password-toggle" data-target="#password-input" title="Toggle password visibility"></div>
+            <span asp-validation-for="Input.Password" class="invalid-feedback my-1"></span>
+        </div>
+
+        <div class="custom-control custom-checkbox">
+            <input type="checkbox" asp-for="Input.RememberMe" class="custom-control-input" id="rememberMe">
+            <label class="custom-control-label" for="rememberMe">Keep me logged in.</label>
+        </div>
+
+        <hr class="my-2" />
+
+        <button type="submit" class="btn btn-success d-block ml-auto">Log in</button>
+    </form>
+</div>
+
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

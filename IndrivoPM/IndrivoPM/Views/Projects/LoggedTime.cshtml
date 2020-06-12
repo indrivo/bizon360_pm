@@ -1,0 +1,151 @@
+﻿@using Bizon360.Models
+@using Gear.Common.Extensions.DateTimeExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.ProjectTabModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@{
+    Layout = "_BizonLayout";
+    ViewData["ActivePage"] = "LoggedTime";
+    ViewData["Title"] = Model.Name;
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+@section Styles {
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+}
+
+@{ await Html.RenderPartialAsync("_ProjectTabs", Model); }
+
+<div class="row row-m-20 bg-white border rounded top-bar pl-20 pr-20">
+    <div class="col-12 d-md-flex p-0">
+        <div class="ml-auto d-inline-block"></div>
+        @if (User.UserHasThisPermission(Permissions.LogTimeCreate))
+        {
+            <button class="btn btn-success ml-auto float-md-none float-right mb-md-0 mb-2 add-entity" data-toggle="modal" data-target="#modal" data-controller="LoggedTime" data-action="LogTimeFromProjectsPage" data-project-id="@Model.Id">@Localizer["shortCuts_logTime"]</button>
+            <div class="top-bar-divider d-md-block d-none"></div>
+        }
+        <input type="text" class="form-control search-input w-md-100-i mt-md-0 mt-2" placeholder="@Localizer["_search"]" />
+    </div>
+</div>
+
+<hr class="no-gutters" />
+
+<div id="time-logs"></div>
+
+<div class="no-results d-none">
+    <p class="mb-0">No matching records found</p>
+</div>
+
+@section Scripts {
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        function GetLoggedTime() {
+            $.ajax({
+                url: "@Url.Action("GetLoggedTimeByProject", "LoggedTime")",
+                type: "GET",
+                data: {
+                    projectId: "@Model.Id"
+                },
+                success: function(result) {
+                    $("#time-logs").html(result);
+                    feather.replace();
+
+                    EnableDataTable(".bizon-datatable", "None");
+                },
+                error: function() {
+                    $.errorAlert({
+                        title: "Error",
+                        message: "@Localizer["messages_errorLoadLoggedTime"]"
+                    });
+                }
+            });
+        }
+
+        function DeleteTableRow(entityId) {
+            var row = $("tr[id='entity-" + entityId + "']");
+            var parentTable = row.parents(".bizon-datatable").DataTable();
+
+            if (row.parents("tbody").children().length <= 1) {
+                $("[id='" + row.attr("data-parent-id") + "'].parent-content").remove();
+            } else {
+                var count = $("[id='" + row.attr("data-parent-id") + "'].time-log-count");
+                count.html(count.html() - row.attr("data-count"));
+
+                row.remove();
+                parentTable.row("#entity-" + entityId).remove();
+            }
+        }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // #region Load time logs on load
+            $("#time-logs").html(LOADER);
+
+            GetLoggedTime();
+            // #endregion
+
+            // #region Bind log time action
+            @if (User.UserHasThisPermission(Permissions.LogTimeCreate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".add-entity",
+                        modalTitle: "@Localizer["shortCuts_logTime"]",
+                        modalSize: "regular",
+                        data: {
+                            projectId: "data-project-id"
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind delete time log action
+            @if (User.UserHasThisPermission(Permissions.LogTimeDelete))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".delete-entity-link",
+                        modalTitle: "@Localizer["messages_deleteTimeLog"]",
+                        modalSize: "regular",
+                        timeLogDelete: true,
+                        successMessage: "@Localizer["messages_deleteTimeLogSuccess"]",
+                        errorMessage: "@Localizer["messages_deleteTimeLogError"]",
+                        eventFunction: function(result) {
+                            DeleteTableRow(result.id);
+                        }
+                    });
+
+                    $.confirmDelete();
+                </text>
+            }
+            // #endregion
+
+            // #region Bind update time log action
+            @if (User.UserHasThisPermission(Permissions.LogTimeUpdate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".update-entity-link",
+                        modalTitle: "@Localizer["shortCuts_editLoggedTime"]",
+                        modalSize: "regular",
+                        data: {
+                            id: "data-id",
+                            projectId: "data-project-id"
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+            $.bindSearch();
+        });
+    </script>
+}

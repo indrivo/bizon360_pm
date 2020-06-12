@@ -1,0 +1,40 @@
+﻿@model Gear.Manager.Core.EntityServices.Reports.Queries.Charts.GetProjectOverallProgress.ProjectOverallView
+@{
+    Layout = null;
+}
+
+<canvas id="pie-overall-project-progress" width="800" height="450"></canvas>
+
+<script>
+    function GetProgressElements() {
+        const result = [];
+
+        result.push("@(Model.CompletedTasks + Model.RefusedTasks)");
+        result.push("@(Model.TotalTasks - (Model.CompletedTasks + Model.RefusedTasks))");
+
+        return result;
+    }
+</script>
+
+<script>
+    var projectOverallChart = new Chart(document.getElementById("pie-overall-project-progress"),
+        {
+            type: 'pie',
+            data: {
+                labels: ["Completed", "Uncompleted"],
+                datasets: [
+                    {
+                        label: "Overall Progress",
+                        backgroundColor: ["#3e95cd", "#8e5ea2"], //"#3cba9f", "#e8c3b9", "#c45850", "#a541ef"],
+                        data: GetProgressElements()
+                    }
+                ]
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: 'Overall Progress'
+                }
+            }
+        });
+</script>

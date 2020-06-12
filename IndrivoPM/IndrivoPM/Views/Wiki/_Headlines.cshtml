@@ -1,0 +1,151 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.Queries.Wiki.Headlines.GetHeadlineList.HeadlineListViewModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@section Styles {
+    <link href="~/css/summer-note.css" rel="stylesheet" />
+}
+
+
+<div class="row row-m-20">
+
+    <div class="col-xl-8 bg-white border rounded py-15 px-20">
+        <div class="row">
+
+            <div class="col-md-4 wiki-headlines">
+                @if (Model.Headlines.Any())
+                {
+                    <ul class="nav nav-tabs wiki-tabs" id="headlines" role="tablist">
+                        @foreach (var headline in Model.Headlines)
+                        {
+                            <li class="nav-item hover-invisible-toggle position-relative" data-headline-id="@headline.Id" style="margin-right:-18px">
+                                <a class="nav-link rounded-left pt-0" id="label-@headline.Id" data-toggle="tab" href="#tab-@headline.Id" data-parent-id="@Model.ProjectId" role="tab">
+                                    <span class="headline-title" data-headline-id="@headline.Id">@headline.Title</span>
+                                </a>
+                                <div class="dropdown" data-headline-id="@headline.Id">
+                                    <i class="cursor-pointer hover-invisible options" data-feather="more-horizontal" data-toggle="dropdown"></i>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a href="#" class="dropdown-item rename-headline"
+                                           data-controller="Wiki" data-action="EditHeadline" data-id="@headline.Id">@Localizer["shortCuts_rename"]</a>
+
+                                        <a href="#" class="dropdown-item delete-headline" data-toggle="modal" data-target="#modal"
+                                           data-controller="Wiki" data-action="DeleteHeadline" data-id="@headline.Id" data-name="@headline.Title">
+                                            @Localizer["shortCuts_delete"]
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <h6 class="mb-0" id="no-tabs">@Localizer["messages_noTabs"]</h6>
+                }
+
+                <a id="create-tab" href="#" class="btn btn-sm btn-success my-3" data-controller="Wiki" data-action="CreateHeadline" data-project-id="@Model.ProjectId">@Localizer["shortCuts_addTab"]</a>
+            </div>
+            <div class="col-md-8">
+                @if (Model.Headlines.Select(x => x.Sections).Any())
+                {
+                    <div class="tab-content" id="sections">
+                        @if (Model.Headlines.Any())
+                        {
+                            foreach (var headline in Model.Headlines)
+                            {
+                                <div class="tab-pane fade" id="tab-@headline.Id" role="tabpanel" aria-labelledby="label-@headline.Id">
+                                    @if (headline.Sections.Any())
+                                    {
+                                        <div class="sections" data-headline-id="@headline.Id">
+                                            @foreach (var sect in headline.Sections)
+                                            {
+                                                <div class="section mb-2 s-note-text-black" data-id="@sect.Id">
+
+                                                    <div class="d-flex">
+                                                        <h6>@sect.Title</h6>
+
+                                                        <div class="dropdown ml-auto">
+                                                            <i class="cursor-pointer options" data-feather="more-horizontal" data-toggle="dropdown"></i>
+                                                            <div class="dropdown-menu dropdown-menu-right">
+                                                                <a href="#" class="dropdown-item edit-section"
+                                                                   data-controller="Wiki" data-action="EditSection" data-id="@sect.Id">@Localizer["shortCuts_edit"]</a>
+                                                                <a href="#" class="dropdown-item delete-section" data-toggle="modal" data-target="#modal" data-controller="Wiki" data-action="DeleteSection" data-id="@sect.Id" data-name="@sect.Title">@Localizer["shortCuts_delete"]</a>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+
+                                                    <hr class="hr-description" />
+
+
+                                                    @Html.Raw(sect.Content)
+
+
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="sections" data-headline-id="@headline.Id"></div>
+                                    }
+
+                                    <div class="create-section-container" data-headline-id="@headline.Id"></div>
+                                    <a href="#" class="btn btn-sm btn-success create-section"
+                                       data-controller="Wiki" data-action="CreateSection" data-headline-id="@headline.Id">@Localizer["shortCuts_addSection"]</a>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                }
+            </div>
+
+        </div>
+
+    </div>
+    <div class="col-xl-4">
+        @if (ViewBag.IsAuthenticatedOnCloud)
+        {
+            <h6 class="mt-3 mb-2">@Localizer["text_uploadFiles"]</h6>
+            <hr class="hr-description" style="margin-top:10px">
+
+            <div class="d-block mt-2">
+                <button type="button" class="btn btn-sm btn-success d-inline-block" id="upload-files" data-toggle="modal" data-target="#modal-add-file">
+                    @Localizer["text_uploadFile"]
+                </button>
+                <p class="p-sm d-inline-block ml-2 mb-0">@Localizer["text_maxFileSize"]</p>
+                <span>25.0 Mb</span>
+                <br />
+                <div id="myProgress">
+                    <div id="myBar"></div>
+                </div>
+            </div>
+
+            <h6 class="mt-3 mb-2">@Localizer["text_uploadedFiles"]</h6>
+            <hr class="hr-description">
+            <div id="files"></div>
+        }
+        else
+        {
+            <div class="d-block mt-2">
+                <form method="post" asp-controller="Home" asp-action="LogInMicrosoft" class="d-inline-block">
+                    <button id="cloudAuth" type="submit" class="btn btn-sm btn-success"
+                            title="@Localizer["text_needsCloudAuth"]">
+                        @Localizer["_cloudAuth"]
+                    </button>
+                </form>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    $("#files").html(LOADER);
+    feather.replace();
+    var wiki = new Wiki();
+    wiki.SaveTab();
+</script>

@@ -1,0 +1,78 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Activities.Commands.ShortcutActions.UpdateStatus.UpdateStatusCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="Activities" asp-action="EditStatus" id="form-edit-status">
+    <div class="modal-body">
+        <input asp-for="Id" hidden />
+
+        <label asp-for="Status" class="float-label-select"></label>
+        <select asp-for="Status" asp-items="Html.GetEnumSelectList<ActivityStatus>()" class="form-control selectpicker"></select>
+        <span asp-validation-for="Status" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-update-status">@Localizer["shortCuts_update"]</button>
+    </div>
+</form>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script>
+    $(".selectpicker").selectpicker();
+
+    $.saveChanges({
+        bindTo: "#btn-update-status",
+        formId: "#form-edit-status",
+        ajaxUrl: "@Url.Action("EditStatus", "Activities")",
+        successMessage: "@Localizer["messages_editActivitySuccess"]",
+        errorMessage: "@Localizer["messages_editActivityError"]",
+        buttonText: "@Localizer["shortCuts_update"]",
+        eventFunction: function (result) {
+
+            if ($('div').hasClass('grid')) {
+                var oldStatus = $(".activity[data-activity-id='" + result.id + "']").parent().attr('data-status'); 
+
+                var activity = $(".activity[data-activity-id='" + result.id + "']")[0].outerHTML;
+
+                $("ul[data-status='" + result.status + "']").prepend(activity);
+
+
+                $("ul[data-status='" + oldStatus + "']")
+                    .children(".activity[data-activity-id='" + result.id + "']").remove();
+
+                $(".activity[data-activity-id='" + result.id + "']").attr("data-status", result.status);
+
+                var itemIds = [];
+                $("ul[data-status='" + result.status + "']").children('li').each(function () {
+                    var itemId = $(this).data("activity-id");
+                    itemIds.push(itemId);
+                });
+
+                $.ajax({
+                    url: "/Activities/ActivitiesUpdateOrder",
+                    data: { itemIds: itemIds },
+                    type: "POST"
+                });
+            }
+            else {
+
+                var link = $("[data-id='" + result.id + "'].edit-entity-status-link");
+
+                link.attr("data-status", result.status);
+            }
+
+            if ($("#activity-status-" + result.id + "") != null) {
+                $("#activity-status-" + result.id + "").html(result.status);
+            }
+
+            if ($("[data-id='" + result.id + "'].global-edit-entity-status-link") != null) {
+                $("[data-id='" + result.id + "'].global-edit-entity-status-link").attr("data-status", result.status);
+                $("#status-" + result.id + "").html(result.status);
+            }
+        }
+    });
+</script>

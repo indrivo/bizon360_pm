@@ -1,0 +1,118 @@
+﻿@using System.Security.Claims
+@using Bizon360.Models
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@model Gear.Manager.Core.EntityServices.Notifications.Querries.GetNotificationProfileList.NotificationProfilesListViewModel
+
+@if (Model.NotificationProfiles.Any())
+{
+    <div class=" collapse-datatable">
+        <table class="table bizon-datatable dt-ntf no-parent" id="datatables-ntf" data-order='[[ 2, "asc" ]]'>
+            <thead>
+                <tr class="hover-invisible-toggle">
+                    <th class="no-sort">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-inactive-jobs" />
+                            <label class="custom-control-label" for="bulk-inactive-jobs"></label>
+                        </div>
+                    </th>
+                    <th class="no-sort" style="width: 30px">#</th>
+                    <th>@Localizer["_profiles"]</th>
+                    <th class="d-lg-table-cell d-none">@Localizer["_users"]</th>
+
+                    <th class="no-sort">
+                        <div class="dropdown datatables-th-dropdown">
+                            <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-job-positions-description" data-table-column-id="3" checked />
+                                    <label class="custom-control-label" for="dt-job-positions-description">
+                                        @Localizer["_users"]
+                                        <span>Users assigned to profile</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var ntf in Model.NotificationProfiles)
+                {
+                    <tr class="hover-invisible-toggle" id="entity-@ntf.Id">
+                        <td>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-check" id="@ntf.Id" data-parent-id="inactive-jobs" />
+                                <label class="custom-control-label" for="@ntf.Id"></label>
+                            </div>
+                        </td>
+                        <td></td>
+                        <td>
+                            <a  asp-controller="Notifications" asp-action="Details" asp-route-id="@ntf.Id" class="datatables-title">@ntf.Name</a>
+                            <div class="position-relative d-lg-inline-block d-none">
+                                <a href="#" class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box edit-ntf" 
+                                   data-controller="Notifications" data-action="Edit" data-id="@ntf.Id">@Localizer["_edit"]</a>
+                            </div>
+                        </td>
+                        <td class="td-users d-xl-table-cell d-none">
+                            @foreach (var user in ntf.UserList.Take(7))
+                            {
+                                <a class="btn btn-outline-primary user-rectangle" asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@user.Key"> @user.Value.ToInitials()</a>
+                            }
+
+                            @if (ntf.UserList.Count > 7)
+                            {
+                                var count = ntf.UserList.Count - 7;
+                                <a href="#" class="btn btn-outline-primary user-rectangle">+@count</a>
+                            }
+                            <a href="#" class="btn btn-outline-success user-rectangle hover-invisible assign-users" data-controller="Notifications" data-action="AssignUsers" data-id="@ntf.Id">+</a>
+                        </td>
+
+
+                        <td class="td-options">
+                            <div class="dropdown datatables-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                    @if (User.UserHasThisPermission(Permissions.NotificationProfileRead))
+                                    {
+                                        <a asp-controller="Notifications" asp-action="Details" asp-route-id="@ntf.Id" class="dropdown-item">@Localizer["_open"]</a>
+                                    }
+                                    @if (User.UserHasThisPermission(Permissions.NotificationProfileUpdate))
+                                    {
+                                        <a href="javascript:" class="dropdown-item edit-ntf" data-controller="Notifications" data-action="Edit" data-id="@ntf.Id">@Localizer["_edit"]</a>
+                                    }
+                                    @if (User.UserHasThisPermission(Permissions.NotificationProfileDelete))
+                                    {
+                                        <div class="dropdown-divider"></div>
+                                        <a href="javascript:" class="dropdown-item delete-ntf" data-controller="Notifications" data-action="Delete" data-id="@ntf.Id" data-name="@ntf.Name">Delete</a>
+                                    }
+
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p>There are no notification profiles.</p>
+}
+
+<script>
+    $(document).ready(function () {
+            EnableDataTable($("#datatables-ntf"), "NotificationsColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)", true);
+
+        $.bindColumnToggle({
+            cookieKey: "NotificationsColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)"
+        });
+    });
+</script>

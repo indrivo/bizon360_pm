@@ -1,0 +1,112 @@
+﻿@using System.Security.Claims
+@using Bizon360.Utils
+@using Gear.Common.Extensions.StringExtensions
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@model IEnumerable<Gear.ProjectManagement.Manager.Domain.Activities.Queries.GetActivitiesForGrid.ActivityForGrid>
+@inject IStringLocalizer Localizer
+
+@foreach (var activity in Model)
+{
+    <li data-activity-id="@activity.Id" data-status="@activity.Status" class="activity">
+        <div class="card rounded panel-heading border mb-2" id="@activity.Id">
+            <div class="card-body hover-invisible-toggle">
+                <div class="dropdown datatables-dropdown float-right">
+                    <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                    <div class="dropdown-menu dropdown-menu-right font-size-14 ignore-sortable">
+                        <a asp-controller="Activities" asp-action="Details" asp-route-id="@activity.Id" class="dropdown-item">@Localizer["shortCuts_open"]</a>
+                        @if (activity.Assignees.Any(a => a.Id == Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)) || User.UserHasThisPermission(Permissions.ActivityUpdateOtherUsersEntry))
+                        {
+                            <a asp-controller="Activities" asp-action="Edit" asp-route-id="@activity.Id" class="dropdown-item">@Localizer["shortCuts_edit"]</a>
+                            <a href="javascript:" class="dropdown-item rename-entity-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="Rename" data-id="@activity.Id" data-name="@activity.Name">@Localizer["shortCuts_rename"]</a>
+                            <a href="javascript:" class="dropdown-item log-time-link" data-controller="LoggedTime" data-action="LogTimeFromActivitiesPage" data-activity-id="@activity.Id" data-progress="@activity.Progress">@Localizer["shortCuts_logTime"]</a>
+                            <a href="javascript:" class="dropdown-item set-entity-priority-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="EditPriority" data-id="@activity.Id" data-priority="@activity.Priority">@Localizer["shortCuts_setPriority"]</a>
+                            <a href="javascript:" class="dropdown-item edit-entity-status-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="EditStatus" data-id="@activity.Id" data-status="@activity.Status">@Localizer["shortCuts_updateStatus"]</a>
+                            <a href="javascript:" class="dropdown-item move-to-list-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="MoveToList" data-id="@activity.Id" data-list-id="@activity.ActivityListId" data-project-id="@activity.ProjectId">@Localizer["shortCuts_moveToList"]</a>
+                            <a href="javascript:" class="dropdown-item assign-to-sprint-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="AssignToSprint" data-id="@activity.Id" data-sprint-id="@activity.SprintId" data-project-id="@activity.ProjectId">@Localizer["shortCuts_assignToSprint"]</a>
+                        }
+                        @if (activity.Assignees.Any(a => a.Id == Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)) || User.UserHasThisPermission(Permissions.ActivityDeleteOtherUsersEntry))
+                        {
+                            <div class="dropdown-divider"></div>
+                            <a href="javascript:" class="dropdown-item delete-entity-link" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="Delete" data-id="@activity.Id" data-name="@activity.Name">@Localizer["shortCuts_delete"]</a>
+                        }
+                    </div>
+                </div>
+
+                @if (activity.DueDate != null)
+                {
+                    <p class="text-muted activity-due-date">
+                        @($"{activity.DueDate:yyyy-MM-dd}")
+                        @if (activity.Status != ActivityStatus.Completed)
+                        {
+                            @($" \u00B7 ")
+                            @activity.DueDate.GetRemainingTime()
+                        }
+                    </p>
+                }
+                else
+                {
+                    <p class="text-muted activity-due-date">Date not specified</p>
+                }
+
+                <h5 class="card-title">
+                    <span class="@ProjectsViewHelper.GetPriorityTextColor(activity.Priority) priority" id="@activity.Id">@activity.Priority</span>
+                    <a class="activity-name" data-id="@activity.Id" asp-controller="Activities" asp-action="Details" asp-route-id="@activity.Id">@activity.Name</a>
+                </h5>
+
+                <div class="row mt-1">
+                    <div class="col">
+                        <p class="activity-usecase mb-0" id="@activity.Id">@activity.ActivityListName</p>
+                    </div>
+                    <div class="col-tracker">
+                        <p class="text-right @ProjectsViewHelper.GetActivityTypeTextColor(activity.ActivityType.ColorBadge) priority mb-0">
+                            @activity.ActivityType.Abbreviation
+                        </p>
+                    </div>
+                </div>
+
+                <hr class="card-divider"/>
+
+                <div class="d-flex">
+                    <a href="javascript:" class="btn btn-success log-time-link px-10 py-5px" data-controller="LoggedTime" data-action="LogTimeFromActivitiesPage" data-activity-id="@activity.Id" data-progress="@activity.Progress">@Localizer["shortCuts_logTime"]</a>
+                    <div class="d-block ml-3">
+                        <p class="font-size-14 line-height-14 mb-0">@Localizer["_est."]</p>
+                        <p class="font-size-14 line-height-14 color-black mb-0">@(activity.EstimatedHours ?? 0)h</p>
+                    </div>
+                    <div class="d-block ml-3">
+                        <p class="font-size-14 line-height-14 mb-0">@Localizer["_log."]</p>
+                        <span class="d-block font-size-14 line-height-14 color-black mb-0"><span class="logged-time" id="@activity.Id">@activity.LoggedTime</span>h</span>
+                    </div>
+                    <div class="d-block ml-3">
+                        <p class="font-size-14 line-height-14 mb-0">@Localizer["_prog"]</p>
+                        <span class="d-block font-size-14 line-height-14 color-black t-progress mb-0" id="@activity.Id">
+                            @activity.Progress<span>%</span>
+                        </span>
+                    </div>
+                    <div class="d-block ml-auto activity-assignees" id="@activity.Id">
+                        @if (activity.Assignees.Any())
+                        {
+                            <a asp-controller="ApplicationUsers" asp-action="Details" asp-route-id="@activity.Assignees.First().Id" title="@activity.Assignees.First().FullName" class="btn btn-outline-primary user-rectangle">@activity.Assignees.First().FullName.ToInitials()</a>
+
+                            if (activity.Assignees.Count > 1)
+                            {
+                                <a href="javascript:" class="btn btn-outline-primary user-rectangle" title="@string.Join(", ", activity.Assignees.Skip(1).Select(a => a.FullName))">+@(activity.Assignees.Count - 1)</a>
+                            }
+                        }
+                        @if (User.UserHasThisPermission(Permissions.ActivityUpdate))
+                        {
+                            <a href="javascript:" class="btn btn-outline-success user-rectangle edit-entity-assignees-link" title="@Localizer["shortCuts_editActivityAssignees"]" data-toggle="modal" data-target="#modal" data-controller="Activities" data-action="EditActivityAssignees" data-id="@activity.Id">+</a>
+                        }
+                        else
+                        {
+                            <span class="datatables-none">-</span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </li>
+}

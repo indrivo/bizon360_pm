@@ -1,0 +1,245 @@
+@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.Commands.UpdateProject.UpdateProjectCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@{
+    Layout = "_BizonLayout";
+    ViewData["Title"] = Model.Name;
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["SecondNode"] = Localizer["shortCuts_editProject"];
+}
+@section Styles {
+    <link href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+    <link href="~/lib/summernote/summernote-bs4.css" rel="stylesheet" />
+    <link href="~/css/summer-note.css" rel="stylesheet" />
+}
+<!-- Tab links -->
+<ul class="tab nav nav-tabs main-nav-tabs project-tabs px-40">
+    <li class="nav-item">
+        <a class="tablinks nav-link cursor-pointer active" onclick="openTab(event, 'tab-details')">@Localizer["_details"]</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="tablinks nav-link cursor-pointer" onclick="openTab(event, 'tab-tabs')">@Localizer["_tabs"]</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="tablinks nav-link cursor-pointer" onclick="openTab(event, 'tab-restrictions')">@Localizer["_restrictions"]</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="tablinks nav-link cursor-pointer" onclick="openTab(event, 'tab-notifications')">@Localizer["_notifications"]</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="tablinks nav-link cursor-pointer" onclick="openTab(event, 'tab-invoicing')">@Localizer["_invoicing"]</a>
+    </li>
+</ul>
+
+
+<!-- Tab content -->
+<div id="settings"></div>
+<div class="tabcontent" id="tab-invoicing" style="display: none"></div>
+
+<div class="tabcontent" id="tab-details">
+    <form asp-controller="Projects" asp-action="EditRedirect" id="form-edit-project">
+        <input asp-for="Id" class="form-control" hidden />
+        @Html.AntiForgeryToken()
+
+        <div class="row bizon-row">
+            <div class="col-lg-3 col-md-6 mb-lg-0 mb-3 bizon-col">
+                <div class="bg-white rounded border px-20 py-15">
+                    <h6>@Localizer["_overview"]</h6>
+                    <hr class="hr-description mb-3" />
+
+                    <label asp-for="Name" class="float-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_projectName"]" autofocus="autofocus" autocomplete="off" required />
+                    <span asp-validation-for="Name" class="invalid-feedback mt-1 mb-2"></span>
+
+                    @*<label asp-for="Budget" class="float-label"></label>
+                    <input asp-for="Budget" class="form-control" placeholder="@Localizer["_estimatedBudget"]" autocomplete="off" />
+                    <span asp-validation-for="Budget" class="invalid-feedback mt-1 mb-2"></span>*@
+
+                    <label asp-for="StartDate" class="float-label"></label>
+                    <input asp-for="StartDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                    <span asp-validation-for="StartDate" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="EndDate" class="float-label"></label>
+                    <input asp-for="EndDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                    <span asp-validation-for="EndDate" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="ProjectManagerId" class="float-label-select"></label>
+                    <select asp-for="ProjectManagerId" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)" placeholder="@Localizer["messages_clickToSelect"]" class="form-control selectpicker" required data-live-search="true"></select>
+                    <span asp-validation-for="ProjectManagerId" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="ProjectMemberIds" class="float-label-select"></label>
+                    <select asp-for="ProjectMemberIds" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)" placeholder="@Localizer["messages_clickToSelect"]" class="form-control selectpicker" multiple data-live-search="true" data-selected-text-format="value" data-actions-box="true"></select>
+                    <span asp-validation-for="ProjectMemberIds" class="invalid-feedback mt-1 mb-2"></span>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-md-0 mb-3 bizon-col">
+                <div class="bg-white rounded border px-20 py-15">
+                    <h6>@Localizer["_projectDetails"]</h6>
+                    <hr class="hr-description mb-3" />
+
+                    <label asp-for="ProjectUrl" class="float-label"></label>
+                    <input asp-for="ProjectUrl" class="form-control" placeholder="@Localizer["_projectLink"]" autocomplete="off" />
+                    <span asp-validation-for="ProjectUrl" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="ProjectGroupId" class="float-label-select"></label>
+                    <select asp-for="ProjectGroupId" asp-items="@((List<SelectListItem>) ViewBag.ProjectGroups)" class="form-control selectpicker" data-live-search="true"></select>
+                    <span asp-validation-for="ProjectGroupId" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="Status" class="float-label-select"></label>
+                    <select asp-for="Status" asp-items="Html.GetEnumSelectList<ProjectStatus>()" class="form-control selectpicker"></select>
+                    <span asp-validation-for="Status" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="Priority" class="float-label-select"></label>
+                    <select asp-for="Priority" asp-items="Html.GetEnumSelectList<ActivityPriority>()" class="form-control selectpicker"></select>
+                    <span asp-validation-for="Priority" class="invalid-feedback mt-1 mb-2"></span>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-lg-0 mb-3 bizon-col">
+
+                <div class="bg-white rounded border px-20 py-15">
+                    <h6>@Localizer["text_providedServices"]</h6>
+                    <hr class="hr-description mb-3" />
+
+                    <label asp-for="SolutionTypeId" class="float-label-select"></label>
+                    <select asp-for="SolutionTypeId" asp-items="@(new SelectList(ViewBag.SolutionTypes, "Id", "Name", null))" class="form-control selectpicker">
+                        <option selected value="null">-Select-</option>
+                    </select>
+                    <span asp-validation-for="SolutionTypeId" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="ServiceTypeId" class="float-label-select"></label>
+                    <select asp-for="ServiceTypeId" asp-items="@(new SelectList(ViewBag.ServiceTypes, "Id", "Name", null))" class="form-control selectpicker">
+                        <option selected value="null">-Select-</option>
+                    </select>
+                    <span asp-validation-for="ServiceTypeId" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="TechnologyTypeId" class="float-label-select"></label>
+                    <select asp-for="TechnologyTypeId" asp-items="@(new SelectList(ViewBag.TechnologyTypes, "Id", "Name", null))" class="form-control selectpicker">
+                        <option selected value="null">-Select-</option>
+                    </select>
+                    <span asp-validation-for="TechnologyTypeId" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="ProductTypeId" class="float-label-select"></label>
+                    <select asp-for="ProductTypeId" asp-items="@(new SelectList(ViewBag.ProductTypes, "Id", "Name", null))" class="form-control selectpicker">
+                        <option selected value="null">-Select-</option>
+                    </select>
+                    <span asp-validation-for="SolutionTypeId" class="invalid-feedback mt-1 mb-2"></span>
+                </div>
+
+
+
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-lg-0 mb-3 bizon-col">
+
+                <div class="bg-white rounded border px-20 py-15">
+                    <h6>@Localizer["_description"]</h6>
+                    <hr class="hr-description mb-3" />
+                    <div class="position-relative">
+                        <label asp-for="Description" class="summernote-label"></label>
+                        <textarea id="summer-note" asp-for="Description"></textarea>
+                        <span asp-validation-for="Description" class="invalid-feedback mt-1 mb-2"></span>
+                    </div>
+
+                </div>
+
+
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<footer class="bulk-actions-container show">
+    <ul class="list-unstyled list-inline d-lg-inline-block d-block float-lg-right mb-0">
+        <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+            <a class="btn w-lg-auto w-100 btn-outline-secondary mr-2" asp-controller="Projects" asp-action="Details" asp-route-id="@Model.Id">@Localizer["_discard"]</a>
+            <button type="submit" class="btn w-lg-auto w-100 btn-success mr-lg-2" id="btn-save">@Localizer["shortCuts_update"]</button>
+        </li>
+    </ul>
+</footer>
+<div class="bulk-hidden-space"></div>
+
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/lib/summernote/summernote-bs4.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $(".selectpicker").selectpicker();
+
+            EnableSummerNote("#summer-note");
+
+            $(".datepicker").datepicker({
+                format: "yyyy/mm/dd",
+                maxViewMode: 3,
+                todayBtn: "linked",
+                autoclose: true,
+                clearBtn: true
+            });
+
+            // ------------------------
+            // Gets form with settings
+
+            $.get("/Projects/SetUp?id=@Model.Id")
+                .done(function (result) {
+                    $("#settings").html(result);
+                });
+
+            // ------------------------
+            // Gets form with invoices
+
+            $.get("/Projects/Invoice?projectId=@Model.Id")
+                .done(function (result) {
+                    $("#tab-invoicing").html(result);
+                });
+
+            // -------------------------------
+            // Save forms
+
+            // Settings
+            $("#btn-save").click(function (e) {
+                DisableButton($(this));
+
+                $.ajax({
+                    url: "/Projects/SetUp/",
+                    type: "POST",
+                    data: $("#form-settings").serialize(),
+                });
+
+                $.ajax({
+                    url: "/Projects/Invoice/",
+                    type: "POST",
+                    data: $("#form-invoice").serialize(),
+                });
+
+                e.preventDefault();
+            });
+
+            // Details
+            $.saveChanges({
+                bindTo: "#btn-save",
+                formId: "#form-edit-project",
+                ajaxUrl: "@Url.Action("EditRedirect", "Projects")",
+                successMessage: "@Localizer["messages_editProjectSuccess"]",
+                errorMessage: "@Localizer["messages_editProjectError"]",
+                eventFunction: function () {
+                    window.location.href = "/Projects/Details?id=@Model.Id";
+                }
+            });
+        });
+    </script>
+}

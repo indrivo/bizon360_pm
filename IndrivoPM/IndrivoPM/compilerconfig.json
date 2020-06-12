@@ -1,0 +1,7 @@
+﻿[
+  {
+    "outputFile": "wwwroot/css/bizon360.css",
+    "inputFile": "wwwroot/sass/bizon360.sass",
+    "sourceMap": true
+  }
+]

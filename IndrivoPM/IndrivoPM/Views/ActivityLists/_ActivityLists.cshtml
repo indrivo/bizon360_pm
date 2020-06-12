@@ -1,0 +1,147 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Newtonsoft.Json
+@model Gear.ProjectManagement.Manager.Domain.ActivityLists.Querries.GetActivityLists.ActivityListsViewModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+@if (Model.ActivityLists.Any())
+{
+    <hr class="no-gutters " />
+    <div id="ongoing-activities">
+        @foreach (var activityList in Model.ActivityLists.Where(x => !x.IsCompleted))
+        {
+            <div class="parent-content" id="@activityList.Id">
+                <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative cursor-pointer pb-lg-0 pb-2" data-toggle="collapse" href="#parent-@activityList.Id" data-type="@ActivityParentType.ActivityList" data-id="@activityList.Id" data-loaded="false">
+                    <div class="d-lg-flex d-block w-100 px-20">
+                        <div class="d-flex pt-collapse">
+                            <a class="border collapse-switcher d-inline-block">
+                                <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                            </a>
+                            <span class="collapse-title" data-id="@activityList.Id">
+                                <a href="@Url.Action("Details", "ActivityLists", new {id = activityList.Id})">
+                                    @activityList.Name
+                                </a>
+                            </span>
+                            <span class="collapse-count" id="count-@activityList.Id">@activityList.ActivitiesCount</span>
+                            @if (User.UserHasThisPermission(Permissions.ActivityListUpdate) || User.UserHasThisPermission(Permissions.ActivityListDelete))
+                            {
+                                <div class="dropdown collapse-dropdown">
+                                    <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        @if (User.UserHasThisPermission(Permissions.ActivityListUpdate))
+                                        {
+                                            <a href="javascript:" class="dropdown-item edit-parent-link" data-toggle="modal" data-target="#modal" data-controller="ActivityLists" data-action="Edit" data-id="@activityList.Id">@Localizer["shortCuts_edit"]</a>
+                                            <a href="javascript:" class="dropdown-item rename-parent-link" data-toggle="modal" data-target="#modal" data-controller="ActivityLists" data-action="Rename" data-id="@activityList.Id">@Localizer["shortCuts_rename"]</a>
+                                            <a href="javascript:" class="dropdown-item update-status-parent-link" data-toggle="modal" data-target="#modal" data-controller="ActivityLists" data-action="UpdateStatus" data-id="@activityList.Id">@Localizer["shortCuts_updateStatus"]</a>
+                                        }
+                                        @if (User.UserHasThisPermission(Permissions.ActivityListDelete))
+                                        {
+                                            <div class="dropdown-divider"></div>
+                                            <a href="javascript:" class="dropdown-item delete-parent-link" data-toggle="modal" data-target="#modal" data-controller="ActivityLists" data-action="Delete" data-id="@activityList.Id" data-name="@activityList.Name">@Localizer["shortCuts_delete"]</a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="d-lg-none collapse-divider"></div>
+                        @if (User.UserHasThisPermission(Permissions.ActivityCreate))
+                        {
+                            <div class="d-lg-block d-inline-block">
+                                <a asp-controller="Activities" asp-action="Create" asp-route-projectId="@ViewBag.ProjectId" asp-route-activityListId="@activityList.Id" class="btn btn-success collapse-button details hover-invisible stop-propagation hover-lg ml-lg-20 mt-lg-10">@Localizer["shortCuts_addActivity"]</a>
+                            </div>
+                        }
+                        <div class="loader-container"></div>
+                        <div class="d-lg-block d-inline-block ml-auto mr-30 collapse-details">
+                            <span class="collapse-log-details d-inline-block">Est. <span class="d-lg-inline d-block color-black">@activityList.EstimatedTime h</span></span>
+                            <span class="collapse-log-details d-inline-block">Log. <span class="d-lg-inline d-block color-black"><span class="parent-logged" data-parent-id="@activityList.Id">@activityList.LoggedTime</span> h</span></span>
+                            <span class="collapse-log-details mr-0 d-inline-block">Prog. <span class="d-lg-inline d-block color-black"><span class="parent-prog" data-parent-id="@activityList.Id">@activityList.CompletedActivitiesCount / @activityList.TotalActivitiesCount</span></span></span>
+                            @*<span class="collapse-log-details d-lg-none d-inline-block">@Localizer["_prog"] <span class="d-lg-inline d-block color-black">@activityList.Progress%</span></span>*@
+                            @*<div class="progress collapse-progress d-lg-inline-flex d-none" title="@activityList.Progress%">
+                                    <div class="progress-bar @ProjectsViewHelper.GetProgressBarColor(activityList.Progress)" role="progressbar" style="width: @activityList.Progress%" aria-valuenow="@activityList.Progress" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>*@
+                        </div>
+                    </div>
+                </div>
+                <div class="collapse collapse-datatable" id="parent-@activityList.Id"></div>
+                <hr class="no-gutters" />
+            </div>
+        }
+    </div>
+    if (Model.ActivityLists.Any(s => s.IsCompleted))
+    {
+        <div>
+            <button class="btn btn-outline-purple btn-sm" data-toggle="collapse" data-target="#completed-activities">Show completed</button>
+        </div>
+        <div class="collapse collapse-fix" id="completed-activities">
+            <hr class="no-gutters" />
+            @foreach (var activityList in Model.ActivityLists.Where(x => x.IsCompleted))
+            {
+                <div class="parent-content" id="@activityList.Id">
+                    <div class="row row-m-20 bg-white border rounded collapse-container hover-invisible-toggle position-relative cursor-pointer pb-lg-0 pb-2" data-toggle="collapse" href="#parent-@activityList.Id" data-type="@ActivityParentType.ActivityList" data-id="@activityList.Id" data-loaded="false">
+                        <div class="d-lg-flex d-block w-100 px-20">
+                            <div class="d-flex pt-collapse">
+                                <a class="border collapse-switcher d-inline-block">
+                                    <i class="collapse-switcher-icon" data-feather="chevron-right"></i>
+                                </a>
+                                <span class="collapse-title color-secondary line-through" data-id="@activityList.Id">
+                                    <a href="@Url.Action("Details", "ActivityLists", new {id = activityList.Id})">
+                                        @activityList.Name
+                                    </a>
+                                </span>
+                                <span class="collapse-count" id="count-@activityList.Id">@activityList.ActivitiesCount</span>
+                                @if (User.UserHasThisPermission(Permissions.ActivityListUpdate) || User.UserHasThisPermission(Permissions.ActivityListDelete))
+                                {
+                                    <div class="dropdown collapse-dropdown">
+                                        <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            @if (User.UserHasThisPermission(Permissions.ActivityListUpdate))
+                                            {
+                                                <a href="javascript:" class="dropdown-item edit-parent-link" data-toggle="modal" data-target="#modal" data-controller="ActivityLists" data-action="Edit" data-id="@activityList.Id">@Localizer["shortCuts_edit"]</a>
+                                                <a href="javascript:" class="dropdown-item rename-parent-link" data-toggle="modal" data-target="#modal" data-controller="ActivityLists" data-action="Rename" data-id="@activityList.Id">@Localizer["shortCuts_rename"]</a>
+                                                <a href="javascript:" class="dropdown-item update-status-parent-link" data-toggle="modal" data-target="#modal" data-controller="ActivityLists" data-action="UpdateStatus" data-id="@activityList.Id">@Localizer["shortCuts_updateStatus"]</a>
+                                            }
+                                            @if (User.UserHasThisPermission(Permissions.ActivityListDelete))
+                                            {
+                                                <div class="dropdown-divider"></div>
+                                                <a href="javascript:" class="dropdown-item delete-parent-link" data-toggle="modal" data-target="#modal" data-controller="ActivityLists" data-action="Delete" data-id="@activityList.Id" data-name="@activityList.Name">@Localizer["shortCuts_delete"]</a>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="d-lg-none collapse-divider"></div>
+                            @if (User.UserHasThisPermission(Permissions.ActivityCreate))
+                            {
+                                <div class="d-lg-block d-inline-block">
+                                    <a asp-controller="Activities" asp-action="Create" asp-route-projectId="@ViewBag.ProjectId" asp-route-activityListId="@activityList.Id" class="btn btn-success collapse-button details hover-invisible stop-propagation hover-lg ml-lg-20 mt-lg-10">@Localizer["shortCuts_addActivity"]</a>
+                                </div>
+                            }
+                            <div class="loader-container"></div>
+                            <div class="d-lg-block d-inline-block ml-auto mr-30 collapse-details">
+                                <span class="collapse-log-details d-inline-block">Est. <span class="d-lg-inline d-block color-black">@activityList.EstimatedTime h</span></span>
+                                <span class="collapse-log-details d-inline-block">Log. <span class="d-lg-inline d-block color-black"><span class="parent-logged" data-parent-id="@activityList.Id">@activityList.LoggedTime</span> h</span></span>
+                                <span class="collapse-log-details mr-0 d-inline-block">Prog. <span class="d-lg-inline d-block color-black"><span class="parent-prog" data-parent-id="@activityList.Id">@activityList.CompletedActivitiesCount / @activityList.TotalActivitiesCount</span></span></span>
+                                @*<span class="collapse-log-details d-lg-none d-inline-block">@Localizer["_prog"] <span class="d-lg-inline d-block color-black">@activityList.Progress%</span></span>
+                                <div class="progress collapse-progress d-lg-inline-flex d-none" title="@activityList.Progress%">
+                                    <div class="progress-bar @ProjectsViewHelper.GetProgressBarColor(activityList.Progress)" role="progressbar" style="width: @activityList.Progress%" aria-valuenow="@activityList.Progress" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>*@
+                            </div>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-datatable" id="parent-@activityList.Id"></div>
+                    <hr class="no-gutters" />
+                </div>
+            }
+        </div>
+    }
+}
+else
+{
+    <div id="ongoing-activities"></div>
+    <p class="mb-0 mt-2 no-parent-entities">@Localizer["messages_noActivityLists"]</p>
+}

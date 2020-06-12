@@ -1,0 +1,37 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.Commands.ShortcutActions.RenameProject.RenameProjectCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="Projects" asp-action="Rename" id="form-rename-project">
+    <div class="modal-body">
+        <input asp-for="Id" class="form-control" hidden />
+        
+        <label asp-for="Name" class="float-label"></label>
+        <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_projectName"]" autocomplete="off" required />
+        <span asp-validation-for="Name" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-rename-project">@Localizer["shortCuts_rename"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+    $.saveChanges({
+        bindTo: "#btn-rename-project",
+        formId: "#form-rename-project",
+        ajaxUrl: "@Url.Action("Rename", "Projects")",
+        successMessage: "@Localizer["messages_editProjectSuccess"]",
+        errorMessage: "@Localizer["messages_editProjectError"]",
+        buttonText: "@Localizer["shortCuts_rename"]",
+        eventFunction: function(result) {
+            $("tr[id='entity-" + result.id + "'] .entity-title").html(result.name);
+            $("[data-id='" + result.id + "'].rename-entity-link").attr("data-name", result.name);
+            $("[data-id='" + result.id + "'].delete-entity-link").attr("data-name", result.name);
+        }
+    });
+</script>

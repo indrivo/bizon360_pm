@@ -1,0 +1,28 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.Queries.GetAllProjects.ProjectsDto
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form>
+    <div class="modal-body">
+        <p class="p-sm color-black ml-sm-auto mb-sm-0 mb-2">
+            @if (Model.Projects.Any())
+            {
+                foreach (var project in Model.Projects)
+                {
+                    <a asp-controller="Projects" asp-action="Details" asp-route-id="@project.Id">@project.Name</a><br />
+                }
+            }
+            else
+            {
+                @Localizer["_userNotAssigned"]
+            }
+        </p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+    </div>
+</form>
+

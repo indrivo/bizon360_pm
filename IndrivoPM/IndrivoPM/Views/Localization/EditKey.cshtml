@@ -1,0 +1,37 @@
+﻿@model Gear.Localizer.Models.EditLocalizationViewModel
+@{
+    ViewData["Title"] = "EditKey";
+}
+    <div class="row">
+        <div class="col-lg-12">
+            <form class="card" asp-action="EditKey" asp-controller="Localization" method="post">
+                <input type="hidden" asp-for="Key" />
+                <div class="card-header">
+                    <strong>Edit localization for key: <code>@Model.Key</code></strong>
+                </div>
+                <div class="card-body card-block">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <div class="row form-group">
+                        <div class="col-md-6">
+                            @foreach (var (key, value) in Model.LocalizedStrings)
+                            {
+                                <div class="form-group">
+                                    <label class="col-form-label">@Model.Languages[key]</label>
+                                    <input class="form-control" type="text" asp-for="LocalizedStrings[key]">
+                                    <span asp-validation-for="LocalizedStrings[key]" class="text-danger"></span>
+                                </div>
+                            }
+
+                        </div>
+                    </div>
+                    <hr />
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="far fa-check-circle"></i> Save
+                    </button>
+                    <a asp-controller="Localization" asp-action="Index" class="btn btn-link btn-sm">Back</a>
+                </div>
+            </form>
+        </div>
+    </div>

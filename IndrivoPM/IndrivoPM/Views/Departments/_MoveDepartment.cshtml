@@ -1,0 +1,60 @@
+﻿@model Gear.Manager.Core.EntityServices.Departments.Commands.MoveDepartment.MoveDepartmentCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+@if (ViewBag.BusinessUnits == null)
+{
+    <p class=" p-3">There are no exist business units</p>
+}
+else
+{
+    <form id="form">
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    @foreach (var item in Model.DepartmentIds)
+                    {
+                        <input asp-for="DepartmentIds" value="@item" hidden/>
+                    }
+
+                    <div class="mb-2">
+                        <label asp-for="BusinessUnitId" class="float-label-select"></label>
+                        <select asp-for="BusinessUnitId" asp-items="@(new SelectList(ViewBag.BusinessUnits, "Id", "Name", null))" class="form-control selectpicker" data-live-search="true">
+                        </select>
+                        <span asp-validation-for="BusinessUnitId" class="invalid-feedback"></span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+            <button type="submit" class="btn btn-success" id="btn">@Localizer["_move"]</button>
+        </div>
+    </form>
+}
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+<script>
+    $(".selectpicker").selectpicker();
+    var dp = new DepartmentContainer();
+    var bu = new BusinessUnitContainer();
+
+    $.saveChanges({
+        bindTo: "#btn",
+        formId: "#form",
+        ajaxUrl: "@Url.Action("MoveDepartment", "Departments")",
+        successMessage: "@Localizer["msgSuccess_moveDepartment"]",
+        errorMessage: "@Localizer["msgError_moveDepartment"]",
+        eventFunction: function () {
+            if (refreshTable) { bu.getBusinessUnits() }
+            else { dp.getDepartments() }
+        }
+    });
+</script>
+

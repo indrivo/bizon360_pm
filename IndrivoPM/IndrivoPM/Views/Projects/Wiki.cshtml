@@ -1,0 +1,304 @@
+﻿@using Bizon360.Models
+@using Gear.Common.Extensions.DateTimeExtensions
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.ProjectTabModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@{
+    Layout = "_BizonLayout";
+    ViewData["ActivePage"] = "Wiki";
+    ViewData["Title"] = Model.Name;
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+@{ await Html.RenderPartialAsync("_ProjectTabs", Model); }
+
+<div class="row mx-n-20">
+    <div class="col-lg-8 bg-white border rounded py-15 px-20">
+        <div id="wiki"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function LoadWiki() {
+            $.ajax({
+                url: "@Url.Action("GetHeadlines", "Wiki")",
+                type: "GET",
+                data: { projectId: "@Model.Id" },
+                success: function(result) {
+                    $("#wiki").html(result);
+                    feather.replace();
+                },
+                error: function() {
+                    $.errorAlert({
+                        title: "@Localizer["_error"]",
+                        message: "@Localizer["error_loadData"]"
+                    });
+                }
+            });
+        }
+    </script>
+    <script>
+        $(document).ready(function () {
+            // #region Load wiki on load
+            $("#wiki").html(LOADER);
+
+            LoadWiki();
+            // #endregion
+
+            // #region Bind tab create action
+            $(document).on("click", "#create-tab", function(e) {
+                e.stopPropagation();
+
+                $.ajax({
+                    url: "@Url.Action("CreateHeadline", "Wiki")",
+                    type: "GET",
+                    data: { projectId: "@Model.Id" },
+                    success: function (result) {
+                        CloseHeadlineEditForm();
+                        CloseSectionCreateForm();
+                        CloseSectionEditForm();
+
+                        $("#create-tab-container").html(result);
+
+                        var button = $("#create-tab");
+                        if (!button.hasClass("d-none")) {
+                            button.addClass("d-none");
+                        }
+                    },
+                    error: function() {
+                        $.errorAlert({
+                            title: "@Localizer["_error"]",
+                            message: "@Localizer["error_loadData"]"
+                        });
+                    }
+                });
+            });
+            // #endregion
+
+            // #region Bind tab edit action
+            $(document).on("click", ".rename-headline", function (e) {
+                var headlineId = $(this).attr("data-headline-id");
+
+                $.ajax({
+                    url: "@Url.Action("EditHeadline", "Wiki")",
+                    type: "GET",
+                    data: { id: headlineId },
+                    success: function (result) {
+                        CloseHeadlineCreateForm();
+                        CloseHeadlineEditForm();
+                        CloseSectionCreateForm();
+                        CloseSectionEditForm();
+
+                        var link = $("[id='label-" + headlineId + "'].nav-link");
+                        var dropdown = $("[data-headline-id='" + headlineId + "'].dropdown");
+
+                        if (!link.hasClass("d-none") && !dropdown.hasClass("d-none")) {
+                            link.addClass("d-none");
+                            dropdown.addClass("d-none");
+                        }
+
+                        link.parent().append(result);
+                    },
+                    error: function() {
+                        $.errorAlert({
+                            title: "@Localizer["_error"]",
+                            message: "@Localizer["error_loadData"]"
+                        });
+                    }
+                });
+            });
+            // #endregion
+
+            // #region Bind tab delete
+            $.bindDeleteModal({
+                bindTo: ".delete-headline",
+                modalTitle: "@Localizer["shortCuts_deleteTab"]",
+                modalSize: "regular",
+                type: "@Localizer["types_tab"]",
+                successMessage: "@Localizer["messages_deleteTabSuccess"]",
+                errorMessage: "@Localizer["messages_deleteTabError"]",
+                eventFunction: function (result) {
+                    $("li[data-headline-id='" + result.id + "'].nav-item").remove();
+                    $("[id='tab-" + result.id + "'].tab-pane").remove();
+
+                    if (!$("#headlines li").length) {
+                        $("#headlines").parent().prepend('<p class="mb-0" id="no-tabs">@Localizer["messages_noTabs"]</p>');
+                    }
+                }
+            });
+            // #endregion
+
+            // #region Form closing functions
+            function CloseHeadlineCreateForm() {
+                var form = $("#form-create-headline");
+
+                if (form.length) {
+                    $("#create-tab").toggleClass("d-none");
+                    form.remove();
+                }
+            }
+
+            function CloseHeadlineEditForm() {
+                var form = $("#form-edit-headline");
+
+                if (form.length) {
+                    var headlineId = form.find(".headline-id").val();
+
+                    $("a[id='label-" + headlineId + "'].nav-link").removeClass("d-none");
+                    $("[data-headline-id='" + headlineId + "'].dropdown").removeClass("d-none");
+
+                    form.remove();
+                }
+            }
+
+            function CloseSectionCreateForm() {
+                var form = $("#form-create-section");
+
+                if (form.length) {
+                    $("[data-headline-id='" + form.find("input.headline-id").val() + "'].create-section")
+                        .toggleClass("d-none");
+                    form.remove();
+                }
+            }
+
+            function CloseSectionEditForm() {
+                var form = $("#form-edit-section");
+
+                if (form.length) {
+                    $("[data-id='" + form.find("input.section-id").val() + "'].section").removeClass("d-none");
+                    form.remove();
+                }
+            }
+
+            $(document).on("click", ".close-btn", function () {
+                CloseHeadlineCreateForm();
+                CloseHeadlineEditForm();
+                CloseSectionCreateForm();
+                CloseSectionEditForm();
+            });
+
+            $(document).keyup(function(e) {
+                if (e.key === "Escape") {
+                    CloseHeadlineCreateForm();
+                    CloseHeadlineEditForm();
+                    CloseSectionCreateForm();
+                    CloseSectionEditForm();
+                }
+            });
+            // #endregion
+            
+            // #region Bind section create action
+            $(document).on("click", ".create-section", function(e) {
+                e.stopPropagation();
+
+                var button = $(this);
+                var headlineId = $(this).attr("data-headline-id");
+
+                $.ajax({
+                    url: "@Url.Action("CreateSection", "Wiki")",
+                    type: "GET",
+                    data: { headlineId: headlineId },
+                    success: function (result) {
+                        CloseSectionEditForm();
+                        CloseHeadlineCreateForm();
+                        CloseHeadlineEditForm();
+
+                        $("[data-headline-id='" + headlineId + "'].create-section-container").html(result);
+
+                        if (!button.hasClass("d-none")) {
+                            button.addClass("d-none");
+                        }
+                    }
+                });
+            });
+            // #endregion
+
+            // #region Bind section edti action
+            $(document).on("click", ".edit-section", function () {
+                var sectionId = $(this).attr("data-section-id");
+
+                $.ajax({
+                    url: "@Url.Action("EditSection", "Wiki")",
+                    type: "GET",
+                    data: { id: sectionId },
+                    success: function (result) {
+                        CloseSectionCreateForm();
+                        CloseSectionEditForm();
+                        CloseHeadlineCreateForm();
+                        CloseHeadlineEditForm();
+
+                        var sectionContainer = $("[data-id='" + sectionId + "'].section");
+                        if (!sectionContainer.hasClass("d-none")) {
+                            sectionContainer.addClass("d-none");
+                        }
+
+                        sectionContainer.after(result);
+                    },
+                    error: function() {
+                        $.errorAlert({
+                            title: "@Localizer["_error"]",
+                            message: "@Localizer["error_loadData"]"
+                        });
+                    }
+                });
+            });
+            // #endregion
+
+            // #region Bind section delete action
+            $.bindDeleteModal({
+                bindTo: ".delete-section",
+                modalTitle: "@Localizer["shortCuts_deleteSection"]",
+                modalSize: "regular",
+                type: "@Localizer["types_section"]",
+                successMessage: "@Localizer["messages_deleteSectionSuccess"]",
+                errorMessage: "@Localizer["messages_deleteSectionError"]",
+                eventFunction: function (result) {
+                    debugger;
+                    var sectionToDelete = $("[data-id='" + result.id + "'].section");
+                    var parent = sectionToDelete.parent();
+
+                    sectionToDelete.remove();
+
+                    if (!parent.children().length) {
+                        parent.parent().prepend('<p class="mb-0 no-sections" data-headline-id="' + parent.attr("data-headline-id") + '">@Localizer["messages_noSections"]</p>')
+                    }
+                }
+            });
+            // #endregion
+
+            $.confirmDelete();
+        });
+    </script>
+}
+
+
+
+
+
+
+
+@*<div class="row bg-white rounded br-8 mx-0 border p-2 ls-md mt-3 py-3">
+        <div class="col-12">
+            <h5 class="font-weight-bold d-inline-block">Wiki</h5>
+            @if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+            {
+                <a asp-controller="Projects" asp-action="EditWiki" asp-route-id="@Model.Id" class="btn btn-success-custom fs-14 font-weight-600 ml-3 px-2 py-1">Edit</a>
+            }
+            <br />
+            @if (string.IsNullOrEmpty(Model.Wiki))
+            {
+                <p class="mb-0">Empty.</p>
+            }
+            else
+            {
+                <br />
+                @Html.Raw(Model.Wiki)
+            }
+        </div>
+    </div>*@

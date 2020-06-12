@@ -1,0 +1,50 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Activities.Commands.BulkActions.SetActivitiesPriority.SetActivitiesPriorityCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form asp-controller="Activities" asp-action="SetActivitiesPriority" id="form-bulk-set-priority">
+    <div class="modal-body">
+        <select asp-for="ActivitiesById" multiple hidden>
+            @foreach (var activity in Model.ActivitiesById)
+            {
+                <option value="@activity" selected></option>
+            }
+        </select>
+
+        <label asp-for="Priority" class="float-label-select"></label>
+        <select asp-for="Priority" asp-items="Html.GetEnumSelectList<ActivityPriority>()" class="form-control selectpicker"></select>
+        <span asp-validation-for="Priority" class="invalid-feedback"></span>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-bulk-set-priority">@Localizer["shortCuts_update"]</button>
+    </div>
+</form>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script>
+    $(".selectpicker").selectpicker();
+
+    $.saveChanges({
+        bindTo: "#btn-bulk-set-priority",
+        formId: "#form-bulk-set-priority",
+        ajaxUrl: "@Url.Action("SetActivitiesPriority", "Activities")",
+        successMessage: "@Localizer["messages_bulkUpdateActivitiesSuccess"]",
+        errorMessage: "@Localizer["messages_bulkUpdateActivitiesError"]",
+        buttonText: "@Localizer["shortCuts_update"]",
+        eventFunction: function(result) {
+            $.each(result.activities, function (key, value) {
+                $(`tr[id='entity-${value}'] .badge:not(.ml-10)`)
+                    .attr("class", "badge " + GetPriorityBadgeColor(result.priority)).html(result.priority);
+                $(`tr[id='search-entity-${value}'] .badge:not(.ml-10)`)
+                    .attr("class", "badge " + GetPriorityBadgeColor(result.priority)).html(result.priority);
+                $(`[data-id='${value}'].set-entity-priority-link`).attr("data-priority", result.priority);
+            });
+            DeselectAll();
+        }
+    });
+</script>

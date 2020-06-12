@@ -1,0 +1,47 @@
+﻿@using Gear.Common.Extensions.DateTimeExtensions
+@model Gear.ProjectManagement.Manager.Domain.Projects.ProjectTabModel
+@{
+    ViewData["Title"] = Model.Name;
+    ViewData["ActivePage"] = "GitLab";
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = "Projects";
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+<div class="row mb-4">
+    <div class="col-12 position-relative">
+        @if (Model.EndDate != null)
+        {
+            switch (Model.EndDate.GetPriorityByDate())
+            {
+                case PriorityByDate.Critical:
+                    <div class="badge badge-danger-custom d-inline-block project-date-badge ml-4">@($"{Model.EndDate:yyyy-MM-dd}")</div>
+                    break;
+                case PriorityByDate.High:
+                    <div class="badge badge-warning-custom d-inline-block project-date-badge ml-4">@($"{Model.EndDate:yyyy-MM-dd}")</div>
+                    break;
+                case PriorityByDate.Medium:
+                    <div class="badge badge-primary-custom d-inline-block project-date-badge ml-4">@($"{Model.EndDate:yyyy-MM-dd}")</div>
+                    break;
+                default:
+                    <div class="badge badge-info-custom d-inline-block project-date-badge ml-4">@($"{Model.EndDate:yyyy-MM-dd}")</div>
+                    break;
+            }
+            <h4 class="d-inline-block font-weight-bold ls-sm ml-2 vertical-center">@ViewData["Title"]</h4>
+        }
+        else
+        {
+            <h4 class="d-inline-block font-weight-bold ls-sm m-0 ml-4">@ViewData["Title"]</h4>
+        }
+        <breadcrumb></breadcrumb>
+    </div>
+</div>
+
+@{ await Html.RenderPartialAsync("_ProjectTabs", Model); }
+
+<div class="row">
+    <div class="col-12">
+        <p class="font-weight-600 mt-1 pl-4">GitLab functionality is not yet developed.</p>
+    </div>
+</div>

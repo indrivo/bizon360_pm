@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gear.DynamicReporting.ProjectManagement\Gear.DynamicReporting.ProjectManagement.csproj" />
+    <ProjectReference Include="..\Gear.DynamicReporting\Gear.DynamicReporting.Abstractions.csproj" />
+    <ProjectReference Include="..\Gear.Identity.Permissions.Abstraction\Gear.Identity.Permissions.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Application\Gear.Manager.Core.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Common\Gear.Common.csproj" />
+    <ProjectReference Include="..\Modules\Notifications\Gear.Notifications\Gear.Notifications\Gear.Notifications.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Audit.EntityFramework.Identity.Core" Version="14.6.3" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="6.1.0" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="8.4.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.2.6" />
+    <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
+    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="2.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Domain\ActivityCheckList\Querries\GetCheckList\" />
+  </ItemGroup>
+
+
+</Project>

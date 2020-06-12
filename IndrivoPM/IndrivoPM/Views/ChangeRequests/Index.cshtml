@@ -1,0 +1,270 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.ProjectTabModel
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@{
+    Layout = "_BizonLayout";
+    ViewData["ActivePage"] = "ChangeRequests";
+    ViewData["Title"] = Model.Name;
+
+    // Breadcrumb data
+    ViewData["FirstNode"] = Localizer["_projects"];
+    ViewData["SecondNode"] = ViewData["Title"];
+}
+
+@{ await Html.RenderPartialAsync("_ProjectTabs", Model); }
+@section Styles {
+    <link href="~/lib/summernote/summernote-bs4.css" rel="stylesheet" />
+}
+<div class="row row-m-20 bg-white border rounded top-bar pl-20 pr-20">
+    <div class="col-12 d-md-flex p-0">
+        <div class="ml-auto d-inline-block"></div>
+        @if (User.UserHasThisPermission(Permissions.ChangeRequestCreate))
+        {
+            <button class="btn btn-success ml-auto float-md-none float-right mb-md-0 mb-2 add-entity" data-toggle="modal" data-target="#modal" data-controller="ChangeRequests" data-action="Create" data-project-id="@Model.Id">@Localizer["shortCuts_addChangeRequest"]</button>
+            <div class="top-bar-divider d-md-block d-none"></div>
+        }
+        <input type="text" class="form-control search-input w-md-100-i mt-md-0 mt-2" placeholder="@Localizer["_search"]" />
+    </div>
+</div>
+
+<hr class="no-gutters" />
+
+<div id="requests"></div>
+
+<div class="no-results d-none">
+    <p class="mb-0">No matching records found</p>
+</div>
+
+<footer class="bulk-actions-container">
+    <div class="d-lg-inline-flex d-block">
+        <button type="button" class="btn d-block w-lg-auto w-100 btn-outline-secondary" id="deselect-all">@Localizer["shortCuts_deselectAll"] <span class="check-counter d-lg-none"></span></button>
+        @if (!User.UserHasThisPermission(Permissions.ProjectUpdate) && !User.UserHasThisPermission(Permissions.ProjectDelete))
+        {
+            <p class="d-lg-inline text-lg-left text-center">@Localizer["messages_noPermissionsRequests"]</p>
+        }
+        else
+        {
+            <p class="d-lg-inline d-none"><span class="check-counter"></span> @Localizer["messages_requestsSelected"]</p>
+        }
+    </div>
+    <ul class="list-unstyled list-inline d-lg-inline-block d-block float-lg-right mb-0">
+        @if (User.UserHasThisPermission(Permissions.ProjectUpdate))
+        {
+            <li class="d-lg-inline-block d-flex mt-lg-0 mt-2">
+                <button type="button" class="bulk-refuse-link btn w-lg-auto w-100 btn-outline-primary mr-lg-2" data-toggle="modal" data-target="#modal" data-controller="ChangeRequests" data-action="BulkRefuse">@Localizer["shortCuts_refuse"]</button>
+            </li>
+        }
+        @if (User.UserHasThisPermission(Permissions.ChangeRequestDelete))
+        {
+            <li class="d-lg-inline-block d-none">
+                <div class="divider"></div>
+            </li>
+            <li class="d-lg-inline-block d-block mt-lg-0 mt-2">
+                <button type="button" class="bulk-delete-link btn d-block w-lg-auto w-100 btn-danger ml-lg-2" data-toggle="modal" data-target="#modal" data-controller="ChangeRequests" data-action="BulkDelete">@Localizer["shortCuts_deleteSelected"]</button>
+            </li>
+        }
+    </ul>
+</footer>
+<div class="bulk-hidden-space d-none"></div>
+
+@section Scripts {
+    <script src="~/lib/summernote/summernote-bs4.js"></script>
+
+    <script>
+        function GetRequestStatusString(status) {
+            switch (status) {
+                case "@ChangeRequestStatus.Unprocessed":
+                    return "unprocessed";
+                case "@ChangeRequestStatus.Approved":
+                    return "approved";
+                case "@ChangeRequestStatus.Refused":
+                    return "refused";
+                default:
+                    return "";
+            }
+        }
+
+        function GetChangeRequests() {
+            $.ajax({
+                url: "@Url.Action("GetChangeRequests", "ChangeRequests")",
+                type: "GET",
+                data: {
+                    projectId: "@Model.Id"
+                },
+                success: function(result) {
+                    $("#requests").html(result);
+                    feather.replace();
+
+                    EnableDataTable(".bizon-datatable", "RequestsHiddenColumns");
+                    $.bindColumnToggle({ cookieKey: "RequestsHiddenColumns" });
+                },
+                error: function() {
+                    $.errorAlert({
+                        title: "Error",
+                        message: "@Localizer["messages_errorLoadRequests"]"
+                    });
+                }
+            });
+        }
+
+        function GetRequestsWithStatus(status) {
+            $.ajax({
+                url: "@Url.Action("GetRequestsWithStatus", "ChangeRequests")",
+                type: "GET",
+                data: {
+                    projectId: "@Model.Id",
+                    status: status
+                },
+                success: function (result) {
+                    $("[id='parent-" + GetRequestStatusString(status) + "'].collapse-datatable").html(result.view);
+                    $("[id='count-" + GetRequestStatusString(status) + "'].collapse-count").html(result.count);
+                    feather.replace();
+                }
+            });
+        }
+    </script>
+    <script>
+        $(document).ready(function () {
+
+
+
+            // #region Load requests on load
+            $("#requests").html(LOADER);
+
+            GetChangeRequests();
+            // #endregion
+
+            // #region Bind request create action
+            @if (User.UserHasThisPermission(Permissions.ChangeRequestCreate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".add-entity",
+                        modalTitle: "@Localizer["shortCuts_addChangeRequest"]",
+                        modalSize: "modal-lg",
+                        data: {
+                            projectId: "data-project-id"
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind request edit action
+            @if (User.UserHasThisPermission(Permissions.ChangeRequestUpdate))
+            {
+                <text>
+                    $.bindFormModal({
+                        bindTo: ".edit-entity-link",
+                        modalTitle: "@Localizer["shortCuts_editRequest"]",
+                        modalSize: "modal-lg"
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind request delete action
+            @if (User.UserHasThisPermission(Permissions.ChangeRequestDelete))
+            {
+                <text>
+                    $.bindDeleteModal({
+                        bindTo: ".delete-entity-link",
+                        modalTitle: "@Localizer["shortCuts_deleteRequest"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_request"]",
+                        successMessage: "@Localizer["messages_deleteRequestSuccess"]",
+                        errorMessage: "@Localizer["messages_deleteRequestError"]",
+                        eventFunction: function(result) {
+                            DeleteTableRowCollapseUpdate(result.id, "@Localizer["messages_noRequests"]");
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+
+            // #region Bind request refuse action
+            @if (User.UserHasThisPermission(Permissions.ChangeRequestReject))
+                 {
+                     <text>
+                         $.bindFormModal({
+                             bindTo: ".refuse-request-link",
+                             modalTitle: "@Localizer["shortCuts_refuseRequest"]",
+                             modalSize: "modal-lg",
+                             data: {
+                                 id: "data-id"
+                             }
+                         });
+                     </text>
+                 }
+            // #endregion
+
+            // #region Bind delete confirmation modal
+            $.confirmDelete();
+            // #endregion
+
+            // #region Bind request details modal
+            $.bindFormModal({
+                bindTo: ".entity-title",
+                modalTitle: "@Localizer["_requestDetails"]"
+            });
+            // #endregion
+
+            // #region Bind search
+            $.bindSearch();
+            // #endregion
+
+            // #region Bulk Actions
+            @if (User.UserHasThisPermission(Permissions.ChangeRequestDelete))
+            {
+                <text>
+                    // Bulk delete requests
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-delete-link",
+                        modalTitle: "@Localizer["bulk_deleteRequests"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_requests"]",
+                        successMessage: "@Localizer["messages_bulkDeleteRequestsSuccess"]",
+                        errorMessage: "@Localizer["messages_bulkDeleteRequestsError"]",
+                        eventFunction: function(result) {
+                            $.each(result.deletedRows, function(key, value) {
+                                DeleteTableRowCollapseUpdate(value, "@Localizer["messages_noRequests"]");
+                            });
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+
+            @if (User.UserHasThisPermission(Permissions.ChangeRequestReject))
+            {
+                <text>
+                    // Bulk refuse requests
+                    $.bindDeleteModal({
+                        bulk: true,
+                        bindTo: ".bulk-refuse-link",
+                        modalTitle: "@Localizer["bulk_refuseRequests"]",
+                        modalSize: "regular",
+                        type: "@Localizer["types_requests"]",
+                        successMessage: "@Localizer["messages_bulkRefuseRequestsSuccess"]",
+                        errorMessage: "@Localizer["messages_bulkRefuseRequestsError"]",
+                        eventFunction: function(result) {
+                            $.each(result.deletedRows, function(key, value) {
+                                DeleteTableRowCollapseUpdate(value, "@Localizer["messages_noRequests"]");
+                            });
+                            GetRequestsWithStatus("@ChangeRequestStatus.Refused");
+                            DeselectAll();
+                        }
+                    });
+                </text>
+            }
+            // #endregion
+        });
+    </script>
+}

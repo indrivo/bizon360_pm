@@ -1,0 +1,134 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.ChangeRequests.Commands.RefuseChangeRequest.RefuseChangeRequestCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<link href="~/css/summer-note.css" rel="stylesheet" />
+
+<form asp-controller="ChangeRequests" asp-action="RefuseChangeRequest" class="add-request-comment">
+    <div class="modal-body">
+        <div class="position-relative mt-3">
+            <input asp-for="Id" value="@ViewBag.requestId"  hidden />
+            <label asp-for="Comment" class="summernote-label"></label>
+            <textarea asp-for="Comment" class="summernote" required="required" data-msg="This field is required."></textarea>
+            <span asp-validation-for="Comment" class="invalid-feedback mt-1 mb-2"></span>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-danger" id="btn-refuse-request"> @Localizer["shortCuts_refuse"]</button>
+    </div>
+</form>
+
+
+<script>
+    /* Summernote Validation */
+    var summernoteForm = $('.add-request-comment');
+    var summernoteElement = $('.summernote');
+
+    var summernoteValidator = summernoteForm.validate({
+        errorElement: "div",
+        errorClass: 'is-invalid',
+        validClass: 'is-valid',
+        ignore: ':hidden:not(.summernote),.note-editable.card-block',
+        errorPlacement: function (error, element) {
+            // Add the `help-block` class to the error element
+            error.addClass("invalid-feedback");
+            console.log(element);
+            if (element.prop("type") === "checkbox") {
+                error.insertAfter(element.siblings("label"));
+            } else if (element.hasClass("summernote")) {
+                error.insertAfter(element.siblings(".note-editor"));
+            } else {
+                error.insertAfter(element);
+            }
+        }
+    });
+    summernoteElement.summernote({
+        dialogsInBody: true,
+        dialogsFade: false,
+        height: 100, // set editor height
+        minHeight: null, // set minimum height of editor
+        maxHeight: null, // set maximum height of editor
+        focus: true, // set focus to editable area after initializing summernote
+        popover: { //solve -> note-popover appearing in top left on page load
+            image: [],
+            link: [],
+            air: []
+        },
+        toolbar: [
+            ['fontsize', ['fontsize']],
+            ['fontname', ['fontname']],
+            ['font', ['bold', 'italic', 'underline', 'clear']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link']]
+        ],
+        callbacks: {
+            onChange: function (contents) {
+                // Note that at this point, the value of the `textarea` is not the same as the one
+                // you entered into the summernote editor, so you have to set it yourself to make
+                // the validation consistent and in sync with the value.
+                summernoteElement.val(summernoteElement.summernote('isEmpty') ? "" : contents);
+
+                if (summernoteElement.summernote('isEmpty')) {
+                    $(".note-editor.note-frame.card").attr('style', 'border-color:red !important');
+
+                } else if (!summernoteElement.summernote('isEmpty')) {
+                    $(".note-editor.note-frame.card").attr('style', 'border-color:blue !important');
+                }
+
+                // You should re-validate your element after change, because the plugin will have
+                // no way to know that the value of your `textarea` has been changed if the change
+                // was done programmatically.
+                summernoteValidator.element(summernoteElement);
+            },
+            onPaste: function (e) {
+                var bufferText = ((e.originalEvent || e).clipboardData || window.clipboardData).getData('Text');
+                e.preventDefault();
+                document.execCommand('insertText', false, bufferText);
+            },
+            onFocus: function () {
+                if (!summernoteElement.summernote('isEmpty') && !$("#Description-error").text()) {
+                    $(".note-editor.note-frame.card").attr('style', 'border-color:blue !important');
+                }
+            },
+            onBlur: function () {
+                if (!$("#Description-error").text()) {
+                    $(".note-editor.note-frame.card").attr('style', 'border-color:none');
+                }
+            }
+        }
+    });
+
+
+    $("#btn-refuse-request").click(function () {
+        if (summernoteElement.summernote('isEmpty')) {
+            summernoteElement.val("");
+            $(".note-editor.note-frame.card").attr('style', 'border-color:red !important');
+        } else {
+            $(".note-editor.note-frame.card").attr('style', 'border-color:none');
+        }
+    });
+
+    $.saveChanges({
+        bindTo: "#btn-refuse-request",
+        formId: ".add-request-comment",
+        ajaxUrl: "@Url.Action("RefuseChangeRequest", "ChangeRequests")",
+        successMessage: "@Localizer["messages_refuseRequestSuccess"]",
+        errorMessage: "@Localizer["messages_refuseRequestError"]",
+        buttonText: "@Localizer["_shortCuts_refuse"]",
+        eventFunction: function (result) {
+            debugger;
+            DeleteTableRowCollapseUpdate(result.id, "@Localizer["messages_noRequests"]");
+            GetRequestsWithStatus("@ChangeRequestStatus.Refused");
+            var count = $("[id='count-refused'].collapse-count");
+            count.html(parseInt(count.html()) + 1);
+        }
+    });
+
+</script>

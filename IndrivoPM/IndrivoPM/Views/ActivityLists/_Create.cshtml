@@ -1,0 +1,185 @@
+﻿@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.ActivityLists.Commands.CreateActivityList.CreateActivityListCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<link href="~/lib/summernote/summernote-bs4.css" rel="stylesheet" />
+<link href="~/css/summer-note.css" rel="stylesheet" />
+<link href="~/css/custom-file-input.css" rel="stylesheet" />
+
+<form asp-controller="ActivityLists" asp-action="Create" id="form-create-activity-list" method="post">
+    <div class="modal-body">
+        <input asp-for="Id" hidden />
+        <input asp-for="ProjectId" hidden />
+        <input asp-for="ProjectNumber" value="@ViewBag.ProjectNumber" hidden />
+
+        <label asp-for="Name" class="float-label"></label>
+        <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_activityListName"]" autocomplete="off" required />
+        <span asp-validation-for="Name" class="invalid-feedback"></span>
+
+        <label asp-for="ActivityListStatus" class="float-label-select"></label>
+        <select asp-for="ActivityListStatus" asp-items="Html.GetEnumSelectList<ActivityListStatus>()" class="form-control selectpicker"></select>
+        <span asp-validation-for="ActivityListStatus" class="invalid-feedback"></span>
+
+        <label asp-for="SprintId" class="float-label-select"></label>
+        <select asp-for="SprintId" asp-items="@((List<SelectListItem>) ViewBag.Sprints)" placeholder="@Localizer["messages_clickToSelect"]" class="form-control selectpicker" id="sprints-select" data-live-search="true">
+            <option Value="">- Select -</option>
+        </select>
+        <span asp-validation-for="SprintId" class="invalid-feedback mt-1 mb-2"></span>
+        <img class="selectpicker-loader d-none" src="~/img/loader.gif" data-input="#sprints-select" />
+
+        <div class="row">
+            <div class="col-sm-6 col-12">
+                <label asp-for="StartDate" class="float-label"></label>
+                <input asp-for="StartDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" id="start-date" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                <span asp-validation-for="StartDate" class="invalid-feedback mt-1 mb-2"></span>
+            </div>
+            <div class="col-sm-6 col-12">
+                <label asp-for="DueDate" class="float-label"></label>
+                <input asp-for="DueDate" type="text" asp-format="{0:yyyy/MM/dd}" class="form-control datepicker" id="due-date" placeholder="@Localizer["messages_clickToSelect"]" autocomplete="off" readonly />
+                <span asp-validation-for="DueDate" class="invalid-feedback mt-1 mb-2"></span>
+            </div>
+        </div>
+
+        <div class="position-relative">
+            <label asp-for="Description" class="summernote-label"></label>
+            <textarea asp-for="Description" class="summernote" id="summernote"></textarea>
+            <span asp-validation-for="Description" class="invalid-feedback mt-1 mb-2"></span>
+        </div>
+        
+    @if (User.UserHasThisPermission(Permissions.ActivityListUpdate))
+    {
+        @if (ViewBag.IsAuthenticatedOnCloud)
+        {
+            <input type="file" name="File" id="file" class="inputfile inputfile-1" data-multiple-caption="{count} files selected"/>
+            <label id="attach-file" for="file">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="17" viewBox="0 0 20 17">
+                    <path d="M10 0l-5.2 4.9h3.3v5.1h3.8v-5.1h3.3l-5.2-4.9zm9.3 11.5l-3.2-2.1h-2l3.4 2.6h-3.5c-.1 0-.2.1-.2.1l-.8 2.3h-6l-.8-2.2c-.1-.1-.1-.2-.2-.2h-3.6l3.4-2.6h-2l-3.2 2.1c-.4.3-.7 1-.6 1.5l.6 3.1c.1.5.7.9 1.2.9h16.3c.6 0 1.1-.4 1.3-.9l.6-3.1c.1-.5-.2-1.2-.7-1.5z"/>
+                </svg> <span>Attach files&hellip;</span>
+            </label>
+        }
+        else
+        {
+            <input class="btn btn-success login-on-cloud" type="submit" value="CloudAuth" form="LoginForm">
+        }
+    }
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-create-activity-list">@Localizer["_add"]</button>
+        <button type="submit" class="btn btn-success" id="btn-create-activity-list-new">@Localizer["_addAndNew"]</button>
+    </div>
+</form>
+
+@if (User.UserHasThisPermission(Permissions.ActivityListUpdate))
+{
+    @if (!ViewBag.IsAuthenticatedOnCloud)
+    {
+        <form method="post" asp-controller="Home" asp-action="LogInMicrosoft" id="LoginForm"></form>
+    }
+}
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script src="~/lib/summernote/summernote-bs4.js"></script>
+<script src="~/js/dev/custom-file-input.js"></script>
+<script>
+    $("#form-create-activity-list").submit(function (e) {
+      
+        e.preventDefault();
+        let form = $(this);
+
+        DisableButton("#btn-create-activity-list");
+
+        let formData = new FormData(form[0]);
+        $.ajax({
+            url: '@Url.Action("Create", "ActivityLists")',
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                $(".no-parent-entities").remove();
+                $("#parent-entities").append(response);
+                feather.replace();
+
+                $.successAlert({
+                    title:"Success",
+                    message:"@Localizer["messages_createActivityListSuccess"]"
+                });
+            },
+            error: function() {
+                $.errorAlert({
+                    title: "Error",
+                    message:  "@Localizer["messages_createActivityListError"]"
+                });
+            },
+            complete: function () {
+                $("#modal").modal("hide");
+                EnableButton("#btn-create-activity-list", "Add");
+                $("#attach-file").prop("disabled", false);
+            }
+        });
+    });
+
+</script>
+<script>
+    $(document).ready(function () {
+        EnableSummerNote("#summernote");
+   
+        $(".selectpicker").selectpicker();
+
+        $(".datepicker").datepicker({
+            format: "yyyy/mm/dd",
+            maxViewMode: 3,
+            todayBtn: "linked",
+            autoclose: true,
+            clearBtn: true
+        });
+
+        if (@ViewBag.IsAuthenticatedOnCloud.ToString().ToLower()) {
+            $(".login-on-cloud").hide();
+        } else {
+            $("#attach-file").hide();
+        }
+    });
+</script>
+
+<script>
+
+
+    @*$.saveChanges({
+        bindTo: "#btn-create-activity-list",
+        formId: "#form-create-activity-list",
+        ajaxUrl: "@Url.Action("Create", "ActivityLists")",
+        successMessage: "@Localizer["messages_createActivityListSuccess"]",
+        errorMessage: "@Localizer["messages_createActivityListError"]",
+        buttonText: "@Localizer["_add"]",
+        eventFunction: function (result) {
+            $(".no-parent-entities").remove();
+            $("#parent-entities").append(result);
+            feather.replace();
+        }
+    });*@
+</script>
+<script>
+    $.saveChanges({
+        bindTo: "#btn-create-activity-list-new",
+        formId: "#form-create-activity-list",
+        ajaxUrl: "@Url.Action("Create", "ActivityLists")",
+        successMessage: "@Localizer["messages_createActivityListSuccess"]",
+        errorMessage: "@Localizer["messages_createActivityListError"]",
+        buttonText: "@Localizer["_addAndNew"]",
+        new: true,
+        eventFunction: function (result) {
+            $(".no-parent-entities").remove();
+            $("#parent-entities").append(result);
+            feather.replace();
+        }
+    });
+</script>

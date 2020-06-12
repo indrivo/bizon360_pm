@@ -1,0 +1,155 @@
+﻿@using System.Security.Claims
+@using Bizon360.Models
+@using Gear.Identity.Permissions.Domain.Resources
+@using Gear.Identity.Permissions.Infrastructure.Utils
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+@model Gear.ProjectManagement.Manager.Domain.TrackerTypes.Queries.GetTrackerTypeList.TrackerTypeListViewModel
+
+
+@if (Model.Trackers.Any())
+{
+    <table class="table bizon-datatable dt-activity-types" data-order='[[ 2, "asc" ]]' id="table-@Model.ActivityTypeId">
+        <thead>
+            <tr class="hover-invisible-toggle">
+                <th class="no-sort">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input datatables-bulk-check" id="bulk-@Model.ActivityTypeId" />
+                        <label class="custom-control-label" for="bulk-@Model.ActivityTypeId"></label>
+                    </div>
+                </th>
+                <th class="no-sort ml-1">
+                    <span class="datatables-dragdrop"></span>
+                    @Localizer["_subtypes"]
+                </th>
+                <th hidden="">order</th>
+                <th class="no-sort col-users d-md-table-cell d-none">@Localizer["_status"]</th>
+                <th class="no-sort col-date d-sm-table-cell d-none">@Localizer["_created"]</th>
+                <th class="no-sort col-date d-sm-table-cell d-none">@Localizer["_modified"]</th>
+                <th class="no-sort">
+                    <div class="dropdown datatables-th-dropdown">
+                        <div class="more-vertical hover-invisible hover-lg" data-toggle="dropdown"></div>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-status-@Model.ActivityTypeId" data-table-column-id="3" checked />
+                                <label class="custom-control-label" for="dt-status-@Model.ActivityTypeId">
+                                    @Localizer["_status"]
+                                    <span>Subtype status</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-created-@Model.ActivityTypeId" data-table-column-id="4" checked />
+                                <label class="custom-control-label" for="dt-created-@Model.ActivityTypeId">
+                                    @Localizer["_created"]
+                                    <span>Created date</span>
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input datatables-column-toggle" id="dt-updated-@Model.ActivityTypeId" data-table-column-id="5" checked />
+                                <label class="custom-control-label" for="dt-updated-@Model.ActivityTypeId">
+                                    @Localizer["_modified"]
+                                    <span>Updated date</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+            </tr>
+        </thead>
+        <tbody class="table-ordered">
+            @foreach (var item in Model.Trackers)
+            {
+                <tr class="hover-invisible-toggle ui-state-default">
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input datatables-check" id="@item.Id" data-parent-id="@Model.ActivityTypeId" />
+                            <label class="custom-control-label" for="@item.Id"></label>
+                        </div>
+                    </td>
+                    <td class="order-row" data-id="@item.Id">
+                        <span class="datatables-dragdrop"></span>
+                        <a href="javascript:" class="datatables-title">@item.Name</a>
+                        <div class="position-relative d-lg-inline-block d-none">
+                            <a href="#" class="btn btn-success btn-sm datatables-button hover-invisible top-webkit-inline-box edit-subtype" data-controller="Services" data-action="EditTracker" data-id="@item.Id">@Localizer["_rename"]</a>
+                        </div>
+                    </td>
+
+                    <td hidden>@item.RowOrder</td>
+
+                    <td class="td-badge sorting_1">
+                        @if (item.Active)
+                        {<span class="badge badge-outline-success">@Localizer["_active"]</span> }
+                    else
+                    { <span class="badge badge-outline-secondary">@Localizer["_inactive"]</span>}
+                    </td>
+                    <td class="d-sm-table-cell d-none">
+                        @item.CreatedTime.ToString("yyyy-MM-dd")
+                    </td>
+                    <td class="d-sm-table-cell d-none">
+                        @item.ModifiedTime.ToString("yyyy-MM-dd")
+                    </td>
+                    <td class="td-options">
+                        @if (User.UserHasThisPermission(Permissions.ActivityTrackerUpdate) || User.UserHasThisPermission(Permissions.ActivityTrackerDelete))
+                        {
+                            <div class="dropdown datatables-dropdown">
+                                <div class="more-vertical hover-invisible hover-lg" id="dropdown-1" data-toggle="dropdown"></div>
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-1">
+                                    @if (User.UserHasThisPermission(Permissions.ActivityTrackerUpdate))
+                                    {
+                                        <a href="#" class="dropdown-item edit-subtype" data-controller="Services" data-action="EditTracker" data-id="@item.Id">@Localizer["_rename"]</a>
+                                        <a href="#" class="dropdown-item move-subtype" data-controller="Services" data-action="MoveTracker" data-id="@item.Id">@Localizer["_moveTo"]</a>
+                                        @if (item.Active)
+                                        {
+                                            <a href="#" class="dropdown-item deactivate-subtype" data-controller="Services" data-action="DeactivateTrackerType" data-id="@item.Id" data-name="@item.Name" data-parent-id="@Model.ActivityTypeId">@Localizer["_deactivate"]</a>
+                                        }
+                                        else
+                                        {
+                                            <a href="#" class="dropdown-item activate-subtype" data-controller="Services" data-action="ActivateTrackerType" data-id="@item.Id" data-name="@item.Name" data-parent-id="@Model.ActivityTypeId">@Localizer["_activate"]</a>
+                                        }
+                                    }
+
+                                    @if (User.UserHasThisPermission(Permissions.ActivityTrackerDelete))
+                                    {
+                                        <div class="dropdown-divider"></div>
+                                        <a href="#" class="dropdown-item delete-subtype" data-controller="Services" data-action="DeleteTracker" data-id="@item.Id" data-name="@item.Name" data-parent-id="@Model.ActivityTypeId">@Localizer["_delete"]</a>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div>
+        <p class="class=" mb-0 mt-2">@Localizer["msg_noSubtypes"]</p>
+    </div>
+}
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script src="~/lib/jqueryui/jquery-ui.js"></script>
+
+<script>
+    $(document).ready(function () {
+         RefreshCount("@Model.ActivityTypeId");
+         EnableDataTable("#table-@Model.ActivityTypeId", "SubtypesColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)");
+        $.bindColumnToggle({ cookieKey: "SubtypesColumns" + "@Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)"});
+
+        @if (User.UserHasThisPermission(Permissions.ActivityTrackerUpdate))
+        {
+            <text>
+                OrderTableRows({
+                tBody: ".table-ordered",
+                tRow: ".order-row",
+                actionUrl: "/Services/UpdateOrder/"
+                });
+            </text>
+        }
+    });
+</script>

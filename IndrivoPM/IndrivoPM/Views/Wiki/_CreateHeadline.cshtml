@@ -1,0 +1,61 @@
+﻿@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@model Gear.ProjectManagement.Manager.Domain.Projects.Commands.Wiki.Headlines.CreateHeadline.CreateHeadlineCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<form id="form-create">
+    <div class="modal-body">
+        <div class="row">
+            <input asp-for="Id" hidden />
+            <input asp-for="ProjectId" hidden />
+            @Html.AntiForgeryToken()
+
+            <div class="col-md-12">
+                <div class="mb-2">
+                    <label asp-for="Title" class="float-label"></label>
+                    <input asp-for="Title" class="form-control" placeholder="@Localizer["placeholders_tabName"]" autofocus="autofocus" autocomplete="off" required />
+                    <span asp-validation-for="Title" class="invalid-feedback"></span>
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="SectionName" class="float-label"></label>
+                    <input asp-for="SectionName" class="form-control" placeholder="@Localizer["placeholders_sectionName"]" autocomplete="off" required />
+                    <span asp-validation-for="SectionName" class="invalid-feedback mb-2"></span>
+                </div>
+
+                <div class="position-relative">
+                    <label asp-for="SectionBody" class="summernote-label"></label>
+                    <textarea asp-for="SectionBody" id="summer-note" placeholder="@Localizer["placeholders_sectionContent"]" required></textarea>
+                    <span asp-validation-for="SectionBody" class="invalid-feedback mt-1 mb-2"></span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-create">@Localizer["_add"]</button>
+    </div>
+</form>
+
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+<script>
+    var wiki = new Wiki();
+    wiki.SummerNote("#summer-note");
+
+    $.saveChanges({
+        bindTo: "#btn-create",
+        formId: "#form-create",
+        ajaxUrl: "@Url.Action("CreateHeadline", "Wiki")",
+        successMessage: "@Localizer["msgSuccess_createHeadline"]",
+        errorMessage: "@Localizer["msgError_createHeadline"]",
+        eventFunction: function () {
+            localStorage.setItem("@Model.ProjectId", "#tab-@Model.Id");
+            GetWiki();
+        }
+    });
+</script>

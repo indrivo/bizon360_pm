@@ -1,0 +1,55 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.Projects.Commands.InvoiceProject.InvoiceProjectCommand
+@using Bizon360.Models
+@using Gear.Domain.PmEntities.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+    <form id="form-invoice">
+        <div class="row bizon-row">
+
+            <div id="form-invoice" class="col-lg-3 col-md-6 mb-lg-0 mb-3 bizon-col">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ProjectId" />
+
+
+                <div class="bg-white rounded border px-20 py-15">
+                    <h6>@Localizer["text_trackingAndBilling"]</h6>
+                    <hr class="hr-description mb-3" />
+
+                    <label asp-for="Currency" class="float-label-select"></label>
+                    <select asp-for="Currency" asp-items="Html.GetEnumSelectList<ProjectCurrency>()" class="form-control selectpicker"></select>
+                    <span asp-validation-for="Currency" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="BudgetMoney" class="float-label"></label>
+                    <input asp-for="BudgetMoney" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="BudgetMoney" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="HourRateMoney" class="float-label"></label>
+                    <input asp-for="HourRateMoney" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="HourRateMoney" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="BudgetMoneyHours" class="float-label"></label>
+                    <input asp-for="BudgetMoneyHours" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="BudgetMoneyHours" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="MaxLogHoursDay" class="float-label-select"></label>
+                    <select asp-for="MaxLogHoursDay" asp-items="Html.GetEnumSelectList<MaxLogHour>()" class="form-control selectpicker"></select>
+                    <span asp-validation-for="MaxLogHoursDay" class="invalid-feedback mt-1 mb-2"></span>
+
+                    <label asp-for="MaxLogHoursActivity" class="float-label-select"></label>
+                    <select asp-for="MaxLogHoursActivity" asp-items="Html.GetEnumSelectList<MaxLogHour>()" class="form-control selectpicker"></select>
+                    <span asp-validation-for="MaxLogHoursActivity" class="invalid-feedback mt-1 mb-2"></span>
+
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+<script>
+    $(document).ready(function () {
+        $(".selectpicker").selectpicker();
+    });
+</script>

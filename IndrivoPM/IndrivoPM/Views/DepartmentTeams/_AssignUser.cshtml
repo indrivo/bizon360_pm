@@ -1,0 +1,52 @@
+﻿@model Gear.Manager.Core.EntityServices.DepartmentTeams.Commands.AssignUser.AssignUserCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+<form id="form">
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-md-12">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input asp-for="DepartmentTeamId" hidden />
+
+                <div class="mb-2">
+                    <label asp-for="ApplicationUserIds" class="float-label-select"></label>
+                    <select asp-for="ApplicationUserIds" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)" class="form-control selectpicker" data-live-search="true"></select>
+                    <span asp-validation-for="ApplicationUserIds" class="invalid-feedback"></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn">@Localizer["_assign"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+<script>
+    $(".selectpicker").selectpicker();
+
+        var tm = new TeamsContainer();
+        var dep = new DepartmentContainer();
+
+    $.saveChanges({
+        bindTo: "#btn",
+        formId: "#form",
+        ajaxUrl: "@Url.Action("AssignUser", "DepartmentTeams")",
+        successMessage: "@Localizer["msgSuccess_assignUser"]",
+        errorMessage: "@Localizer["msgError_assignUser"]",
+        eventFunction: function () {
+            if (refreshTable) {
+                dep.getTeamsByParent("@Model.DepartmentId");
+            } else {
+                tm.getTeamList();
+            }
+        }
+    });
+</script>

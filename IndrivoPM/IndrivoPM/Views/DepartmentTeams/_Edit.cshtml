@@ -1,0 +1,110 @@
+﻿@model Gear.Manager.Core.EntityServices.DepartmentTeams.Commands.UpdateDepartmentTeam.UpdateDepartmentTeamCommand
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+<form asp-action="Edit" id="form-update-tm">
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input asp-for="Id" hidden />
+                <input hidden asp-for="Active" >
+
+                <div class="mb-2">
+                    <label asp-for="Name" class="float-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_team"]" autofocus="autofocus" autocomplete="off" required />
+                    <span asp-validation-for="Name" class="invalid-feedback"></span>
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="Abbreviation" class="float-label"></label>
+                    <input asp-for="Abbreviation" class="form-control" placeholder="@Localizer["placeholders_abbr"]" autofocus="autofocus" autocomplete="off" />
+                    <span asp-validation-for="Abbreviation" class="invalid-feedback"></span>
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="DepartmentTeamLeadId" class="float-label-select"></label>
+                    <select asp-for="DepartmentTeamLeadId" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)" class="form-control selectpicker" data-live-search="true"></select>
+                    <span asp-validation-for="DepartmentTeamLeadId" class="invalid-feedback"></span>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+
+                <div class="mb-2">
+                    <label asp-for="DepartmentId" class="float-label-select"></label>
+                    @if (ViewBag.Departments == null)
+                    {
+                        <select asp-for="DepartmentId" class="form-control selectpicker" data-live-search="true" disabled>
+                            <option selected disabled value="">There are no departments</option>
+                        </select>
+                    }
+                    else
+                    {
+                        <select asp-for="DepartmentId" asp-items="@(new SelectList(ViewBag.Departments, "Id", "Name", null))" class="form-control selectpicker" data-live-search="true"></select>
+                        <span asp-validation-for="DepartmentId" class="invalid-feedback"></span>
+                    }
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="JobPositionIds" class="float-label-select"></label>
+                    @if (ViewBag.JobPositions == null)
+                    {
+                        <select asp-for="JobPositionIds" class="form-control selectpicker" data-live-search="true" disabled>
+                            <option selected disabled value="">There are no job positions</option>
+                        </select>
+                    }
+                    else
+                    {
+                        <select asp-for="JobPositionIds" asp-items="@(new SelectList(ViewBag.JobPositions, "Id", "Name", null))" class="form-control selectpicker" data-live-search="true" data-actions-box="true"></select>
+                        <span asp-validation-for="JobPositionIds" class="invalid-feedback"></span>
+                    }
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="MembersIds" class="float-label-select"></label>
+                    <select asp-for="MembersIds" asp-items="@((List<SelectListItem>) ViewBag.ApplicationUsers)" class="form-control selectpicker" data-live-search="true" multiple data-actions-box="true"></select>
+                    <span asp-validation-for="MembersIds" class="invalid-feedback"></span>
+                </div>
+
+            </div>
+
+            <div class="mb-2 col-12">
+                <label asp-for="Description" class="float-label"></label>
+                <textarea asp-for="Description" class="form-control" placeholder="@Localizer["placeholders_descriptionTeam"]" autocomplete="off" ></textarea>
+                <span asp-validation-for="Description" class="invalid-feedback"></span>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn-update-tm">@Localizer["_update"]</button>
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+<script>
+    $(".selectpicker").selectpicker();
+
+    var tm = new TeamsContainer();
+    var dp = new DepartmentContainer();
+
+    $.saveChanges({
+        bindTo: "#btn-update-tm",
+        formId: "#form-update-tm",
+        ajaxUrl: "@Url.Action("Edit", "DepartmentTeams")",
+        successMessage: "@Localizer["msgSuccess_updateTeam"]",
+        errorMessage: "@Localizer["msgError_updateTeam"]",
+        buttonText: "@Localizer["_update"]",
+        eventFunction: function () {
+            if (refreshTable) { dp.getTeamsByParent("@Model.DepartmentId") }
+            else { tm.getTeamList() }
+        }
+    });
+</script>
+

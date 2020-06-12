@@ -1,0 +1,45 @@
+﻿@model Gear.Sstp.Abstractions.Domain.ProductType
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+@using Bizon360.Models
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+
+<form id="form">
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-md-12">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input asp-for="Id" hidden />
+
+                <div class="mb-2">
+                    <label asp-for="Name" class="float-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="@Localizer["placeholders_productType"]" autofocus="autofocus" autocomplete="off" required />
+                    <span asp-validation-for="Name" class="invalid-feedback"></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@Localizer["_cancel"]</button>
+        <button type="submit" class="btn btn-success" id="btn">@Localizer["_add"]</button>
+    </div>
+</form>
+
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+<script>
+    $(".selectpicker").selectpicker();
+    var product = new SstpContainer();
+
+    $.saveChanges({
+        bindTo: "#btn",
+        formId: "#form",
+        ajaxUrl: "@Url.Action("CreateProduct", "Sstp")",
+        successMessage: "@Localizer["msgSuccess_addProductType"]",
+        errorMessage: "@Localizer["msgError_addProductType"]",
+        eventFunction: product.getProducts
+    });
+</script>

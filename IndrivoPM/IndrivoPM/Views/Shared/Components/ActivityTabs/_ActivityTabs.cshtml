@@ -1,0 +1,14 @@
+﻿@using Bizon360.Views.Shared.Components.ActivityTabs
+@model Guid
+
+<ul class="nav nav-tabs main-nav-tabs px-40">
+    <li class="nav-item">
+        <a class="nav-link @ActivityTabs.ActivityNavClass(ViewContext)" asp-controller="Activities" asp-action="Details" asp-route-id="@Model">Activity</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @ActivityTabs.LoggedTimeNavClass(ViewContext)" asp-controller="LoggedTime" asp-action="Index" asp-route-id="@Model">Logged Time</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @ActivityTabs.CommentsNavClass(ViewContext)" asp-controller="MainComments" asp-action="Index" asp-route-id="@Model">Comments</a>
+    </li>
+</ul>

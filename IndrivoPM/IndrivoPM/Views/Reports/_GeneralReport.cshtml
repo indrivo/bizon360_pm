@@ -1,0 +1,76 @@
+﻿@model Gear.Manager.Core.EntityServices.Reports.Queries.GetGeneralReport.GeneralReportList
+@using Bizon360.Models
+@using Gear.Manager.Core.EntityServices.Reports.Queries.GetGeneralReport
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@inject IStringLocalizer Localizer
+@inject IOptionsSnapshot<LocalizationConfigModel> LocalizationConfig
+
+<table class="table bizon-datatable no-parent dt-logged-time" data-order='[[ 1, "asc" ]]'>
+
+
+    <thead>
+        <tr class="hover-invisible-toggle">
+            <th class="no-sort" style="width: 30px">#</th>
+            <th style="width: 70px">@Localizer["_projectGroup"]</th>
+            <th style="width: 70px">@Localizer["_project"]</th>
+            <th style="width: 70px">@Localizer["_assignee"]</th>
+            <th style="width: 70px">@Localizer["_activity"]</th>
+            @*<th style="width: 30px">@Localizer["_status"]</th>*@
+            <th class="col-date d-sm-table-cell" style="width: 100px">Sprint</th>
+            <th class="col-date d-sm-table-cell" style="width: 100px">Estimated</th>
+            <th class="col-date d-sm-table-cell" style="width: 100px">Logged</th>
+            <th style="width: 30px">@Localizer["_created"]</th>
+        </tr>
+    </thead>
+    <tbody>
+    @if (Model.GeneralReport != null && Model.GeneralReport.Any())
+    {
+        var previousActivityId = Guid.Empty;
+        foreach (var report in Model.GeneralReport)
+        {
+            if (report.ActivityId != previousActivityId)
+            {
+                previousActivityId = report.ActivityId;
+        <tr class="hover-invisible-toggle">
+            <td></td>
+            <td class="d-md-table-cell">@report.ProjectGroup</td>
+            <td class="d-md-table-cell"><a href="@Url.Action("Details", "Projects", new {id = report.ProjectId})">@report.ProjectName</a></td>
+            <td class="d-md-table-cell"><a href="@Url.Action("Details", "ApplicationUsers", new {id = report.UserId})">@report.UserName</a></td>
+            <td class="d-md-table-cell"><a href="@Url.Action("Details", "Activities", new {id = report.ActivityId})">@report.ActivityName</a></td>
+            <td class="d-md-table-cell">@report.Sprint</td>
+            <td class="d-md-table-cell">@report.Estimated?.ToString("N")h</td>
+            <td class="d-md-table-cell">@Model.GeneralReport.Where(x => x.ActivityId == previousActivityId).Sum(x => x.LoggedTime).ToString("N")h</td>
+            <td class="d-md-table-cell">@report.CreateTime.ToShortDateString()</td>
+        </tr>
+            }
+        }
+    }
+    </tbody>
+
+    <tfoot>
+    <tr class="hover-invisible-toggle">
+        <td></td>
+        <td class="d-md-table-cell"></td>
+        <td class="d-md-table-cell"></td>
+        <td class="d-md-table-cell"></td>
+        <td class="d-md-table-cell"></td>
+        <td class="d-md-table-cell"></td>
+        <td class="d-md-table-cell"></td>
+        <td class="font-size-14 d-sm-table-cell font-weight-600 px-0 py-1">Total</td>
+        <td class="font-size-14 d-md-table-cell font-weight-600 px-0 py-1">@Model.GeneralReport.Sum(x => x.LoggedTime).ToString("N")h</td>
+    </tr>
+    </tfoot>
+
+</table>
+
+<script>
+    EnableDataTable(".bizon-datatable", null, true, 0);
+</script>
+
+<script>
+    $(document).ready(function () {
+        checkHeaders();
+    });
+</script>
+

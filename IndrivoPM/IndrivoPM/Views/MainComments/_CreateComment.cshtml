@@ -1,0 +1,30 @@
+﻿@model Gear.ProjectManagement.Manager.Domain.MainComments.Commands.CreateMainComment.CreateMainCommentCommand
+
+<form asp-action="CreateMainComment" asp-controller="MainComments" id="post-comment">
+    <input asp-for="RecordId" hidden />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <h6>Leave your reply</h6>
+    <hr class="hr-description mb-2" />
+
+    <label asp-for="Message" class="float-label">Comment</label>
+    <textarea id="new-comment" asp-for="Message" rows="3" class="form-control" placeholder="What are you thinking right now ?" onkeyup="uniKeyCode(event)"></textarea>
+    <span asp-validation-for="Message" class="text-danger"></span>
+
+    <div class="mt-1">
+        <input type="submit" value="Post" class="btn btn-success btn-sm float-right mt-1" id="confirm-post-comment" />
+    </div>
+</form>
+
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script src="~/js/crud-modals.js"></script>
+<script src="~/js/dev/Comments.js"></script>
+
+<script>
+    SaveChanges({
+        bindTo: "#confirm-post-comment",
+        formId: "#post-comment",
+        ajaxUrl: "@Url.Action("CreateMainComment", "MainComments")",
+        eventFunction:GetComments
+    });
+</script>

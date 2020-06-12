@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Audit.EntityFramework.Identity.Core" Version="14.6.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="2.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.6" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="2.2.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gear.Crm.Persistence.Config\Gear.Crm.Persistence.Config.csproj" />
+    <ProjectReference Include="..\Gear.DynamicReporting.Config\Gear.DynamicReporting.Config.csproj" />
+    <ProjectReference Include="..\Gear.Hrm.Persistence.Config\Gear.Hrm.Persistence.Config.csproj" />
+    <ProjectReference Include="..\Gear.Identity.Permissions.Config\Gear.Identity.Permissions.Config.csproj" />
+    <ProjectReference Include="..\Gear.Pm.Persistence.Config\Gear.Pm.Persistence.Config.csproj" />
+    <ProjectReference Include="..\Gear.Sstp.Config\Gear.Sstp.Config.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Application\Gear.Manager.Core.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Domain\Gear.Domain.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Common\Gear.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.EntityFrameworkCore">
+      <HintPath>..\..\..\..\..\..\..\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.entityframeworkcore\2.2.0\lib\netstandard2.0\Microsoft.EntityFrameworkCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

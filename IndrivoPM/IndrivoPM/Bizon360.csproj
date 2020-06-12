@@ -1,0 +1,68 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <UserSecretsId>aspnet-IndrivoPM-AE002E92-D535-47DF-B50C-6B0FAD403421</UserSecretsId>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="compilerconfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="compilerconfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="compilerconfig.json" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Audit.EntityFramework.Core" Version="14.6.3" />
+    <PackageReference Include="AutoMapper" Version="8.1.0" />
+    <PackageReference Include="EPPlus" Version="4.5.3.2" />
+    <PackageReference Include="JetBrains.Annotations" Version="2019.1.3" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.4" />
+    <PackageReference Include="NLog" Version="4.6.7" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="1.6.0" />
+    <PackageReference Include="NLog.Web.AspNetCore" Version="4.8.6" />
+    <PackageReference Include="Npgsql" Version="4.1.3.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.4" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="1.1.0" />
+    <PackageReference Include="PDFsharp-MigraDoc" Version="1.50.5147" />
+    <PackageReference Include="popper.js" Version="1.14.3" />
+    <PackageReference Include="Sentry.AspNetCore" Version="1.2.0" />
+    <PackageReference Include="SmartBreadcrumbs" Version="2.1.0" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gear.CloudStorage.Abstractions\Gear.CloudStorage.Abstractions.csproj" />
+    <ProjectReference Include="..\Gear.DynamicReporting.ProjectManagement\Gear.DynamicReporting.ProjectManagement.csproj" />
+    <ProjectReference Include="..\Gear.Identity.Application\Gear.Identity.Manager.csproj" />
+    <ProjectReference Include="..\Gear.Identity.Permissions.Abstraction\Gear.Identity.Permissions.csproj" />
+    <ProjectReference Include="..\Gear.Localizer\Gear.Localizer.csproj" />
+    <ProjectReference Include="..\Gear.MailSender\Gear.MailSender.csproj" />
+    <ProjectReference Include="..\Gear.OneDriveCloudStorage\Gear.OneDriveCloudStorage.csproj" />
+    <ProjectReference Include="..\Gear.ProjectManagement.Application\Gear.ProjectManagement.Manager.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Application\Gear.Manager.Core.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Common\Gear.Common.csproj" />
+    <ProjectReference Include="..\IndrivoPM.Persistence\Gear.Persistence.csproj" />
+    <ProjectReference Include="..\Modules\Notifications\Gear.Notifications\Gear.Notifications.Abstractions\Gear.Notifications.Abstractions.csproj" />
+    <ProjectReference Include="..\Modules\Notifications\Gear.Notifications\Gear.Notifications\Gear.Notifications.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Content Update="nlog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>
